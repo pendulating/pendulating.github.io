@@ -89,14 +89,6 @@ export default function WhiteboardLayout({
         scale: targetScale
       };
       
-      console.log('Auto-zooming and centering expanded card:', {
-        cardPosition: { x: cardX, y: cardY },
-        currentTransform: transform,
-        targetScale,
-        newTransform,
-        cardSize: { width: cardRect.width, height: cardRect.height }
-      });
-      
       // Apply the centered zoom transform
       updateTransform(newTransform, true);
     }
@@ -149,6 +141,47 @@ export default function WhiteboardLayout({
     });
     return Array.from(tagSet).sort((a, b) => a.localeCompare(b));
   }, [items]);
+
+  // Brain theme (dark/light): default to system preference if available, else dark
+  const [brainTheme, setBrainTheme] = useState<'dark' | 'light'>(() => {
+    if (typeof window === 'undefined') return 'dark';
+    try {
+      const saved = window.localStorage.getItem('brain_theme');
+      if (saved === 'light' || saved === 'dark') return saved as 'light' | 'dark';
+      if (window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches) return 'light';
+      return 'dark';
+    } catch {
+      return 'dark';
+    }
+  });
+  // Track whether user has explicitly overridden system theme
+  const [themeSource, setThemeSource] = useState<'system' | 'user'>(() => {
+    if (typeof window === 'undefined') return 'system';
+    try { return window.localStorage.getItem('brain_theme') ? 'user' : 'system'; } catch { return 'system'; }
+  });
+  // Persist only when user explicitly toggles
+  useEffect(() => {
+    if (themeSource !== 'user') return;
+    try { window.localStorage.setItem('brain_theme', brainTheme); } catch {}
+  }, [brainTheme, themeSource]);
+  // Listen to system changes if using system theme
+  useEffect(() => {
+    if (themeSource !== 'system' || typeof window === 'undefined' || !window.matchMedia) return;
+    const mq = window.matchMedia('(prefers-color-scheme: light)');
+    const handler = (e: MediaQueryListEvent) => setBrainTheme(e.matches ? 'light' : 'dark');
+    try { mq.addEventListener('change', handler); } catch { mq.addListener(handler); }
+    return () => {
+      try { mq.removeEventListener('change', handler); } catch { mq.removeListener(handler); }
+    };
+  }, [themeSource]);
+  const toggleBrainTheme = useCallback(() => {
+    setThemeSource('user');
+    setBrainTheme(prev => {
+      const next = prev === 'dark' ? 'light' : 'dark';
+      try { window.localStorage.setItem('brain_theme', next); } catch {}
+      return next;
+    });
+  }, []);
 
   // Relayout visible items with smooth transform transition
   const laidOutItems = useMemo(() => {
@@ -206,6 +239,12 @@ export default function WhiteboardLayout({
     return laidOutItems.filter(isMatch);
   }, [laidOutItems, selectedTags, matchAll]);
 
+  // Helper: focus by DOM-derived position (works with laidOutItems)
+  const isMobile = typeof window !== 'undefined' && (
+    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+    window.innerWidth <= 768
+  );
+
   // Bind focus hook to focusableItems to avoid ghost indices
   const focusHook = useCardFocus(focusableItems, transform, updateTransform);
   currentIndex = focusHook.currentIndex;
@@ -214,11 +253,17 @@ export default function WhiteboardLayout({
   focusOnCard = focusHook.focusOnCard;
   focusedCardId = focusableItems.length ? focusableItems[currentIndex]?.id : undefined;
 
-  // Check if we're on mobile
-  const isMobile = typeof window !== 'undefined' && (
-    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
-    window.innerWidth <= 768
-  );
+  // Track last focused world position to choose nearest card after filter changes
+  const lastFocusedPositionRef = useRef<{ x: number; y: number } | null>(null);
+  useEffect(() => {
+    if (!focusedCardId) return;
+    const current = focusableItems.find(it => it.id === focusedCardId)
+      || laidOutItems.find(it => it.id === focusedCardId)
+      || items.find(it => it.id === focusedCardId);
+    if (current) {
+      lastFocusedPositionRef.current = { x: current.position.x, y: current.position.y };
+    }
+  }, [focusedCardId, focusableItems, laidOutItems, items]);
 
   // Mobile autofocus adaptation on tag toggle (only real mobile/coarse pointer)
   useEffect(() => {
@@ -227,27 +272,40 @@ export default function WhiteboardLayout({
     if (!(isMobileDevice || isCoarsePointer)) return;
     const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
     if (now - lastManualInteractionRef.current < 500) return;
-    const selected = selectedTags;
-    const matches = (it: any) => {
-      const tags: string[] = Array.isArray(it?.data?.data?.tags) ? it.data.data.tags : [];
-      return selected.size === 0 ? true : (matchAll
-        ? Array.from(selected).every(t => tags.includes(t))
-        : Array.from(selected).some(t => tags.includes(t)));
-    };
     const visibleIds = focusableItems.map(it => it.id);
     if (visibleIds.length === 0) return;
-
-    // Debounce to avoid multiple jumps during rapid toggles
+    // Debounce during rapid toggles
     if (tagFocusDebounceRef.current) {
       clearTimeout(tagFocusDebounceRef.current);
     }
     tagFocusDebounceRef.current = window.setTimeout(() => {
-      if (!focusedCardId || !visibleIds.includes(focusedCardId)) {
-        // Use hook's focus logic based on laid-out positions
-        const targetIndex = 0;
-        // Preserve current zoom if already readable; otherwise hook will choose mobile zoom
-        focusOnCard(targetIndex);
+      // Determine target focus index
+      let targetIndex = 0;
+      if (focusedCardId && visibleIds.includes(focusedCardId)) {
+        targetIndex = focusableItems.findIndex(it => it.id === focusedCardId);
+        if (targetIndex < 0) targetIndex = 0;
+      } else {
+        // Choose nearest to previous focused position if available
+        const prev = lastFocusedPositionRef.current;
+        if (prev && focusableItems.length > 0) {
+          let bestIdx = 0;
+          let bestDist = Number.POSITIVE_INFINITY;
+          for (let i = 0; i < focusableItems.length; i++) {
+            const p = focusableItems[i].position;
+            const dx = p.x - prev.x;
+            const dy = p.y - prev.y;
+            const d2 = dx * dx + dy * dy;
+            if (d2 < bestDist) { bestDist = d2; bestIdx = i; }
+          }
+          targetIndex = bestIdx;
+        }
       }
+      // Ensure layout has applied before centering; double rAF for safety
+      requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          focusOnCard(targetIndex);
+        });
+      });
     }, 250);
 
     return () => {
@@ -413,7 +471,9 @@ export default function WhiteboardLayout({
   return (
     <ErrorBoundary>
       {/* Simple clean background without window */}
-      <div className="fixed inset-0 bg-gradient-to-br from-slate-800 to-slate-900">
+      <div className={`fixed inset-0 ${brainTheme === 'dark' ? 'bg-gradient-to-br from-slate-800 to-slate-900' : 'bg-gradient-to-br from-zinc-50 to-zinc-200'}`}>
+        {/* Top-left Home button */}
+        <a href="/" className={`fixed top-3 left-3 z-[60] rounded-full border px-3 py-2 font-mono text-xs ${brainTheme === 'dark' ? 'bg-black/80 border-cyan-500/20 text-cyan-300' : 'bg-white/90 border-zinc-300 text-zinc-700'} hover:opacity-90 transition`}>Home</a>
         <div
           className={`transform-container ${isTransitioning ? 'is-transitioning' : ''}`}
           style={{
@@ -458,6 +518,7 @@ export default function WhiteboardLayout({
           }}
           matchAll={matchAll}
           onToggleMatchAll={() => setMatchAll(v => !v)}
+          theme={brainTheme}
         />
 
         <WhiteboardToolbar
@@ -475,6 +536,8 @@ export default function WhiteboardLayout({
             });
             setClustered(v => !v);
           }}
+          theme={brainTheme}
+          onToggleTheme={toggleBrainTheme}
         />
       </div>
     </ErrorBoundary>

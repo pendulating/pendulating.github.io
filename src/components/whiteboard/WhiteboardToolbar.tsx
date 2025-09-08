@@ -1,5 +1,5 @@
 import React from 'react';
-import { ZoomIn, ZoomOut, Home, ArrowLeft, ArrowRight, MoreHorizontal, Shapes } from 'lucide-react';
+import { ZoomIn, ZoomOut, Home, ArrowLeft, ArrowRight, MoreHorizontal, Shapes, Sun, Moon } from 'lucide-react';
 
 interface WhiteboardToolbarProps {
   onZoomIn: (animate?: boolean) => void;
@@ -10,6 +10,8 @@ interface WhiteboardToolbarProps {
   onFocusPrev: () => void;
   onFocusNext: () => void;
   onClusterToggle?: () => void;
+  theme?: 'dark' | 'light';
+  onToggleTheme?: () => void;
 }
 
 export const WhiteboardToolbar: React.FC<WhiteboardToolbarProps> = ({
@@ -20,7 +22,9 @@ export const WhiteboardToolbar: React.FC<WhiteboardToolbarProps> = ({
   minScale,
   onFocusPrev,
   onFocusNext,
-  onClusterToggle
+  onClusterToggle,
+  theme = 'dark',
+  onToggleTheme
 }) => {
   // State to track if expanded menu is open (for mobile view)
   const [expanded, setExpanded] = React.useState(false);
@@ -143,6 +147,17 @@ export const WhiteboardToolbar: React.FC<WhiteboardToolbarProps> = ({
           </button>
         )}
         
+        {/* Theme toggle - desktop only */}
+        {onToggleTheme && (
+          <button 
+            onClick={onToggleTheme}
+            className="hidden sm:flex p-3 text-cyan-400 hover:text-cyan-300 transition-colors items-center justify-center"
+            title={theme === 'dark' ? 'Switch to light' : 'Switch to dark'}
+          >
+            {theme === 'dark' ? <Sun className="w-6 h-6" strokeWidth={1.5} /> : <Moon className="w-6 h-6" strokeWidth={1.5} />}
+          </button>
+        )}
+
         {/* On mobile, show a "more" button that expands to show secondary controls */}
         <button 
           onClick={() => setExpanded(!expanded)}
@@ -157,6 +172,15 @@ export const WhiteboardToolbar: React.FC<WhiteboardToolbarProps> = ({
       {expanded && (
         <div className="mt-2 bg-black/95 dark:bg-black/95 rounded-full px-3 py-2 backdrop-blur-md shadow-lg flex sm:hidden items-center justify-center gap-4 transition-all duration-200 ease-in-out">
           {secondaryControls}
+          {onToggleTheme && (
+            <button 
+              onClick={onToggleTheme}
+              className="p-2 text-cyan-400 hover:text-cyan-300 transition-colors items-center justify-center"
+              title={theme === 'dark' ? 'Switch to light' : 'Switch to dark'}
+            >
+              {theme === 'dark' ? <Sun className="w-5 h-5" strokeWidth={1.5} /> : <Moon className="w-5 h-5" strokeWidth={1.5} />}
+            </button>
+          )}
         </div>
       )}
     </div>

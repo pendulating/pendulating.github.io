@@ -6,6 +6,7 @@ interface TagFilterPanelProps {
   onToggleTag: (tag: string) => void;
   matchAll: boolean;
   onToggleMatchAll: () => void;
+  theme?: 'dark' | 'light';
 }
 
 export const TagFilterPanel: React.FC<TagFilterPanelProps> = ({
@@ -13,21 +14,26 @@ export const TagFilterPanel: React.FC<TagFilterPanelProps> = ({
   selectedTags,
   onToggleTag,
   matchAll,
-  onToggleMatchAll
+  onToggleMatchAll,
+  theme = 'dark'
 }) => {
   if (!allTags.length) return null;
 
   return (
     <div
-      className="fixed left-1/2 -translate-x-1/2 z-50 w-[95vw] sm:w-[85vw]"
+      className="fixed left-1/2 -translate-x-1/2 z-40 sm:z-50 w-[95vw] sm:w-[85vw] pointer-events-auto"
       style={{ top: 'calc(env(safe-area-inset-top, 0px) + 8px)' }}
     >
-      <div className="relative mx-auto bg-black/85 dark:bg-black/85 rounded-full px-2 py-1 sm:px-3 sm:py-2 backdrop-blur-md shadow-lg border border-cyan-500/20">
+      <div className={`relative mx-auto rounded-full px-2 py-1 sm:px-3 sm:py-2 backdrop-blur-md shadow-lg ${
+        theme === 'dark' ? 'bg-black/85 border border-cyan-500/20' : 'bg-white/90 border border-zinc-300'
+      }`}>
         <div className="flex items-center gap-2 sm:gap-3">
           {/* Match mode toggle */}
           <button
             onClick={onToggleMatchAll}
-            className="px-3 py-1.5 sm:px-2 sm:py-1 text-[12px] sm:text-xs rounded-full bg-cyan-950/50 text-cyan-400/90 border border-cyan-500/20 font-mono"
+            className={`px-3 py-1.5 sm:px-2 sm:py-1 text-[12px] sm:text-xs rounded-full font-mono ${
+              theme === 'dark' ? 'bg-cyan-950/50 text-cyan-400/90 border border-cyan-500/20' : 'bg-zinc-100 text-zinc-700 border border-zinc-300'
+            }`}
             title={matchAll ? 'Match all selected tags' : 'Match any selected tags'}
           >
             {matchAll ? 'ALL' : 'ANY'}
@@ -42,10 +48,10 @@ export const TagFilterPanel: React.FC<TagFilterPanelProps> = ({
                   <button
                     key={tag}
                     onClick={() => onToggleTag(tag)}
-                    className={`px-3 py-1.5 sm:px-2 sm:py-1 min-w-[72px] text-[12px] sm:text-xs rounded-full border font-mono whitespace-nowrap transition-colors ${
+                    className={`px-3 py-1.5 sm:px-2 sm:py-1 min-w-[84px] text-[12px] sm:text-xs rounded-full border font-mono whitespace-nowrap transition-colors ${
                       active
-                        ? 'bg-cyan-600/30 border-cyan-400/60 text-cyan-200'
-                        : 'bg-cyan-950/40 border-cyan-500/20 text-cyan-400/90 hover:text-cyan-300'
+                        ? (theme === 'dark' ? 'bg-cyan-600/30 border-cyan-400/60 text-cyan-200' : 'bg-sky-200/80 border-sky-400/60 text-sky-800')
+                        : (theme === 'dark' ? 'bg-cyan-950/40 border-cyan-500/20 text-cyan-400/90 hover:text-cyan-300' : 'bg-zinc-100 border-zinc-300 text-zinc-700 hover:text-zinc-900')
                     }`}
                     title={tag}
                   >
@@ -57,8 +63,17 @@ export const TagFilterPanel: React.FC<TagFilterPanelProps> = ({
           </div>
 
           {/* Gradient edges to hint scroll on mobile */}
-          <div className="hidden sm:block pointer-events-none absolute left-0 top-0 h-full w-6 rounded-l-full bg-gradient-to-r from-black/70 to-transparent" />
-          <div className="hidden sm:block pointer-events-none absolute right-0 top-0 h-full w-6 rounded-r-full bg-gradient-to-l from-black/70 to-transparent" />
+          {theme === 'dark' ? (
+            <>
+              <div className="hidden sm:block pointer-events-none absolute left-0 top-0 h-full w-6 rounded-l-full bg-gradient-to-r from-black/70 to-transparent" />
+              <div className="hidden sm:block pointer-events-none absolute right-0 top-0 h-full w-6 rounded-r-full bg-gradient-to-l from-black/70 to-transparent" />
+            </>
+          ) : (
+            <>
+              <div className="hidden sm:block pointer-events-none absolute left-0 top-0 h-full w-6 rounded-l-full bg-gradient-to-r from-white/90 to-transparent" />
+              <div className="hidden sm:block pointer-events-none absolute right-0 top-0 h-full w-6 rounded-r-full bg-gradient-to-l from-white/90 to-transparent" />
+            </>
+          )}
         </div>
       </div>
     </div>

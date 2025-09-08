@@ -2,7 +2,7 @@
 import { LOCALE, SITE } from "@config";
 import "@styles/base.css";
 import { ViewTransitions } from "astro:transitions";
-import SidebarMenu from "@components/SidebarMenu.astro";
+// Removed SidebarMenu for Brain
 
 export interface Props {
   title?: string;
@@ -90,13 +90,7 @@ const layoutRenderStart = Date.now();
       <slot />
     </div>
     
-    <div class="sidebar-button" id="sidebarButton">
-      <button class="p-2 rounded-full bg-zinc-900/90 backdrop-blur-sm">
-        <span class="sr-only">Toggle menu</span>
-        <!-- Add menu icon -->
-      </button>
-    </div>
-    <SidebarMenu />
+    
   </body>
 </html>
 
@@ -126,42 +120,7 @@ const layoutRenderStart = Date.now();
     overflow: visible;
   }
 
-  .sidebar-button {
-    position: fixed;
-    top: 1rem;
-    left: 1rem;
-    z-index: 50;
-    transition: transform 0.3s ease-in-out;
-  }
-
-  .sidebar-button button {
-    transition: transform 0.2s ease-in-out;
-  }
-
-  .sidebar-button button:hover {
-    transform: scale(1.1);
-  }
-
-  .sidebar-button.sidebar-open {
-    transform: translateX(240px);
-  }
-
-  :global(.nav-menu) {
-    position: fixed;
-    top: 0;
-    left: -240px;
-    width: 240px;
-    height: 100vh;
-    background: var(--color-bg);
-    padding: 2rem;
-    transform: translateX(0);
-    transition: transform 0.3s ease-in-out;
-    z-index: 40;
-  }
-
-  :global(.nav-menu.open) {
-    transform: translateX(240px);
-  }
+  
   
   /* Performance optimization styles */
   :global(.react-loaded) #brain-loading {
@@ -205,18 +164,18 @@ const layoutRenderStart = Date.now();
   const layoutRenderStart = Date.now();
 
   // Utility function for performance logging
-  function perfLog(level, message, data) {
-    if (performanceConfig.verboseLogging) {
-      if (data) {
-        console[level](`[PerformanceMonitor] ${message}`, data);
-      } else {
-        console[level](`[PerformanceMonitor] ${message}`);
-      }
+  function perfLog(level: 'log' | 'warn' | 'error' | 'info', message: string, data?: unknown): void {
+    if (!performanceConfig.verboseLogging) return;
+    const fn = console[level] as (...args: any[]) => void;
+    if (data !== undefined) {
+      fn(`[PerformanceMonitor] ${message}`, data);
+    } else {
+      fn(`[PerformanceMonitor] ${message}`);
     }
   }
 
   // Apply performance mode based on detected capabilities
-  function applyPerformanceMode(mode) {
+  function applyPerformanceMode(mode: 'high' | 'medium' | 'low' | 'minimal') {
     performanceConfig.currentPerformanceMode = mode;
     
     // Apply CSS classes based on mode
@@ -322,14 +281,6 @@ const layoutRenderStart = Date.now();
     const capabilities = detectDeviceCapabilities();
     perfLog('log', 'Device capabilities detected:', capabilities);
     
-    const sidebarButton = document.getElementById('sidebarButton');
-    const navMenu = document.querySelector('.nav-menu');
-
-    sidebarButton?.addEventListener('click', () => {
-      sidebarButton.classList.toggle('sidebar-open');
-      navMenu?.classList.toggle('open');
-    });
-
     initializeMobileOptimizations();
     
     // Performance logging removed to avoid TypeScript issues
