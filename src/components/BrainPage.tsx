@@ -103,6 +103,15 @@ const BrainPage: React.FC<WhiteboardProps> = (props) => {
         <Route path="/" element={
           <WhiteboardLayout {...optimizedProps} />
         } />
+        <Route path="album/:slug" element={
+          <WhiteboardLayout {...optimizedProps} />
+        } />
+        <Route path="snip/:slug" element={
+          <WhiteboardLayout {...optimizedProps} />
+        } />
+        <Route path="playlist/:slug" element={
+          <WhiteboardLayout {...optimizedProps} />
+        } />
       </Routes>
     </Router>
   );

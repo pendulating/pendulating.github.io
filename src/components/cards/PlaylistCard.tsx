@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import type { CollectionEntry } from 'astro:content';
 import type { WhiteboardItem } from '../../types/whiteboard';
 import CardWrapper from './CardWrapper';
@@ -31,10 +31,15 @@ export function PlaylistCard({
 }: PlaylistCardProps) {
   const playlist = item.data as CollectionEntry<"playlists">;
   const contentRef = useRef<HTMLDivElement>(null);
-  const playlistId = playlist.data.playlistUrl.split('/').pop();
+  const playlistId = useMemo(() => playlist.data.playlistUrl.split('/').pop(), [playlist.data.playlistUrl]);
   const [embedCode, setEmbedCode] = useState<JSX.Element | null>(null);
+  const shouldLoad = isFocused || !!item.position.expanded;
 
   useEffect(() => {
+    if (!shouldLoad) {
+      setEmbedCode(null);
+      return;
+    }
     if (!contentRef.current) return;
     const availableHeight = item.position.height - 80;
     let newEmbedCode: JSX.Element | null = null;
@@ -64,7 +69,7 @@ export function PlaylistCard({
       );
     }
     setEmbedCode(newEmbedCode);
-  }, [playlist.data.platform, playlistId, item.position.height]);
+  }, [shouldLoad, playlist.data.platform, playlistId, item.position.height]);
 
   return (
     <CardWrapper
@@ -106,7 +111,11 @@ export function PlaylistCard({
           </div>
         )}
         
-        {embedCode}
+        {embedCode || (
+          <div className="w-full h-40 flex items-center justify-center text-cyan-400/70 border border-cyan-500/20 rounded bg-gray-800/30">
+            {!shouldLoad ? 'Focus or expand to load embed' : 'Loading...'}
+          </div>
+        )}
       </div>
     </CardWrapper>
   );

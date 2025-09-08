@@ -1,5 +1,5 @@
 import React from 'react';
-import { ZoomIn, ZoomOut, Home, ArrowLeft, ArrowRight, MoreHorizontal } from 'lucide-react';
+import { ZoomIn, ZoomOut, Home, ArrowLeft, ArrowRight, MoreHorizontal, Shapes } from 'lucide-react';
 
 interface WhiteboardToolbarProps {
   onZoomIn: (animate?: boolean) => void;
@@ -9,6 +9,7 @@ interface WhiteboardToolbarProps {
   minScale: number;
   onFocusPrev: () => void;
   onFocusNext: () => void;
+  onClusterToggle?: () => void;
 }
 
 export const WhiteboardToolbar: React.FC<WhiteboardToolbarProps> = ({
@@ -18,7 +19,8 @@ export const WhiteboardToolbar: React.FC<WhiteboardToolbarProps> = ({
   scale,
   minScale,
   onFocusPrev,
-  onFocusNext
+  onFocusNext,
+  onClusterToggle
 }) => {
   // State to track if expanded menu is open (for mobile view)
   const [expanded, setExpanded] = React.useState(false);
@@ -129,6 +131,17 @@ export const WhiteboardToolbar: React.FC<WhiteboardToolbarProps> = ({
         
         {/* Desktop-only controls */}
         {desktopControls}
+
+        {/* Cluster toggle */}
+        {onClusterToggle && (
+          <button 
+            onClick={onClusterToggle}
+            className="hidden sm:flex p-3 text-cyan-400 hover:text-cyan-300 transition-colors items-center justify-center"
+            title="Cluster by Type"
+          >
+            <Shapes className="w-6 h-6" strokeWidth={1.5} />
+          </button>
+        )}
         
         {/* On mobile, show a "more" button that expands to show secondary controls */}
         <button 

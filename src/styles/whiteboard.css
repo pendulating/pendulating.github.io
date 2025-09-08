@@ -124,7 +124,7 @@
 
 /* Add smooth transitions for expand/collapse */
 .draggable-area:not(.is-interacting) {
-  transition: width 0.3s ease, height 0.3s ease;
+  transition: width 0.3s ease, height 0.3s ease, transform 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
 .sticky-note.is-interacting {
@@ -316,5 +316,14 @@
     animation: none !important;
     transition: none !important;
   }
+}
+
+/* Utility: hide horizontal scrollbars (mobile-friendly) */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
 }
 

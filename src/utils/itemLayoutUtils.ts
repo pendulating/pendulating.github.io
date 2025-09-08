@@ -67,3 +67,61 @@ export function updateItemZIndex(
     }
   }));
 }
+
+// New: Clustered layout by type (albums, snips, playlists)
+export function calculateClusteredLayout(
+  items: WhiteboardItem[]
+): WhiteboardItem[] {
+  const spacing = 420; // distance between items inside a cluster
+  const jitterRange = 40;
+
+  // Cluster centers laid out horizontally
+  const clusterCenters: Record<string, { x: number; y: number }> = {
+    album: { x: -spacing * 2, y: 0 },
+    snip: { x: 0, y: 0 },
+    playlist: { x: spacing * 2, y: 0 },
+  };
+
+  const groups: Record<string, WhiteboardItem[]> = { album: [], snip: [], playlist: [] } as any;
+  items.forEach(it => {
+    (groups as any)[it.type]?.push(it);
+  });
+
+  const result: WhiteboardItem[] = [];
+  let zCounter = 0;
+
+  (['album', 'snip', 'playlist'] as const).forEach(type => {
+    const group = groups[type] || [];
+    const center = clusterCenters[type];
+
+    const cols = Math.max(1, Math.ceil(Math.sqrt(group.length)));
+    const startX = center.x - ((cols - 1) * spacing) / 2;
+    const startY = center.y;
+
+    group.forEach((item, index) => {
+      const row = Math.floor(index / cols);
+      const col = index % cols;
+      const jitterX = (Math.random() - 0.5) * jitterRange;
+      const jitterY = (Math.random() - 0.5) * jitterRange;
+      const rotation = (Math.random() - 0.5) * 5;
+
+      const x = startX + col * spacing + jitterX;
+      const y = startY + row * spacing + jitterY;
+
+      result.push({
+        ...item,
+        position: {
+          x,
+          y,
+          z: zCounter++,
+          width: item.position?.width ?? STICKY_NOTE.WIDTH,
+          height: item.position?.height ?? STICKY_NOTE.HEIGHT,
+          expanded: false,
+          rotation,
+        }
+      });
+    });
+  });
+
+  return result;
+}

@@ -19,6 +19,7 @@ export type Position = Point & {
   width: number;
   height: number;
   expanded: boolean;
+  rotation?: number;
 };
 
 // Item types
@@ -31,6 +32,7 @@ export interface WhiteboardItemPosition {
   width: number;
   height: number;
   expanded: boolean;
+  rotation?: number;
 }
 
 export interface WhiteboardItem {
