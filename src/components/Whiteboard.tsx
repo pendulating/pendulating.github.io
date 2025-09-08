@@ -116,9 +116,12 @@ export default function WhiteboardLayout({
     onZoomToFit: handleZoomToFit
   });
 
-  // Use the focus hook on all items (no filtering)
-  const { currentIndex, onFocusPrev, onFocusNext, focusOnCard } = useCardFocus(items, transform, updateTransform);
-  const focusedCardId = items.length ? items[currentIndex].id : undefined;
+  // Focus hook will be bound to focusableItems further below
+  let currentIndex = 0 as number;
+  let onFocusPrev = (() => {}) as () => void;
+  let onFocusNext = (() => {}) as () => void;
+  let focusOnCard = ((_i: number) => {}) as (index: number) => void;
+  let focusedCardId: string | undefined = undefined;
 
   // Cluster toggle state
   const [clustered, setClustered] = useState(false);
@@ -128,6 +131,7 @@ export default function WhiteboardLayout({
   const markManualInteraction = useCallback(() => {
     lastManualInteractionRef.current = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
   }, []);
+  const tagFocusDebounceRef = useRef<number | undefined>(undefined);
 
   // Tag filtering state
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
@@ -200,15 +204,38 @@ export default function WhiteboardLayout({
     updateTransform({ x: Math.round(-x * zoomLevel * 100) / 100, y: Math.round(-y * zoomLevel * 100) / 100, scale: zoomLevel }, true);
   }, [updateTransform]);
 
+  // Compute focusable items from current filter (no offscreen ghosts)
+  const focusableItems = useMemo(() => {
+    if (selectedTags.size === 0) return items;
+    const selected = selectedTags;
+    const isMatch = (it: any) => {
+      const tags: string[] = Array.isArray(it?.data?.data?.tags) ? it.data.data.tags : [];
+      return matchAll
+        ? Array.from(selected).every(t => tags.includes(t))
+        : Array.from(selected).some(t => tags.includes(t));
+    };
+    return items.filter(isMatch);
+  }, [items, selectedTags, matchAll]);
+
+  // Bind focus hook to focusableItems to avoid ghost indices
+  const focusHook = useCardFocus(focusableItems, transform, updateTransform);
+  currentIndex = focusHook.currentIndex;
+  onFocusPrev = focusHook.onFocusPrev;
+  onFocusNext = focusHook.onFocusNext;
+  focusOnCard = focusHook.focusOnCard;
+  focusedCardId = focusableItems.length ? focusableItems[currentIndex]?.id : undefined;
+
   // Check if we're on mobile
   const isMobile = typeof window !== 'undefined' && (
     /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
     window.innerWidth <= 768
   );
 
-  // Mobile autofocus adaptation on tag toggle
+  // Mobile autofocus adaptation on tag toggle (only real mobile/coarse pointer)
   useEffect(() => {
-    if (!isMobile) return;
+    const isMobileDevice = typeof navigator !== 'undefined' && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    const isCoarsePointer = typeof window !== 'undefined' && typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches;
+    if (!(isMobileDevice || isCoarsePointer)) return;
     const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
     if (now - lastManualInteractionRef.current < 500) return;
     const selected = selectedTags;
@@ -220,19 +247,33 @@ export default function WhiteboardLayout({
     };
     const visibleIds = items.filter(matches).map(it => it.id);
     if (visibleIds.length === 0) return;
-    if (!focusedCardId || !visibleIds.includes(focusedCardId)) {
-      // Focus first visible after layout effect tick
-      requestAnimationFrame(() => {
-        const el = document.querySelector(`.draggable-area[data-item-id="${visibleIds[0]}"]`) as HTMLElement | null;
-        if (!el) return;
-        const styles = getComputedStyle(el);
-        const x = parseFloat(styles.getPropertyValue('--item-x')) || 0;
-        const y = parseFloat(styles.getPropertyValue('--item-y')) || 0;
-        const zoomLevel = 1.2;
-        updateTransform({ x: Math.round(-x * zoomLevel * 100) / 100, y: Math.round(-y * zoomLevel * 100) / 100, scale: zoomLevel }, true);
-      });
+
+    // Debounce to avoid multiple jumps during rapid toggles
+    if (tagFocusDebounceRef.current) {
+      clearTimeout(tagFocusDebounceRef.current);
     }
-  }, [selectedTags, matchAll, items, isMobile, focusedCardId, updateTransform]);
+    tagFocusDebounceRef.current = window.setTimeout(() => {
+      if (!focusedCardId || !visibleIds.includes(focusedCardId)) {
+        requestAnimationFrame(() => {
+          const el = document.querySelector(`.draggable-area[data-item-id="${visibleIds[0]}"]`) as HTMLElement | null;
+          if (!el) return;
+          const styles = getComputedStyle(el);
+          const x = parseFloat(styles.getPropertyValue('--item-x')) || 0;
+          const y = parseFloat(styles.getPropertyValue('--item-y')) || 0;
+          // Preserve current zoom if already readable; otherwise bump to 1.2
+          const targetZoom = Math.max(transform.scale, 1.2);
+          updateTransform({ x: Math.round(-x * targetZoom * 100) / 100, y: Math.round(-y * targetZoom * 100) / 100, scale: targetZoom }, true);
+        });
+      }
+    }, 250);
+
+    return () => {
+      if (tagFocusDebounceRef.current) {
+        clearTimeout(tagFocusDebounceRef.current);
+        tagFocusDebounceRef.current = undefined;
+      }
+    };
+  }, [selectedTags, matchAll, items, focusedCardId, updateTransform, transform.scale]);
 
   // Deep-link support (album/snip/playlist/:slug)
   const params = useParams();
