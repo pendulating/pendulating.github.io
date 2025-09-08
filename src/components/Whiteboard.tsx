@@ -193,20 +193,9 @@ export default function WhiteboardLayout({
     });
   }, [items, selectedTags, matchAll, clustered]);
 
-  // Helper: focus by DOM-derived position (works with laidOutItems)
-  const focusItemByIdDOM = useCallback((id: string) => {
-    const el = document.querySelector(`.draggable-area[data-item-id="${id}"]`) as HTMLElement | null;
-    if (!el) return;
-    const styles = getComputedStyle(el);
-    const x = parseFloat(styles.getPropertyValue('--item-x')) || 0;
-    const y = parseFloat(styles.getPropertyValue('--item-y')) || 0;
-    const zoomLevel = 1.2; // mobile-friendly zoom
-    updateTransform({ x: Math.round(-x * zoomLevel * 100) / 100, y: Math.round(-y * zoomLevel * 100) / 100, scale: zoomLevel }, true);
-  }, [updateTransform]);
-
-  // Compute focusable items from current filter (no offscreen ghosts)
+  // Compute focusable items from current filter using laid-out positions
   const focusableItems = useMemo(() => {
-    if (selectedTags.size === 0) return items;
+    if (selectedTags.size === 0) return laidOutItems;
     const selected = selectedTags;
     const isMatch = (it: any) => {
       const tags: string[] = Array.isArray(it?.data?.data?.tags) ? it.data.data.tags : [];
@@ -214,8 +203,8 @@ export default function WhiteboardLayout({
         ? Array.from(selected).every(t => tags.includes(t))
         : Array.from(selected).some(t => tags.includes(t));
     };
-    return items.filter(isMatch);
-  }, [items, selectedTags, matchAll]);
+    return laidOutItems.filter(isMatch);
+  }, [laidOutItems, selectedTags, matchAll]);
 
   // Bind focus hook to focusableItems to avoid ghost indices
   const focusHook = useCardFocus(focusableItems, transform, updateTransform);
@@ -245,7 +234,7 @@ export default function WhiteboardLayout({
         ? Array.from(selected).every(t => tags.includes(t))
         : Array.from(selected).some(t => tags.includes(t)));
     };
-    const visibleIds = items.filter(matches).map(it => it.id);
+    const visibleIds = focusableItems.map(it => it.id);
     if (visibleIds.length === 0) return;
 
     // Debounce to avoid multiple jumps during rapid toggles
@@ -254,16 +243,10 @@ export default function WhiteboardLayout({
     }
     tagFocusDebounceRef.current = window.setTimeout(() => {
       if (!focusedCardId || !visibleIds.includes(focusedCardId)) {
-        requestAnimationFrame(() => {
-          const el = document.querySelector(`.draggable-area[data-item-id="${visibleIds[0]}"]`) as HTMLElement | null;
-          if (!el) return;
-          const styles = getComputedStyle(el);
-          const x = parseFloat(styles.getPropertyValue('--item-x')) || 0;
-          const y = parseFloat(styles.getPropertyValue('--item-y')) || 0;
-          // Preserve current zoom if already readable; otherwise bump to 1.2
-          const targetZoom = Math.max(transform.scale, 1.2);
-          updateTransform({ x: Math.round(-x * targetZoom * 100) / 100, y: Math.round(-y * targetZoom * 100) / 100, scale: targetZoom }, true);
-        });
+        // Use hook's focus logic based on laid-out positions
+        const targetIndex = 0;
+        // Preserve current zoom if already readable; otherwise hook will choose mobile zoom
+        focusOnCard(targetIndex);
       }
     }, 250);
 
@@ -273,7 +256,7 @@ export default function WhiteboardLayout({
         tagFocusDebounceRef.current = undefined;
       }
     };
-  }, [selectedTags, matchAll, items, focusedCardId, updateTransform, transform.scale]);
+  }, [selectedTags, matchAll, focusableItems, focusedCardId, focusOnCard]);
 
   // Deep-link support (album/snip/playlist/:slug)
   const params = useParams();
@@ -391,7 +374,7 @@ export default function WhiteboardLayout({
     initializeView();
   }, [initializeView]);
 
-  // Auto-focus deep-linked card if present; otherwise first card
+  // Auto-focus deep-linked card (all devices); otherwise first card (mobile/coarse only)
   useEffect(() => {
     if (items.length === 0 || hasAutoFocusedRef.current) return;
 
@@ -406,12 +389,19 @@ export default function WhiteboardLayout({
       }
     }
 
+    // Only auto-focus first card on mobile/coarse-pointer devices
+    const isMobileDevice = typeof navigator !== 'undefined' && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    const isCoarsePointer = typeof window !== 'undefined' && typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches;
+    if (!(isMobileDevice || isCoarsePointer)) {
+      return;
+    }
+
     hasAutoFocusedRef.current = true;
     const timer = setTimeout(() => {
       focusOnCard(0);
-    }, isMobile ? 1000 : 1500);
+    }, 1000);
     return () => clearTimeout(timer);
-  }, [items, hasDeepLink, routeType, routeSlug, focusOnCard, isMobile]);
+  }, [items, hasDeepLink, routeType, routeSlug, focusOnCard]);
 
   // Persist positions whenever items change
   useEffect(() => {
