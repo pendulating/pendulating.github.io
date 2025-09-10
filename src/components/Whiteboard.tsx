@@ -103,6 +103,7 @@ export default function WhiteboardLayout({
     handleDragEnd,
 
     handleExpand,
+    handleResizeToContent,
   } = useWhiteboardItems({
     onZoomToFit: handleZoomToFit
   });
@@ -499,6 +500,7 @@ export default function WhiteboardLayout({
             onDragStart={onDragStart}
             onDragEnd={handleDragEnd}
             onExpand={handleExpand}
+            onResizeToContent={handleResizeToContent}
             photosByAlbum={photosByAlbum}
           />
         </div>

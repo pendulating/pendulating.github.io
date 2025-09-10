@@ -12,6 +12,7 @@ export const WhiteboardContent = React.memo(function WhiteboardContent({
   onDragStart,
   onDragEnd,
   onExpand,
+  onResizeToContent,
   photosByAlbum,
 }: WhiteboardContentProps) {
   // Add more detailed logging
@@ -40,6 +41,7 @@ export const WhiteboardContent = React.memo(function WhiteboardContent({
           onDragStart,
           onDragEnd: () => onDragEnd(item.id),
           onExpand: (id: string, cardElement?: HTMLElement | null) => onExpand(id, cardElement),
+          onResizeToContent,
           isFocused,
           // Use the cleaned albumId to look up photos
           photos: item.type === 'album' && albumId ? 

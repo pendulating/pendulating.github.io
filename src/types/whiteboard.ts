@@ -63,6 +63,7 @@ export interface WhiteboardContentProps {
   onDragStart: (id: string, event: React.MouseEvent) => void;
   onDragEnd: (id: string) => void;
   onExpand: (id: string, cardElement?: HTMLElement | null) => void;
+  onResizeToContent?: (id: string, cardElement?: HTMLElement | null) => void;
 
   photosByAlbum: Record<string, PhotoData[]>;
 }

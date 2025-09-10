@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef } from 'react';
 import type { WhiteboardItem } from '../types/whiteboard';
 import { STICKY_NOTE } from '../constants/whiteboard';
-import { calculateOptimalSize } from '../utils/contentMeasurement';
+import { calculateOptimalSize, measureContentHeight } from '../utils/contentMeasurement';
 import { useNavigate } from 'react-router-dom'; // Import useNavigate from react-router-dom
 
 interface DragState {
@@ -184,6 +184,27 @@ export const useWhiteboardItems = (options: WhiteboardItemsOptions = {}) => {
     );
   }, [options]);
 
+  // Resize a card to fit its current content (e.g., after inner image enlargement)
+  const handleResizeToContent = useCallback((id: string, cardElement?: HTMLElement | null) => {
+    if (!cardElement) return;
+    try {
+      const measurement = measureContentHeight(cardElement);
+      setItems(prevItems => prevItems.map(item => {
+        if (item.id !== id) return item;
+        return {
+          ...item,
+          position: {
+            ...item.position,
+            width: measurement.requiredWidth,
+            height: measurement.requiredHeight,
+          }
+        };
+      }));
+    } catch (error) {
+      console.warn('Failed to resize to content:', error);
+    }
+  }, []);
+
   return {
     items,
     setItems,
@@ -191,5 +212,6 @@ export const useWhiteboardItems = (options: WhiteboardItemsOptions = {}) => {
     handleDragStart,
     handleDragEnd,
     handleExpand,
+    handleResizeToContent,
   };
 };
