@@ -11,8 +11,6 @@ interface PlaylistCardProps extends Omit<React.HTMLAttributes<HTMLDivElement>, '
   onDragStart: (id: string, event: React.MouseEvent) => void;
   onExpand: (id: string, cardElement?: HTMLElement | null) => void;
   onDragEnd: () => void;
-
-  onLongPress: (id: string) => void;
   isFocused: boolean;
 }
 
@@ -25,15 +23,19 @@ export function PlaylistCard({
   onExpand,
   onDragEnd,
 
-  onLongPress,
   isFocused,
   ...rest
 }: PlaylistCardProps) {
   const playlist = item.data as CollectionEntry<"playlists">;
   const contentRef = useRef<HTMLDivElement>(null);
-  const playlistId = useMemo(() => playlist.data.playlistUrl.split('/').pop(), [playlist.data.playlistUrl]);
+  const playlistId = useMemo(() => {
+    const url = playlist.data.playlistUrl || '';
+    const parts = url.split('/').filter(Boolean);
+    return parts.length > 0 ? parts[parts.length - 1] : '';
+  }, [playlist.data.playlistUrl]);
   const [embedCode, setEmbedCode] = useState<JSX.Element | null>(null);
   const shouldLoad = isFocused || !!item.position.expanded;
+  const hasDescription = Boolean(playlist.data.description && playlist.data.description.trim());
 
   useEffect(() => {
     if (!shouldLoad) {
@@ -43,7 +45,7 @@ export function PlaylistCard({
     if (!contentRef.current) return;
     const availableHeight = item.position.height - 80;
     let newEmbedCode: JSX.Element | null = null;
-    if (playlist.data.platform === 'spotify') {
+    if (playlist.data.platform === 'spotify' && playlistId) {
       newEmbedCode = (
         <iframe
           title="Spotify Embed"
@@ -55,7 +57,7 @@ export function PlaylistCard({
           allow="encrypted-media"
         />
       );
-    } else if (playlist.data.platform === 'apple') {
+    } else if (playlist.data.platform === 'apple' && playlistId) {
       newEmbedCode = (
         <iframe
           title="Apple Music Embed"
@@ -79,7 +81,6 @@ export function PlaylistCard({
       onDragEnd={onDragEnd}
 
       onExpand={(id, cardElement) => onExpand(id, cardElement)}
-      onLongPress={(id) => onLongPress(id)}
     >
       <div
         ref={contentRef}
@@ -92,7 +93,9 @@ export function PlaylistCard({
         }}
       >
         <h3 className="text-lg font-mono text-cyan-400 mb-2">{playlist.data.title}</h3>
-        <p className="text-sm text-gray-300/90 mb-4">{playlist.data.description}</p>
+        {hasDescription && (
+          <p className="text-sm text-gray-300/90 mb-4">{playlist.data.description}</p>
+        )}
         
         {/* Platform badge */}
         <div className="mb-3">
@@ -113,7 +116,7 @@ export function PlaylistCard({
         
         {embedCode || (
           <div className="w-full h-40 flex items-center justify-center text-cyan-400/70 border border-cyan-500/20 rounded bg-gray-800/30">
-            {!shouldLoad ? 'Focus or expand to load embed' : 'Loading...'}
+            {!shouldLoad ? 'Focus or expand to load embed' : (playlistId ? 'Loading...' : 'No playlist URL provided')}
           </div>
         )}
       </div>

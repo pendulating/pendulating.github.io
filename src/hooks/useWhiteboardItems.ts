@@ -184,31 +184,6 @@ export const useWhiteboardItems = (options: WhiteboardItemsOptions = {}) => {
     );
   }, [options]);
 
-  // New function to handle long press
-  const handleLongPress = useCallback((id: string) => {
-    const item = items.find(i => i.id === id);
-    if (!item) return;
-
-    let path = '';
-    switch (item.type) {
-      case 'album':
-        path = `/brain/album/${item.data.slug}`;
-        break;
-      case 'snip':
-        path = `/brain/snip/${item.data.slug}`;
-        break;
-      case 'playlist':
-        path = `/brain/playlist/${item.data.slug}`;
-        break;
-      default:
-        break;
-    }
-
-    if (path) {
-      navigate(path);
-    }
-  }, [items, navigate]);
-
   return {
     items,
     setItems,
@@ -216,6 +191,5 @@ export const useWhiteboardItems = (options: WhiteboardItemsOptions = {}) => {
     handleDragStart,
     handleDragEnd,
     handleExpand,
-    handleLongPress,
   };
 };

@@ -8,7 +8,6 @@ interface CardWrapperProps {
   onDragStart: (id: string, event: React.MouseEvent) => void;
   onDragEnd: () => void;
   onExpand: (id: string, cardElement?: HTMLElement | null) => void;
-  onLongPress: (id: string) => void;
   children: React.ReactNode;
   item: { position: { x: number; y: number; width: number; height: number; z: number; expanded?: boolean; rotation?: number } };
 }
@@ -36,12 +35,10 @@ const CardWrapper: React.FC<CardWrapperProps> = ({
   onDragStart,
   onDragEnd,
   onExpand,
-  onLongPress,
   children,
   item
 }) => {
   const cardRef = useRef<HTMLDivElement>(null);
-  const [longPressTimeout, setLongPressTimeout] = useState<NodeJS.Timeout | null>(null);
   const [isInteracting, setIsInteracting] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
@@ -106,12 +103,6 @@ const CardWrapper: React.FC<CardWrapperProps> = ({
       e.stopPropagation();
       setIsInteracting(true); // Set interaction state to true
       onDragStart(id, e);
-
-      // Set a timeout for long press
-      const timeout = setTimeout(() => {
-        onLongPress(id);
-      }, 1000); // 1 second for long press
-      setLongPressTimeout(timeout);
     }
   };
 
@@ -119,20 +110,9 @@ const CardWrapper: React.FC<CardWrapperProps> = ({
     e.stopPropagation();
     onDragEnd();
     setIsInteracting(false); // Reset interaction state
-
-    // Clear the long press timeout
-    if (longPressTimeout) {
-      clearTimeout(longPressTimeout);
-      setLongPressTimeout(null);
-    }
   };
 
   const handleMouseLeave = () => {
-    // Clear the long press timeout if the mouse leaves the card
-    if (longPressTimeout) {
-      clearTimeout(longPressTimeout);
-      setLongPressTimeout(null);
-    }
     // Don't reset isInteracting here as it might interfere with drag operations
   };
 

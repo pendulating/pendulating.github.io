@@ -11,8 +11,6 @@ interface SnipCardProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onRe
   onDragStart: (id: string, event: React.MouseEvent) => void;
   onExpand: (id: string, cardElement?: HTMLElement | null) => void;
   onDragEnd: () => void;
-
-  onLongPress: (id: string) => void
   isFocused: boolean;
 }
 
@@ -25,11 +23,17 @@ export function SnipCard({
   onExpand,
   onDragEnd,
 
-  onLongPress,
   isFocused,
   ...rest
 }: SnipCardProps) {
   const snip = item.data as CollectionEntry<"snips">;
+  const titleText = snip.data.title?.trim() || '';
+  const descriptionText = snip.data.description?.trim() || '';
+  const showDescription = Boolean(descriptionText && descriptionText.toLowerCase() !== titleText.toLowerCase());
+  const bodyText = (snip.body as unknown as string)?.trim?.() ? String(snip.body).trim() : '';
+  const hasTags = Array.isArray(snip.data.tags) && snip.data.tags.length > 0;
+  const hasMeaningfulSource = Boolean(snip.data.source && !/^_?no response_?$/i.test(String(snip.data.source).trim()));
+  const hasSourceUrl = Boolean(snip.data.sourceUrl);
   
   return (
     <CardWrapper
@@ -38,7 +42,6 @@ export function SnipCard({
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
 
-      onLongPress={(id) => onLongPress(id)}
       onExpand={(id, cardElement) => onExpand(id, cardElement)}
     >
       <div
@@ -52,35 +55,41 @@ export function SnipCard({
       >
         <h3 className="text-lg font-mono text-cyan-400 mb-3">{snip.data.title}</h3>
         <div className="space-y-3">
-          <p className="text-sm text-gray-300/90">
-            {snip.data.description}
-          </p>
+          {showDescription && (
+            <p className="text-sm text-gray-300/90">
+              {snip.data.description}
+            </p>
+          )}
           
           {/* Add the snip body content */}
-          <div className="mt-4 p-3 bg-gray-800/50 rounded border border-cyan-500/20">
-            <pre className="text-sm font-mono text-cyan-300/90 whitespace-pre-wrap break-words">
-              {snip.body}
-            </pre>
-          </div>
+          {bodyText && (
+            <div className="mt-4 p-3 bg-gray-800/50 rounded border border-cyan-500/20">
+              <pre className="text-sm font-mono text-cyan-300/90 whitespace-pre-wrap break-words">
+                {bodyText}
+              </pre>
+            </div>
+          )}
 
-          <div className="flex flex-wrap gap-2 mt-3">
-            {snip.data.tags.map(tag => (
-              <span
-                key={tag}
-                className="px-2 py-1 text-xs rounded-full bg-cyan-950/50 
-                           text-cyan-400/90 border border-cyan-500/20 font-mono 
-                           tracking-tight"
-              >
-                #{tag}
-              </span>
-            ))}
-          </div>
+          {hasTags && (
+            <div className="flex flex-wrap gap-2 mt-3">
+              {snip.data.tags.map(tag => (
+                <span
+                  key={tag}
+                  className="px-2 py-1 text-xs rounded-full bg-cyan-950/50 
+                             text-cyan-400/90 border border-cyan-500/20 font-mono 
+                             tracking-tight"
+                >
+                  #{tag}
+                </span>
+              ))}
+            </div>
+          )}
 
           {/* Add source attribution if available */}
-          {(snip.data.source || snip.data.sourceUrl) && (
+          {(hasMeaningfulSource || hasSourceUrl) && (
             <div className="mt-3 text-xs text-gray-400/70">
-              {snip.data.source && <span>Source: {snip.data.source}</span>}
-              {snip.data.sourceUrl && (
+              {hasMeaningfulSource && <span>Source: {snip.data.source}</span>}
+              {hasSourceUrl && (
                 <a 
                   href={snip.data.sourceUrl}
                   target="_blank"

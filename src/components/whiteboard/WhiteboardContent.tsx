@@ -12,8 +12,6 @@ export const WhiteboardContent = React.memo(function WhiteboardContent({
   onDragStart,
   onDragEnd,
   onExpand,
-
-  onLongPress, // New prop
   photosByAlbum,
 }: WhiteboardContentProps) {
   // Add more detailed logging
@@ -42,8 +40,6 @@ export const WhiteboardContent = React.memo(function WhiteboardContent({
           onDragStart,
           onDragEnd: () => onDragEnd(item.id),
           onExpand: (id: string, cardElement?: HTMLElement | null) => onExpand(id, cardElement),
-
-          onLongPress: () => onLongPress(item.id), // Pass the new prop
           isFocused,
           // Use the cleaned albumId to look up photos
           photos: item.type === 'album' && albumId ? 

@@ -65,7 +65,6 @@ export interface WhiteboardContentProps {
   onExpand: (id: string, cardElement?: HTMLElement | null) => void;
 
   photosByAlbum: Record<string, PhotoData[]>;
-  onLongPress: (id: string) => void; // Add this line to fix the error
 }
 
 export interface CardWrapperProps {

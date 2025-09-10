@@ -12,8 +12,6 @@ interface AlbumCardProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onR
   onDragStart: (id: string, event: React.MouseEvent) => void;
   onExpand: (id: string, cardElement?: HTMLElement | null) => void;
   onDragEnd: () => void;
-
-  onLongPress: (id: string) => void; // Add the onLongPress prop
   photos: PhotoData[];
   isFocused: boolean;
 }
@@ -26,8 +24,6 @@ export function AlbumCard({
   onDragStart,
   onExpand,
   onDragEnd,
-
-  onLongPress, // Add the onLongPress prop
   photos = [],
   isFocused,
   ...rest
@@ -36,6 +32,7 @@ export function AlbumCard({
   // Strip .md extension from album.id when comparing
   const albumIdWithoutExt = album.id.replace('.md', '');
   const albumPhotos = photos.filter(photo => photo.data.albumId === albumIdWithoutExt);
+  const hasDescription = Boolean(album.data.description && album.data.description.trim());
 
   // Enhanced debug logging
   //console.group('AlbumCard Render Debug');
@@ -54,7 +51,6 @@ export function AlbumCard({
       onDragEnd={onDragEnd}
 
       onExpand={(id, cardElement) => onExpand(id, cardElement)}
-      onLongPress={(id) => onLongPress(id)} // Pass the onLongPress prop
     >
       <div
         {...rest}
@@ -93,9 +89,11 @@ export function AlbumCard({
               </div>
             ))}
           </div>
-          <p className="text-sm text-gray-300/90">
-            {album.data.description}
-          </p>
+          {hasDescription && (
+            <p className="text-sm text-gray-300/90">
+              {album.data.description}
+            </p>
+          )}
           
           {/* Add album body content if available */}
           {album.body && album.body.trim() && (
