@@ -74,10 +74,6 @@ export function AlbumCard({
         {...rest}
         className={`relative w-full h-full bg-gray-900/90 backdrop-blur-sm 
                       rounded-lg border border-cyan-500/30 overflow-hidden ${isFocused ? 'focused-card' : ''}`}
-        style={{
-          ...(rest.style || {}),
-          boxShadow: isFocused ? '0 0 20px 10px rgba(0, 0, 0, 0.8)' : undefined
-        }}
       >
         <div className="p-4 h-full" ref={contentRootRef}>
           <h3 className="text-lg font-mono text-cyan-400 mb-3">{album.data.title}</h3>

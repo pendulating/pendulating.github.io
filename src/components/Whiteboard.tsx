@@ -80,12 +80,12 @@ export default function WhiteboardLayout({
     
     // Only proceed if we need to zoom out
     if (targetScale < transform.scale) {
-      // Calculate transform to center the card at the new scale
-      // In whiteboard coordinates, to center a card at position (cardX, cardY),
-      // we need transform: x = -cardX * scale, y = -cardY * scale
+      // Calculate transform to center the card with pre-scale translation.
+      // Our container applies translate() before scale(), so translation is unscaled in world space.
+      // To center (cardX, cardY), use x = -cardX, y = -cardY (no scale factor).
       const newTransform: Transform = {
-        x: -cardX * targetScale,
-        y: -cardY * targetScale,
+        x: -cardX,
+        y: -cardY,
         scale: targetScale
       };
       

@@ -48,10 +48,6 @@ export function SnipCard({
         {...rest}
         className={`relative w-full h-full bg-gray-900/90 backdrop-blur-sm 
                    rounded-lg border border-cyan-500/30 overflow-hidden p-4 ${isFocused ? 'focused-card' : ''}`}
-        style={{
-          ...(rest.style || {}),
-          boxShadow: isFocused ? '0 0 20px 10px rgba(0, 0, 0, 0.8)' : undefined
-        }}
       >
         <h3 className="text-lg font-mono text-cyan-400 mb-3">{snip.data.title}</h3>
         <div className="space-y-3">

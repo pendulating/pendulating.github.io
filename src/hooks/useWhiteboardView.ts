@@ -42,9 +42,10 @@ export function useWhiteboardView() {
         const viewportWidth = window.innerWidth;
         const viewportHeight = window.innerHeight;
         
-        // Allow generous panning for the infinite whiteboard feel
-        const maxPanX = viewportWidth * 2;
-        const maxPanY = viewportHeight * 2;
+        // Allow very generous panning so focus/centering on distant items isn't clamped
+        // This prevents misalignment when filtering changes the focused card
+        const maxPanX = viewportWidth * 100; // previously * 2
+        const maxPanY = viewportHeight * 100; // previously * 2
         
         return {
           x: Math.max(-maxPanX, Math.min(maxPanX, newTransform.x)),

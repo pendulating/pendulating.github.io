@@ -137,6 +137,15 @@
   animation-play-state: paused !important;
 }
 
+/* Focused card accent */
+.focused-card {
+  outline: 2px solid rgba(34, 211, 238, 0.6); /* cyan-400 */
+  box-shadow: 0 0 0 2px rgba(8, 145, 178, 0.35) inset, /* cyan-600 inner */
+              0 6px 24px rgba(34, 211, 238, 0.28),
+              0 2px 8px rgba(0, 0, 0, 0.35);
+  transition: box-shadow 200ms ease, outline-color 200ms ease;
+}
+
 /* Mobile optimizations - disable complex effects but preserve colors */
 .mobile-optimized .sticky-note {
   /* Simplified rendering for mobile - keep post-it colors */

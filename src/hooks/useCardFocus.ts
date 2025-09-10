@@ -64,10 +64,12 @@ export function useCardFocus(
     const zoomLevel = getZoomLevel();
 
     // Calculate the transform needed to center the camera on the card
-    // To center the viewport on a point at (x, y), use transform.x = -x * scale, transform.y = -y * scale
+    // IMPORTANT: Our container transform applies translate() before scale().
+    // That means translations are pre-scale and get scaled by the zoom.
+    // To center a world point (x, y), use transform.x = -x, transform.y = -y (no scale factor).
     // Round to avoid sub-pixel issues
-    const targetX = Math.round(-cardCenterX * zoomLevel * 100) / 100;
-    const targetY = Math.round(-cardCenterY * zoomLevel * 100) / 100;
+    const targetX = Math.round(-cardCenterX * 100) / 100;
+    const targetY = Math.round(-cardCenterY * 100) / 100;
 
     console.log('Card focus debug:', {
       cardIndex: clampedIndex,
@@ -80,11 +82,7 @@ export function useCardFocus(
       isMobile
     });
 
-    const newTransform: Transform = {
-      x: targetX,
-      y: targetY,
-      scale: zoomLevel
-    };
+    const newTransform: Transform = { x: targetX, y: targetY, scale: zoomLevel };
 
     // Apply the transform with smooth animation
     updateTransform(newTransform, true);
