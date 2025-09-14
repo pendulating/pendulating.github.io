@@ -118,9 +118,32 @@
     @apply inline-block h-6 w-6 fill-skin-base group-hover:fill-skin-accent;
     transition: var(--theme-transition);
   }
+
+  /* Normalize social icon appearance globally (e.g., LinkedIn SVG with hard-coded sizes) */
+  .social-icons .link-button-social svg {
+    width: 24px !important;
+    height: 24px !important;
+    fill: currentColor !important;
+    stroke: currentColor !important;
+    transform-box: fill-box;
+    transform-origin: 50% 50%;
+    overflow: visible;
+  }
+  .social-icons .link-button-social svg[stroke-width] {
+    stroke-width: 1.75;
+  }
+
+  /* Tweak LinkedIn size to match optical weight of stroke-based icons */
+  .social-icons .link-button-social[title*="LinkedIn"] svg,
+  .social-icons-share .link-button[title*="LinkedIn"] svg {
+    width: 22px !important;
+    height: 22px !important;
+    transform: scale(0.9);
+    transform-origin: 50% 50%;
+  }
   
   svg.icon-tabler {
-    @apply inline-block h-6 w-6 scale-125 fill-transparent stroke-current stroke-2 opacity-90 group-hover:fill-transparent sm:scale-110;
+    @apply inline-block h-6 w-6 fill-transparent stroke-current stroke-2 group-hover:fill-transparent;
     transition: var(--theme-transition);
   }
   
@@ -1106,6 +1129,11 @@
   background: transparent;
 }
 
+/* Reserve space for the Instagram "Story" badge so it doesn't clip */
+.instagram-story.link-button {
+  padding-right: 0 !important;
+}
+
 .link-button:hover {
   @apply border-skin-accent;
   background: var(--platform-color, #f0f0f0);
@@ -1115,20 +1143,18 @@
 /* Instagram Story Button */
 .instagram-story {
   @apply relative;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
+  background: transparent !important;
+  color: inherit !important;
 }
 
 .instagram-story::after {
-  content: "Story";
-  @apply absolute -top-1 -right-1 text-xs bg-white text-purple-600 px-1.5 py-0.5 rounded-full font-bold;
-  font-size: 10px;
-  line-height: 1;
+  content: none !important;
+  display: none !important;
 }
 
 .instagram-story:hover::after {
-  @apply bg-purple-600 text-white;
+  background: transparent !important;
+  color: inherit !important;
 }
 
 /* Native Share Button */

@@ -49,13 +49,8 @@ const shareLinks = [
   },
 ] as const;
 
-// Instagram Story sharing (deep link)
-const instagramStoryShare = {
-  name: "Instagram",
-  href: `instagram-stories://share?source_application=web&url=${encodeURIComponent(URL)}`,
-  linkTitle: `Share this post to Instagram Story`,
-  fallbackHref: "https://instagram.com",
-};
+// Note: Instagram Story deep links from web (instagram-stories://) are unreliable/unsupported.
+// Prefer the Web Share API with files where available.
 ---
 
 <div class={`social-icons-share`}>
@@ -128,6 +123,29 @@ const instagramStoryShare = {
 </div>
 
 <script>
+  let cachedOgFile: File | null = null;
+  let cachedOgUrl: string | null = null;
+  let prefetchInFlight = false;
+
+  async function prefetchOgImageIfNeeded(title: string, imageUrl: string) {
+    try {
+      if (!imageUrl || prefetchInFlight) return;
+      if (cachedOgFile && cachedOgUrl === imageUrl) return;
+      prefetchInFlight = true;
+      const response = await fetch(imageUrl, { cache: 'force-cache' });
+      if (!response.ok) throw new Error(`OG fetch ${response.status}`);
+      const blob = await response.blob();
+      const sanitizedTitle = title && title.trim().length > 0 ? title : 'share';
+      const fileName = `${sanitizedTitle.replace(/[^a-z0-9]/gi, '_')}.png`;
+      cachedOgFile = new File([blob], fileName, { type: blob.type || 'image/png', lastModified: Date.now() });
+      cachedOgUrl = imageUrl;
+    } catch (e) {
+      console.log('OG prefetch failed:', e);
+    } finally {
+      prefetchInFlight = false;
+    }
+  }
+
   // Instagram Story sharing - optimized for web browsers
   async function shareToInstagramStory(title: string, url: string, imageUrl: string) {
     try {
@@ -141,69 +159,49 @@ const instagramStoryShare = {
       const isIOSSafari = /iPad|iPhone|iPod/.test(navigator.userAgent) && /Safari/.test(navigator.userAgent) && !/Chrome/.test(navigator.userAgent);
       console.log('iOS Safari detected:', isIOSSafari);
       
-      // First, try to fetch the OG image
-      let imageBlob = null;
-      try {
-        console.log('Fetching OG image from:', imageUrl);
-        const response = await fetch(imageUrl);
-        console.log('Image fetch response status:', response.status);
-        console.log('Image fetch response headers:', Object.fromEntries(response.headers.entries()));
-        
-        if (!response.ok) {
-          throw new Error(`Failed to fetch image: ${response.status}`);
-        }
-        imageBlob = await response.blob();
-        console.log('Successfully fetched image blob:', imageBlob.size, 'bytes, type:', imageBlob.type);
-      } catch (imageError) {
-        console.log('Failed to fetch image, proceeding without image:', imageError);
-      }
+      // Use cached OG image if available (prefetched on hover/DOMContentLoaded)
+      const imageFile = cachedOgFile || null;
       
-      // On iOS Safari, try the Web Share API with files first
-      if (isIOSSafari && imageBlob && navigator.canShare) {
-        console.log('Testing file sharing on iOS Safari');
+      // Prefer Web Share API with files when possible (works best on iOS Safari and many Android browsers)
+      if (imageFile && 'canShare' in navigator) {
         try {
-          const file = new File([imageBlob], `${title.replace(/[^a-z0-9]/gi, '_')}.png`, {
-            type: 'image/png',
-            lastModified: new Date().getTime(),
-          });
-          
-          console.log('Created file:', file.name, file.size, file.type);
-          
-          const shareData = {
-            title: title,
-            text: `Check out this post: ${title}`,
-            url: url,
-            files: [file],
-          };
-          
-          console.log('Share data prepared:', shareData);
-          console.log('Testing if device can share files:', navigator.canShare(shareData));
-          
-          if (navigator.canShare(shareData)) {
-            console.log('Device can share files, calling navigator.share');
-            await navigator.share(shareData);
-            console.log('Web Share API with files successful');
+          console.log('Using cached file for sharing:', { name: imageFile.name, size: imageFile.size, type: imageFile.type });
+
+          // Some browsers reject share() when both files and url/text are present.
+          // Try files-only first for highest compatibility with Instagram share extensions.
+          const filesOnly = { files: [imageFile] } as any;
+          if ((navigator as any).canShare(filesOnly)) {
+            console.log('canShare(filesOnly) passed, invoking navigator.share(filesOnly)');
+            await (navigator as any).share(filesOnly);
+            console.log('Shared via files-only successfully');
             return;
-          } else {
-            console.log('Device cannot share files, trying without files');
+          }
+
+          // If files-only not supported, try including title/text without url
+          const filesWithText = { files: [imageFile], title } as any;
+          if ((navigator as any).canShare(filesWithText)) {
+            console.log('canShare(filesWithText) passed, invoking navigator.share(filesWithText)');
+            await (navigator as any).share(filesWithText);
+            console.log('Shared via files-with-text successfully');
+            return;
           }
         } catch (fileShareError) {
-          console.log('File sharing failed:', fileShareError);
+          console.log('File-based sharing failed, falling back:', fileShareError);
         }
       }
-      
+
       // Fallback: Try regular Web Share API (without files)
-      if (navigator.share) {
+      if ('share' in navigator) {
         console.log('Trying regular Web Share API');
         try {
           const shareData = {
             title: title,
             text: `Check out this post: ${title}`,
             url: url,
-          };
+          } as any;
           
           console.log('Regular share data:', shareData);
-          await navigator.share(shareData);
+          await (navigator as any).share(shareData);
           console.log('Regular Web Share API successful');
           return;
         } catch (shareError) {
@@ -293,6 +291,15 @@ const instagramStoryShare = {
     const instagramButton = document.querySelector('.instagram-story') as HTMLButtonElement;
     console.log('Instagram button found:', instagramButton);
     if (instagramButton) {
+      // Prefetch OG image ASAP to preserve user activation on click
+      const prefetchTitle = instagramButton.getAttribute('data-title') || '';
+      const prefetchImageUrl = instagramButton.getAttribute('data-image-url') || '';
+      if (prefetchImageUrl) {
+        prefetchOgImageIfNeeded(prefetchTitle, prefetchImageUrl);
+        instagramButton.addEventListener('mouseenter', () => prefetchOgImageIfNeeded(prefetchTitle, prefetchImageUrl));
+        instagramButton.addEventListener('touchstart', () => prefetchOgImageIfNeeded(prefetchTitle, prefetchImageUrl), { passive: true });
+      }
+
       instagramButton.addEventListener('click', function() {
         console.log('Instagram button clicked!');
         const title = this.getAttribute('data-title') || '';

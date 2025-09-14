@@ -9,7 +9,7 @@ import partytown from "@astrojs/partytown";
 
 // https://astro.build/config
 export default defineConfig({
-  site: "https://mattwfranchi.github.io",
+  site: "https://pendulating.github.io",
   redirects: {
      '/claustrophobic-streets': '/posts/claustrophobic-streets'
   },

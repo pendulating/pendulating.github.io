@@ -77,7 +77,7 @@ Dedicated Instagram Stories sharing component.
 ```typescript
 export const SOCIAL_SHARING = {
   instagram: {
-    username: "@mattfranchi",
+    username: "@pendulating",
     storySharing: true,
     deepLinking: true,
   },

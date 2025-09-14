@@ -18,9 +18,9 @@ export const PROFILE = {
 };
 
 export const SITE: Site = {
-  website: "https://mattwfranchi.github.io", // replace this with your deployed domain
+  website: "https://mfranchi.net", // replace this with your deployed domain
   author: "Matt Franchi",
-  profile: "https://mattwfranchi.github.io",
+  profile: "https://mfranchi.net",
   desc: "Matt Franchi is a computer science PhD candidate at Cornell University, interested in computational social science and urban sensing. Extra-academically, he writes peaceful piano compositions, models, and plays with generative AI models.",
   title: "Matt Franchi",
   ogImage: "astropaper-og.jpg",
