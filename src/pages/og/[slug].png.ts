@@ -1,17 +1,17 @@
 import type { APIRoute } from "astro";
-import { getCollection } from "astro:content";
-import { generateOgImageForPost } from "@utils/generateOgImages";
+import { getCollection, type CollectionEntry } from "astro:content";
+import { generateOgImageForPost, generateStoryImageForPost } from "@utils/generateOgImages";
 
 export async function getStaticPaths() {
   const posts = await getCollection("blog");
   
-  return posts.map((post) => ({
+  return posts.map((post: CollectionEntry<"blog">) => ({
     params: { slug: post.slug },
     props: { post },
   }));
 }
 
-export const GET: APIRoute = async ({ params }) => {
+export const GET: APIRoute = async ({ params, request }) => {
   try {
     const { slug } = params;
     
@@ -20,13 +20,18 @@ export const GET: APIRoute = async ({ params }) => {
     }
 
     const posts = await getCollection("blog");
-    const post = posts.find((post) => post.slug === slug);
+    const post = posts.find((p: CollectionEntry<"blog">) => p.slug === slug);
 
     if (!post) {
       return new Response("Post not found", { status: 404 });
     }
 
-    const pngBuffer = await generateOgImageForPost(post);
+    const url = new URL(request.url);
+    const variant = url.searchParams.get("variant");
+
+    const pngBuffer = variant === "story"
+      ? await generateStoryImageForPost(post as CollectionEntry<"blog">)
+      : await generateOgImageForPost(post as CollectionEntry<"blog">);
 
     return new Response(pngBuffer, {
       headers: {

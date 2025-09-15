@@ -34,6 +34,10 @@ const ogUrl = new URL(
   ogImageUrl ?? `/og/${post.slug}.png`,
   Astro.url.origin
 ).href;
+const storyUrl = new URL(
+  `/og/${post.slug}.png?variant=story`,
+  Astro.url.origin
+).href;
 
 const layoutProps = {
   title: `${title} | ${SITE.title}`,
@@ -80,11 +84,11 @@ const layoutProps = {
     </article>
 
     <ul class="my-8 flex flex-wrap justify-center gap-2">
-      {tags.map(tag => <Tag tag={slugifyStr(tag)} />)}
+      {tags.map((tag: string) => <Tag tag={slugifyStr(tag)} />)}
     </ul>
 
     <div class="post-actions-container">
-      <ShareLinks title={title} ogImageUrl={ogUrl} />
+      <ShareLinks title={title} ogImageUrl={ogUrl} storyImageUrl={storyUrl} />
       <button
         id="back-to-top"
         class="focus-outline whitespace-nowrap py-1 hover:opacity-75"

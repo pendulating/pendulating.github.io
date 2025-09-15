@@ -5,6 +5,7 @@ import socialIcons from "@assets/socialIcons";
 const URL = Astro.url.href;
 const title = Astro.props.title || "Check out this post";
 const ogImageUrl = Astro.props.ogImageUrl || `${Astro.url.origin}/og.png`;
+const storyImageUrl = Astro.props.storyImageUrl || ogImageUrl;
 
 const shareLinks = [
   {
@@ -75,7 +76,8 @@ const shareLinks = [
       title="Share to Instagram Story"
       data-title={title}
       data-url={URL}
-      data-image-url={ogImageUrl}
+      data-image-url={storyImageUrl}
+      data-fallback-image-url={ogImageUrl}
     >
       <svg xmlns="http://www.w3.org/2000/svg" class="icon-tabler" stroke-linecap="round" stroke-linejoin="round">
         <path stroke="none" d="M0 0h24v24H0z" fill="none"></path>
@@ -190,6 +192,12 @@ const shareLinks = [
         }
       }
 
+      // Try opening Instagram camera as a hint for the user if share is not possible
+      try {
+        // Open Instagram camera if available (best-effort, may be blocked)
+        window.location.href = 'instagram://camera';
+      } catch {}
+
       // Fallback: Try regular Web Share API (without files)
       if ('share' in navigator) {
         console.log('Trying regular Web Share API');
@@ -209,14 +217,35 @@ const shareLinks = [
         }
       }
       
-      // Final fallback: copy URL to clipboard
-      console.log('All sharing methods failed, copying to clipboard');
+      // Final fallback: download the story image so user can upload in Instagram
+      console.log('All sharing methods failed, downloading story image');
+      await downloadImage(imageUrl, title);
+      // Also copy URL for attribution
       copyToClipboard(url);
       
     } catch (error) {
       console.error('Error in shareToInstagramStory:', error);
       // Final fallback: copy URL to clipboard
       copyToClipboard(url);
+    }
+  }
+
+  async function downloadImage(imageUrl: string, title: string) {
+    try {
+      const res = await fetch(imageUrl, { cache: 'no-cache' });
+      if (!res.ok) throw new Error('download failed');
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      const base = title && title.trim().length ? title : 'story';
+      a.download = `${base.replace(/[^a-z0-9]/gi, '_')}.png`;
+      a.href = url;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+    } catch (e) {
+      console.log('downloadImage error', e);
     }
   }
   
