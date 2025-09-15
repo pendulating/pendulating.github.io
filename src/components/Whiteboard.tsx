@@ -14,6 +14,7 @@ import { calculateInitialLayout, calculateClusteredLayout } from '../utils/itemL
 import { loadPositions, savePositions } from '../utils/whiteboardStorage';
 import ErrorBoundary from './ErrorBoundary';
 import TagFilterPanel from './TagFilterPanel';
+import '../styles/whiteboard.css';
 
 // Debug flag to control logging
 const DEBUG = false;

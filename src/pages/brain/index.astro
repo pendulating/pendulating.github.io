@@ -63,29 +63,39 @@ console.timeEnd('brain-page-data-processing');
 ---
 
 <script>
-// Apply mobile-level performance optimizations for all devices
+// Apply performance optimizations conditionally (do NOT disable animations on desktop)
 document.addEventListener('DOMContentLoaded', () => {
-  // Apply aggressive optimizations for all devices
-  document.documentElement.classList.add('mobile-optimized', 'reduce-motion', 'perf-low');
-  
-  // Disable heavy animations and effects for all devices
-  document.documentElement.style.setProperty('--enable-animations', '0');
-  document.documentElement.style.setProperty('--enable-3d-effects', '0');
-  
-  // Add content visibility optimizations
-  document.documentElement.style.setProperty('content-visibility', 'auto');
-  
-  // Force simplified background for all devices
-  document.documentElement.classList.add('simplified-background');
-  
-  // Reduced motion preference
-  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-    document.documentElement.classList.add('reduce-motion');
+  const html = document.documentElement;
+  const isCoarsePointer = typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches;
+  const isSmallViewport = window.innerWidth <= 768;
+  const isMobileUA = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+  const isMobileLike = isCoarsePointer || isSmallViewport || isMobileUA;
+
+  // Only apply mobile/perf-low optimizations on mobile-like devices
+  if (isMobileLike) {
+    html.classList.add('mobile-optimized');
+    html.classList.add('perf-low');
+    html.style.setProperty('--enable-animations', '0');
+    html.style.setProperty('--enable-3d-effects', '0');
+    html.classList.add('simplified-background');
+  } else {
+    html.classList.remove('mobile-optimized', 'perf-low', 'simplified-background');
+    html.style.setProperty('--enable-animations', '1');
+    html.style.setProperty('--enable-3d-effects', '1');
   }
-  
+
+  // Respect user reduced-motion preference only
+  if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    html.classList.add('reduce-motion');
+  } else {
+    html.classList.remove('reduce-motion');
+  }
+
+  // Add content visibility hint
+  html.style.setProperty('content-visibility', 'auto');
+
   // Viewport-based optimizations
   if ('IntersectionObserver' in window) {
-    // Add intersection observer for lazy loading
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
@@ -99,26 +109,19 @@ document.addEventListener('DOMContentLoaded', () => {
       rootMargin: '50px',
       threshold: 0.1
     });
-    
-    // Store observer in a way that React components can access it
     // @ts-ignore - Custom property for our app
     window.brainLazyObserver = observer;
   }
-  
-  // Memory optimization
+
   if ('requestIdleCallback' in window) {
     requestIdleCallback(() => {
-      // Force garbage collection if available
       if (window.gc) {
         window.gc();
       }
     });
   }
-  
-  // Performance mark
+
   performance.mark('brain-page-interactive');
-  
-  console.log('Mobile-level performance optimizations applied to all devices');
 });
 </script>
 

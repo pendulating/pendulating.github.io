@@ -43,11 +43,12 @@ export function SnipCard({
       onDragEnd={onDragEnd}
 
       onExpand={(id, cardElement) => onExpand(id, cardElement)}
+      isFocused={isFocused}
     >
       <div
         {...rest}
         className={`relative w-full h-full bg-gray-900/90 backdrop-blur-sm 
-                   rounded-lg border border-cyan-500/30 overflow-hidden p-4 ${isFocused ? 'focused-card' : ''}`}
+                   rounded-lg border border-cyan-500/30 overflow-hidden p-4`}
       >
         <h3 className="text-lg font-mono text-cyan-400 mb-3">{snip.data.title}</h3>
         <div className="space-y-3">

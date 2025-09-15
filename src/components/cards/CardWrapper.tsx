@@ -10,6 +10,7 @@ interface CardWrapperProps {
   onExpand: (id: string, cardElement?: HTMLElement | null) => void;
   children: React.ReactNode;
   item: { position: { x: number; y: number; width: number; height: number; z: number; expanded?: boolean; rotation?: number } };
+  isFocused?: boolean;
 }
 
 // Animation type definitions
@@ -36,7 +37,8 @@ const CardWrapper: React.FC<CardWrapperProps> = ({
   onDragEnd,
   onExpand,
   children,
-  item
+  item,
+  isFocused = false
 }) => {
   const cardRef = useRef<HTMLDivElement>(null);
   const [isInteracting, setIsInteracting] = useState(false);
@@ -174,13 +176,21 @@ const CardWrapper: React.FC<CardWrapperProps> = ({
     // Remove the grid pattern background
     // Only apply animation styles conditionally for performance
     ...(!isInteracting && isVisible ? {
-      animation: `${animationProperties.animationType} var(--flutter-duration) ease-in-out infinite ${animationProperties.delay}s`,
-      animationDirection: animationProperties.direction as any,
+      animation: `$${''}` as any
     } : {
       // When interacting or not visible, use a simplified state
       animation: 'none'
     }),
   };
+
+  // Start animation as soon as the card is visible (even during transitions)
+  if (isVisible) {
+    // Focused cards sway; non-focused flutter
+    const focusedAnim = `var(--focused-wind-animation-name, focused-wind-sway) 6s ease-in-out infinite`;
+    const flutterAnim = `${animationProperties.animationType} var(--flutter-duration) ease-in-out infinite ${animationProperties.delay}s`;
+    (stickyNoteStyle as any).animation = isFocused ? focusedAnim : flutterAnim;
+    (stickyNoteStyle as any).animationDirection = animationProperties.direction as any;
+  }
 
   return (
     <div
@@ -199,7 +209,7 @@ const CardWrapper: React.FC<CardWrapperProps> = ({
           ${isExpanded ? 'is-resized' : ''}
           ${isTransitioning ? 'is-transitioning-size' : ''}
           ${!isPrioritized && !isVisible ? 'simplified-animation' : ''}
-          etched-content
+          etched-content ${isFocused ? 'focused-card' : ''}
         `} 
         style={stickyNoteStyle}
       >

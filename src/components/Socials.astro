@@ -33,17 +33,5 @@ const { centered = false } = Astro.props;
     @apply p-4 sm:p-4 hover:scale-110;
     transition: transform 0.2s ease, var(--theme-transition);
   }
-  /* Normalize all injected SVG icon sizes and color */
-  .social-icons .link-button-social svg {
-    width: 24px;
-    height: 24px;
-    display: block;
-    /* Force icons to inherit text color and ignore hardcoded fills */
-    fill: currentColor !important;
-    stroke: currentColor !important;
-  }
-  /* Some icon sets rely on stroke-width; keep it visually consistent */
-  .social-icons .link-button-social svg[stroke-width] {
-    stroke-width: 1.75;
-  }
+  /* All SVG normalization lives in base.css to avoid duplication */
 </style>

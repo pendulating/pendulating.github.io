@@ -119,7 +119,7 @@
     transition: var(--theme-transition);
   }
 
-  /* Normalize social icon appearance globally (e.g., LinkedIn SVG with hard-coded sizes) */
+  /* Normalize profile social icon appearance (header/footer) */
   .social-icons .link-button-social svg {
     width: 24px !important;
     height: 24px !important;
@@ -130,7 +130,10 @@
     overflow: visible;
   }
   .social-icons .link-button-social svg[stroke-width] {
-    stroke-width: 1.75;
+    stroke-width: 1.1 !important; /* thinner */
+  }
+  .social-icons .link-button-social .icon-tabler {
+    stroke-width: 1.1 !important; /* override global stroke-2 */
   }
 
   /* Tweak LinkedIn size to match optical weight of stroke-based icons */
@@ -141,6 +144,8 @@
     transform: scale(0.9);
     transform-origin: 50% 50%;
   }
+
+  /* keep profile icon color inherited (no grey overrides) */
   
   svg.icon-tabler {
     @apply inline-block h-6 w-6 fill-transparent stroke-current stroke-2 group-hover:fill-transparent;
@@ -1273,4 +1278,14 @@
     display: none;
   }
   
+}
+
+/* ===== Utilities ===== */
+/* Hide scrollbars while preserving scrollability */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none; /* IE and Edge */
+  scrollbar-width: none; /* Firefox */
 }

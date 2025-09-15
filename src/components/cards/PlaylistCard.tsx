@@ -81,12 +81,13 @@ export function PlaylistCard({
       onDragEnd={onDragEnd}
 
       onExpand={(id, cardElement) => onExpand(id, cardElement)}
+      isFocused={isFocused}
     >
       <div
         ref={contentRef}
         {...rest}
         className={`relative w-full h-full bg-gray-900/90 backdrop-blur-sm 
-                   rounded-lg border border-cyan-500/30 overflow-hidden p-4 ${isFocused ? 'focused-card' : ''}`}
+                   rounded-lg border border-cyan-500/30 overflow-hidden p-4`}
       >
         <h3 className="text-lg font-mono text-cyan-400 mb-2">{playlist.data.title}</h3>
         {hasDescription && (

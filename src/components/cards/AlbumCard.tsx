@@ -69,11 +69,12 @@ export function AlbumCard({
       onDragEnd={onDragEnd}
 
       onExpand={(id, cardElement) => onExpand(id, cardElement)}
+      isFocused={isFocused}
     >
       <div
         {...rest}
         className={`relative w-full h-full bg-gray-900/90 backdrop-blur-sm 
-                      rounded-lg border border-cyan-500/30 overflow-hidden ${isFocused ? 'focused-card' : ''}`}
+                      rounded-lg border border-cyan-500/30 overflow-hidden`}
       >
         <div className="p-4 h-full" ref={contentRootRef}>
           <h3 className="text-lg font-mono text-cyan-400 mb-3">{album.data.title}</h3>

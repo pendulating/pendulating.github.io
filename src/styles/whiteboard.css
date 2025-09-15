@@ -139,11 +139,86 @@
 
 /* Focused card accent */
 .focused-card {
-  outline: 2px solid rgba(34, 211, 238, 0.6); /* cyan-400 */
-  box-shadow: 0 0 0 2px rgba(8, 145, 178, 0.35) inset, /* cyan-600 inner */
-              0 6px 24px rgba(34, 211, 238, 0.28),
-              0 2px 8px rgba(0, 0, 0, 0.35);
-  transition: box-shadow 200ms ease, outline-color 200ms ease;
+  /* Remove harsh outline; use soft, dimensional glow + drop shadow */
+  outline: none;
+  box-shadow: 
+    0 16px 36px rgba(0, 0, 0, 0.48), /* main drop, darker */
+    0 8px 18px rgba(0, 0, 0, 0.32),  /* support */
+    0 0 0 1px rgba(8, 145, 178, 0.28) inset, /* subtle inner edge */
+    0 0 28px rgba(34, 211, 238, 0.30); /* brighter aura */
+  transition: box-shadow 200ms ease;
+}
+
+/* Theme-aware emphasis: lighter drop + stronger glow in dark mode */
+html[data-theme="dark"] .focused-card {
+  box-shadow:
+    0 10px 24px rgba(0, 0, 0, 0.30),
+    0 4px 12px rgba(0, 0, 0, 0.22),
+    0 0 0 1px rgba(34, 211, 238, 0.32) inset,
+    0 0 36px rgba(34, 211, 238, 0.45);
+}
+
+@media (prefers-color-scheme: dark) {
+  .focused-card {
+    box-shadow:
+      0 10px 24px rgba(0, 0, 0, 0.30),
+      0 4px 12px rgba(0, 0, 0, 0.22),
+      0 0 0 1px rgba(34, 211, 238, 0.32) inset,
+      0 0 36px rgba(34, 211, 238, 0.45);
+  }
+}
+
+/* Desktop-only gentle wind sway for focused cards */
+@media (min-width: 769px) and (prefers-reduced-motion: no-preference) {
+  .focused-card {
+    animation: var(--focused-wind-animation-name, focused-wind-sway) 5.2s ease-in-out infinite;
+    transform-origin: top center;
+  }
+}
+
+/* Dark-mode animation variant */
+@media (min-width: 769px) and (prefers-reduced-motion: no-preference) {
+  html[data-theme="dark"] .focused-card {
+    --focused-wind-animation-name: focused-wind-sway-dark;
+    animation: var(--focused-wind-animation-name, focused-wind-sway-dark) 6s ease-in-out infinite;
+    transform-origin: top center;
+  }
+}
+
+@media (min-width: 769px) and (prefers-reduced-motion: no-preference) and (prefers-color-scheme: dark) {
+  .focused-card {
+    --focused-wind-animation-name: focused-wind-sway-dark;
+    animation: var(--focused-wind-animation-name, focused-wind-sway-dark) 6s ease-in-out infinite;
+    transform-origin: top center;
+  }
+}
+
+@keyframes focused-wind-sway {
+  0%   { transform: translateY(0px) rotate(0deg); }
+  25%  { transform: translateY(-1.5px) rotate(-0.25deg); box-shadow: 0 18px 38px rgba(0,0,0,0.50), 0 9px 20px rgba(0,0,0,0.34), 0 0 0 1px rgba(8,145,178,0.28) inset, 0 0 30px rgba(34,211,238,0.34); }
+  50%  { transform: translateY(-3px) rotate(0.25deg);  box-shadow: 0 20px 42px rgba(0,0,0,0.52), 0 10px 22px rgba(0,0,0,0.36), 0 0 0 1px rgba(8,145,178,0.28) inset, 0 0 34px rgba(34,211,238,0.36); }
+  75%  { transform: translateY(-1.5px) rotate(-0.15deg); box-shadow: 0 18px 38px rgba(0,0,0,0.50), 0 9px 20px rgba(0,0,0,0.34), 0 0 0 1px rgba(8,145,178,0.28) inset, 0 0 30px rgba(34,211,238,0.34); }
+  100% { transform: translateY(0px) rotate(0deg); }
+}
+
+/* Dark-mode variant with lighter drop and stronger glow */
+@keyframes focused-wind-sway-dark {
+  0%   { transform: translateY(0px) rotate(0deg); }
+  25%  { transform: translateY(-1.5px) rotate(-0.25deg); box-shadow: 0 12px 28px rgba(0,0,0,0.32), 0 6px 16px rgba(0,0,0,0.24), 0 0 0 1px rgba(34,211,238,0.34) inset, 0 0 40px rgba(34,211,238,0.48); }
+  50%  { transform: translateY(-3px) rotate(0.25deg);  box-shadow: 0 14px 30px rgba(0,0,0,0.34), 0 7px 18px rgba(0,0,0,0.26), 0 0 0 1px rgba(34,211,238,0.34) inset, 0 0 44px rgba(34,211,238,0.52); }
+  75%  { transform: translateY(-1.5px) rotate(-0.15deg); box-shadow: 0 12px 28px rgba(0,0,0,0.32), 0 6px 16px rgba(0,0,0,0.24), 0 0 0 1px rgba(34,211,238,0.34) inset, 0 0 40px rgba(34,211,238,0.48); }
+  100% { transform: translateY(0px) rotate(0deg); }
+}
+
+/* Respect performance modes and reduced motion */
+.perf-low .focused-card,
+.perf-minimal .focused-card,
+.mobile-optimized .focused-card {
+  animation: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .focused-card { animation: none !important; }
 }
 
 /* Mobile optimizations - disable complex effects but preserve colors */
@@ -214,6 +289,12 @@
 .is-transitioning .sticky-note,
 .is-scrolling .sticky-note {
   animation-play-state: paused !important;
+}
+
+/* Allow focused card to animate immediately even during camera transitions */
+.is-transitioning .sticky-note.focused-card,
+.is-scrolling .sticky-note.focused-card {
+  animation-play-state: running !important;
 }
 
 /* Enhanced etched content styling - simplified for mobile */
@@ -327,12 +408,5 @@
   }
 }
 
-/* Utility: hide horizontal scrollbars (mobile-friendly) */
-.no-scrollbar::-webkit-scrollbar {
-  display: none;
-}
-.no-scrollbar {
-  -ms-overflow-style: none; /* IE and Edge */
-  scrollbar-width: none; /* Firefox */
-}
+/* (moved) no-scrollbar utility is defined in base.css */
 
