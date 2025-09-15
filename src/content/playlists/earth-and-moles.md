@@ -11,5 +11,3 @@ coverImage: "/path/to/cover/image.jpg"
 mood: ["dance", "electronic"]
 order: 1
 ---
-
-<!-- Add any additional content or notes about the playlist here -->    

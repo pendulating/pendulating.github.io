@@ -11,5 +11,3 @@ coverImage: "/path/to/cover/image.jpg"
 mood: ["all over the place"]
 order: 1
 ---
-
-<!-- Add any additional content or notes about the playlist here -->    
