@@ -34,10 +34,8 @@ const ogUrl = new URL(
   ogImageUrl ?? `/og/${post.slug}.png`,
   Astro.url.origin
 ).href;
-const storyUrl = new URL(
-  `/og/${post.slug}.png?variant=story`,
-  Astro.url.origin
-).href;
+// Prefer dedicated story endpoint to avoid caching confusion
+const storyUrl = new URL(`/og/story/${post.slug}.png`, Astro.url.origin).href;
 
 const layoutProps = {
   title: `${title} | ${SITE.title}`,
