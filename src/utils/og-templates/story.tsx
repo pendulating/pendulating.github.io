@@ -1,7 +1,7 @@
 import satori from "satori";
 import type { CollectionEntry } from "astro:content";
 import { SITE } from "@config";
-import loadGoogleFonts, { type FontOptions } from "../loadGoogleFont";
+import loadLocalFonts, { type FontOptions } from "../loadLocalFonts";
 
 // 1080x1920 story image generator
 export default async (post: CollectionEntry<"blog">) => {
@@ -80,8 +80,9 @@ export default async (post: CollectionEntry<"blog">) => {
         >
           <h1
             style={{
+              fontFamily: 'GTZirkon',
               fontSize: 92,
-              fontWeight: 800,
+              fontWeight: 700,
               color: "#0f172a",
               lineHeight: 1.08,
               textAlign: "center",
@@ -97,6 +98,28 @@ export default async (post: CollectionEntry<"blog">) => {
           </h1>
         </div>
 
+        {/* Excerpt */}
+        {(post.data.description || post.body) && (
+          <div
+            style={{
+              marginTop: 12,
+              padding: "0 48px",
+              textAlign: "center",
+              color: "#334155",
+              fontFamily: 'GTZirkon',
+              fontSize: 36,
+              lineHeight: 1.35,
+              maxHeight: 320,
+              display: "-webkit-box",
+              WebkitLineClamp: 6,
+              WebkitBoxOrient: "vertical",
+              overflow: "hidden",
+            }}
+          >
+            {(post.data.description || String(post.body || '')).replace(/<[^>]+>/g, '').slice(0, 400)}
+          </div>
+        )}
+
         {/* Footer */}
         <div
           style={{
@@ -108,8 +131,8 @@ export default async (post: CollectionEntry<"blog">) => {
           }}
         >
           <div>
-            <div style={{ fontSize: 28, color: "#64748b" }}>by</div>
-            <div style={{ fontSize: 40, fontWeight: 700, color: "#0f172a" }}>
+            <div style={{ fontFamily: 'GTZirkon', fontSize: 28, color: "#64748b" }}>by</div>
+            <div style={{ fontFamily: 'GTZirkon', fontSize: 40, fontWeight: 700, color: "#0f172a" }}>
               {post.data.author}
             </div>
           </div>
@@ -123,6 +146,7 @@ export default async (post: CollectionEntry<"blog">) => {
                     color: "#fff",
                     padding: "8px 18px",
                     borderRadius: 999,
+                    fontFamily: 'GTZirkon',
                     fontSize: 24,
                     fontWeight: 600,
                   }}
@@ -139,9 +163,7 @@ export default async (post: CollectionEntry<"blog">) => {
       width: 1080,
       height: 1920,
       embedFont: true,
-      fonts: (await loadGoogleFonts(
-        post.data.title + post.data.author + SITE.title
-      )) as FontOptions[],
+      fonts: (await loadLocalFonts()) as FontOptions[],
     }
   );
 };

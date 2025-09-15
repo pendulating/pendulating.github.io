@@ -305,9 +305,21 @@ const shareLinks = [
     }
   }
 
-  // Initialize event listeners when DOM is loaded
-  document.addEventListener('DOMContentLoaded', function() {
-    console.log('DOM loaded, initializing ShareLinks event listeners');
+  function openInstagramApp() {
+    try {
+      // Try Story camera first, then generic camera; fall back to web
+      window.location.href = 'instagram://story-camera';
+      setTimeout(() => {
+        try { window.location.href = 'instagram://camera'; } catch {}
+        setTimeout(() => { window.open('https://instagram.com', '_blank'); }, 500);
+      }, 600);
+    } catch (e) {
+      window.open('https://instagram.com', '_blank');
+    }
+  }
+
+  function initShareLinks() {
+    console.log('Initializing ShareLinks event listeners');
     
     // Show native share button only if Web Share API is supported
     const nativeShareButton = document.getElementById('native-share-button') as HTMLButtonElement;
@@ -329,13 +341,19 @@ const shareLinks = [
         instagramButton.addEventListener('touchstart', () => prefetchOgImageIfNeeded(prefetchTitle, prefetchImageUrl), { passive: true });
       }
 
-      instagramButton.addEventListener('click', function() {
+      instagramButton.addEventListener('click', async function() {
         console.log('Instagram button clicked!');
         const title = this.getAttribute('data-title') || '';
         const url = this.getAttribute('data-url') || '';
         const imageUrl = this.getAttribute('data-image-url') || '';
         console.log('Instagram button data:', { title, url, imageUrl });
-        shareToInstagramStory(title, url, imageUrl);
+        // Try share with files; if not successful, fall back to download + open app
+        try {
+          await shareToInstagramStory(title, url, imageUrl);
+        } finally {
+          // As a helpful next step, open the Instagram camera so user can pick the saved Story image
+          openInstagramApp();
+        }
       });
       console.log('Instagram button event listener attached');
     } else {
@@ -366,5 +384,12 @@ const shareLinks = [
     } else {
       console.log('Copy button not found!');
     }
-  });
+  }
+
+  // Initialize immediately if DOM is already ready; otherwise wait
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initShareLinks);
+  } else {
+    initShareLinks();
+  }
 </script>
