@@ -52,6 +52,35 @@ jobs:
           script: |
             const fs = require('fs');
             const path = require('path');
+            // Helpers
+            const stripHtmlComments = (text) => String(text)
+              .replace(/^<!--[\s\S]*?-->\s*/,'')
+              .replace(/<!--[\s\S]*?-->/g,'');
+            const isPlaceholder = (value) => {
+              if (value === null || value === undefined) return true;
+              const trimmed = String(value).trim();
+              return trimmed.length === 0 || /^_?no response_?$/i.test(trimmed);
+            };
+            const summarize = (text, maxLen = 160) => {
+              if (!text) return '';
+              const lines = String(text).split('\n').map(l => l.trim()).filter(Boolean);
+              if (lines.length === 0) return '';
+              const joined = lines.join(' ');
+              return joined.length > maxLen ? `${joined.slice(0, maxLen).trim()}…` : joined;
+            };
+            const sanitizeBody = (raw) => {
+              let s = stripHtmlComments(raw || '');
+              // Remove Issue Form section headers and common field prefixes
+              // Headers like: ### Content, ### Source, ### Tags, etc. (case-insensitive, optional colon)
+              const headerPattern = /^###\s*(content|source|tags|description|platform|playlist url|mood|album art|photos|images|title)\s*:?[ \t]*$/gim;
+              s = s.replace(headerPattern, '').trim();
+              // Remove simple field prefix lines that sometimes get pasted into body
+              const fieldLinePattern = /^(source|tags|platform|playlist url|mood|album art|photos|images)\s*:\s*.*$/gim;
+              s = s.replace(fieldLinePattern, '').trim();
+              // Collapse excessive blank lines
+              s = s.replace(/\n{3,}/g, '\n\n').trim();
+              return s;
+            };
             
             // Get issue details
             const issue = context.payload.issue;
@@ -71,43 +100,54 @@ jobs:
             console.log(`Processing ${contentType} content`);
             
             // Parse structured content from issue body
-            let actualContent = body;
-            let extractedSource = "GitHub Issue";
+            let actualContent = '';
+            let extractedSource = '';
             let extractedTags = [];
-            let extractedDescription = title;
+            let extractedDescription = '';
             
             if (contentType === 'snips') {
-              // Parse snip-specific fields from issue body
-              const sourceMatch = body.match(/### Source[\s\S]*?\n\n(.*?)(?:\n\n### |$)/s);
-              const tagsMatch = body.match(/### Tags[\s\S]*?\n\n(.*?)(?:\n\n### |$)/s);
-              
-              if (sourceMatch && sourceMatch[1].trim()) {
-                extractedSource = sourceMatch[1].trim();
+              // Parse explicit Issue Form sections
+              const contentMatch = body.match(/###\s*Content[\s\S]*?\n\n([\s\S]*?)(?:\n\n###\s|$)/i);
+              const sourceMatch = body.match(/###\s*Source[\s\S]*?\n\n([\s\S]*?)(?:\n\n###\s|$)/i);
+              const tagsMatch = body.match(/###\s*Tags[\s\S]*?\n\n([\s\S]*?)(?:\n\n###\s|$)/i);
+
+              if (contentMatch && typeof contentMatch[1] === 'string') {
+                actualContent = sanitizeBody(contentMatch[1]).trim();
               }
-              
-              if (tagsMatch && tagsMatch[1].trim()) {
-                extractedTags = tagsMatch[1].split(/[,\s]+/).map(tag => tag.trim()).filter(tag => tag);
+              if (sourceMatch && typeof sourceMatch[1] === 'string') {
+                const rawSource = sourceMatch[1].trim();
+                if (!isPlaceholder(rawSource)) {
+                  extractedSource = rawSource;
+                }
               }
-              
-              // Extract the main content (everything before the first ### section)
-              const contentMatch = body.match(/^([\s\S]*?)(?:\n\n### |$)/);
-              if (contentMatch) {
-                actualContent = contentMatch[1].trim();
+              if (tagsMatch && typeof tagsMatch[1] === 'string') {
+                const rawTags = tagsMatch[1].trim();
+                if (!isPlaceholder(rawTags)) {
+                  extractedTags = rawTags
+                    .split(',')
+                    .map(t => t.trim())
+                    .filter(Boolean);
+                }
               }
+
+              // Derive description from content; avoid duplicating the title
+              const contentSummary = summarize(actualContent, 160);
+              if (contentSummary && contentSummary.toLowerCase() !== title.toLowerCase()) {
+                extractedDescription = contentSummary;
+              } else {
+                const contentLines = String(actualContent).split('\n').map(l => l.trim()).filter(Boolean);
+                if (contentLines.length > 1) {
+                  extractedDescription = summarize(contentLines.slice(1).join(' '), 160);
+                }
+              }
+              if (!extractedDescription) extractedDescription = title;
             } else {
-              // For other content types, clean up body content
-              actualContent = body
-                .replace(/### Content[\s\S]*?\n\n/, '') // Remove "### Content" header if present
-                .replace(/^<!--[\s\S]*?-->\s*/, '') // Remove HTML comments at start
-                .replace(/<!--[\s\S]*?-->/g, '') // Remove all HTML comments
-                .trim();
+              // For other content types, clean up body content with sanitizer
+              actualContent = sanitizeBody(body);
             }
             
             // Clean up body content (remove form template artifacts)
-            actualContent = actualContent
-              .replace(/^<!--[\s\S]*?-->\s*/, '') // Remove HTML comments at start
-              .replace(/<!--[\s\S]*?-->/g, '') // Remove all HTML comments
-              .trim();
+            actualContent = sanitizeBody(actualContent);
             
             console.log('Extracted content:', JSON.stringify(actualContent));
             console.log('Extracted source:', extractedSource);
@@ -126,10 +166,16 @@ jobs:
 
             // Add content-specific fields
             if (contentType === 'snips') {
-              frontmatter += `description: "${extractedDescription}"\n`;
-              frontmatter += `source: "${extractedSource}"\n`;
+              const descToWrite = (extractedDescription && extractedDescription.trim()) ? extractedDescription : title;
+              frontmatter += `description: "${descToWrite.replace(/\"/g, '\\\"')}"\n`;
+              if (extractedSource && extractedSource.trim()) {
+                frontmatter += `source: "${String(extractedSource).replace(/\"/g, '\\\"')}"\n`;
+              }
+              // Always include the issue URL as provenance
               frontmatter += `sourceUrl: "${issue.html_url}"\n`;
-              frontmatter += `tags: [${extractedTags.map(tag => `"${tag}"`).join(', ')}]\n`;
+              if (Array.isArray(extractedTags) && extractedTags.length > 0) {
+                frontmatter += `tags: [${extractedTags.map(tag => `"${String(tag).replace(/\"/g, '\\\"')}"`).join(', ')}]\n`;
+              }
             } else if (contentType === 'playlists') {
               frontmatter += `description: "${actualContent.split('\n')[0] || title}"\nplatform: "spotify"\nplaylistUrl: ""\nplaylistId: ""\nmood: []\ntags: []\n`;
             } else if (contentType === 'photos') {
@@ -138,7 +184,7 @@ jobs:
             
             // Close frontmatter and add body content
             frontmatter += `---\n\n${actualContent}`;
-
+            
              // Create file path
              const fileName = `${slug}.md`;
              let filePath;
@@ -153,7 +199,7 @@ jobs:
                
                // Process any image attachments from the issue
                const imageRegex = /!\[.*?\]\((https:\/\/github\.com\/.*?\/assets\/.*?)\)/g;
-               const imageMatches = [...cleanBody.matchAll(imageRegex)];
+               const imageMatches = [...body.matchAll(imageRegex)];
                
                if (imageMatches.length > 0) {
                  console.log(`Found ${imageMatches.length} image(s) in issue`);
@@ -188,9 +234,9 @@ jobs:
                filePath = `src/content/${contentType}/${fileName}`;
                await fs.promises.mkdir(path.dirname(filePath), {recursive: true});
              }
-             
-             // Write the main content file
-             await fs.promises.writeFile(filePath, frontmatter);
+            
+            // Write the main content file
+            await fs.promises.writeFile(filePath, frontmatter);
             
                          // Commit files
              const { execSync } = require('child_process');
