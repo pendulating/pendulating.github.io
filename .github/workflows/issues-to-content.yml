@@ -81,6 +81,22 @@ jobs:
               s = s.replace(/\n{3,}/g, '\n\n').trim();
               return s;
             };
+            const parseTags = (text) => {
+              if (!text) return [];
+              const input = stripHtmlComments(String(text));
+              const tags = [];
+              const re = /"([^"\n]+)"|'([^'\n]+)'|([^,\n;]+)/g;
+              let m;
+              while ((m = re.exec(input)) !== null) {
+                const raw = (m[1] ?? m[2] ?? m[3] ?? '').trim();
+                if (!raw) continue;
+                let t = raw.replace(/^[*-]\s+/, '').trim(); // bullets
+                t = t.replace(/^#\s*/, '').trim(); // leading '#'
+                if (!t || isPlaceholder(t)) continue;
+                tags.push(t);
+              }
+              return Array.from(new Set(tags));
+            };
             
             // Get issue details
             const issue = context.payload.issue;
@@ -121,13 +137,7 @@ jobs:
                 }
               }
               if (tagsMatch && typeof tagsMatch[1] === 'string') {
-                const rawTags = tagsMatch[1].trim();
-                if (!isPlaceholder(rawTags)) {
-                  extractedTags = rawTags
-                    .split(',')
-                    .map(t => t.trim())
-                    .filter(Boolean);
-                }
+                extractedTags = parseTags(tagsMatch[1]);
               }
 
               // Derive description from content; avoid duplicating the title
