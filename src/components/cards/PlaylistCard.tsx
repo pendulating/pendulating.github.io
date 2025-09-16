@@ -3,7 +3,7 @@ import type { CollectionEntry } from 'astro:content';
 import type { WhiteboardItem } from '../../types/whiteboard';
 import CardWrapper from './CardWrapper';
 
-interface PlaylistCardProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onResize' | 'onDragStart'> {
+interface PlaylistCardProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onResize' | 'onDragStart' | 'onResizeToContent'> {
   item: WhiteboardItem;
   id: string;
   isDragging: boolean;
@@ -11,6 +11,7 @@ interface PlaylistCardProps extends Omit<React.HTMLAttributes<HTMLDivElement>, '
   onDragStart: (id: string, event: React.MouseEvent) => void;
   onExpand: (id: string, cardElement?: HTMLElement | null) => void;
   onDragEnd: () => void;
+  onResizeToContent?: (id: string, cardElement?: HTMLElement | null) => void;
   isFocused: boolean;
 }
 
@@ -22,6 +23,7 @@ export function PlaylistCard({
   onDragStart,
   onExpand,
   onDragEnd,
+  onResizeToContent,
 
   isFocused,
   ...rest

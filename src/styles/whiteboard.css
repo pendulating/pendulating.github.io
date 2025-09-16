@@ -8,13 +8,19 @@
   left: 50%;
   width: 100vw;
   height: 100vh;
-  /* Simplified 2D transform for mobile compatibility */
-  transform: translate(-50%, -50%) translate(var(--translateX, 0), var(--translateY, 0)) scale(var(--scale, 1));
-  transform-origin: center center;
+  transform: translate(-50%, -50%);
   z-index: 1;
   /* Remove aggressive containment that clips content in production */
   overflow: visible;
 }
+
+/* Full-viewport event layer to capture panning across the entire screen */
+.whiteboard-viewport {
+  position: fixed;
+  inset: 0;
+  z-index: 1; /* below UI (tags/toolbar), above page backdrop */
+}
+.whiteboard-viewport:active { cursor: grabbing; }
 
 /* Disable browser touch gestures on mobile */
 @media (max-width: 768px) {
@@ -28,8 +34,24 @@
 
 /* Buttery smooth transitions for zoom and pan on all platforms */
 .whiteboard-container.is-transitioning,
-.transform-container.is-transitioning {
+.transform-container.is-transitioning { /* reserved for compatibility */ }
+
+/* Smooth camera transitions now apply to the world element */
+.transform-container.is-transitioning .world {
   transition: transform 1s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* World: receives camera transform; container above stays full-viewport for events */
+.world {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 100vw;
+  height: 100vh;
+  transform: translate(-50%, -50%) translate(var(--translateX, 0), var(--translateY, 0)) scale(var(--scale, 1));
+  transform-origin: center center;
+  z-index: 1;
+  overflow: visible;
 }
 
 .whiteboard-content {
@@ -39,6 +61,40 @@
   /* Remove size containment that can clip expanded content */
   overflow: visible;
   z-index: 3;
+}
+
+/* Fixed-position debug HUD independent of world transforms */
+.debug-hud {
+  position: fixed;
+  top: 8px;
+  right: 8px;
+  z-index: 1000;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+  font-size: 10px;
+  line-height: 1.1;
+  padding: 4px 6px;
+  border-radius: 4px;
+  color: #a7f3d0;
+  background: rgba(0,0,0,0.7);
+  border: 1px solid rgba(34,211,238,0.3);
+  pointer-events: none;
+}
+
+/* World-space painting background that pans/zooms with camera */
+.whiteboard-background {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  /* Make the painting large so it covers during pans/zooms */
+  min-width: 300vw;
+  min-height: 300vh;
+  background-size: cover;
+  background-position: center center;
+  background-repeat: no-repeat;
+  z-index: -1; /* always behind any card content */
+  pointer-events: none; /* do not block dragging/gestures */
+  opacity: 0.9; /* subtle so cards remain legible */
 }
 
 /* Sticky note positioning - mobile optimized */
@@ -54,6 +110,11 @@
   left: 50%;
   /* Ensure no clipping of expanded content */
   overflow: visible;
+}
+
+/* Focused cards should always appear above world background and neighbors */
+.draggable-area.is-focused {
+  z-index: 9999;
 }
 
 .draggable-area .sticky-note {
@@ -234,14 +295,10 @@ html[data-theme="dark"] .focused-card {
   /* Don't override background - preserve component colors */
 }
 
-.mobile-optimized .transform-container,
-.mobile-optimized .whiteboard-container {
-  /* Simplified transforms for mobile */
+.mobile-optimized .world {
   transform: translate(-50%, -50%) translate(var(--translateX, 0), var(--translateY, 0)) scale(var(--scale, 1));
-  /* Remove aggressive containment and visibility properties that clip in production */
   overflow: visible;
   will-change: none;
-  /* Use same smooth timing for mobile when transitioning */
 }
 
 .mobile-optimized .whiteboard-content {

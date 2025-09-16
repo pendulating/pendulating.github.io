@@ -26,6 +26,7 @@ export function WhiteboardContainer({
         "--translateY": `${transform.y}px`,
         "--scale": transform.scale,
       } as React.CSSProperties}
+      data-debug-transform={`${transform.x},${transform.y},${transform.scale}`}
     >
       {children}
     </div>

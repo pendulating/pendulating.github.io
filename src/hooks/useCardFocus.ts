@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import type { WhiteboardItem, Transform } from '../types/whiteboard';
 
 interface UseCardFocusResult {
@@ -14,6 +14,7 @@ export function useCardFocus(
   updateTransform: (transform: Transform, animate?: boolean) => void
 ): UseCardFocusResult {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const correctionTimerRef = useRef<number | undefined>(undefined);
   
   // Use different zoom levels for mobile vs desktop
   const getZoomLevel = () => {
@@ -63,13 +64,11 @@ export function useCardFocus(
     // Use appropriate zoom level
     const zoomLevel = getZoomLevel();
 
-    // Calculate the transform needed to center the camera on the card
-    // IMPORTANT: Our container transform applies translate() before scale().
-    // That means translations are pre-scale and get scaled by the zoom.
-    // To center a world point (x, y), use transform.x = -x, transform.y = -y (no scale factor).
-    // Round to avoid sub-pixel issues
-    const targetX = Math.round(-cardCenterX * 100) / 100;
-    const targetY = Math.round(-cardCenterY * 100) / 100;
+    // To align the card centroid with the viewport center under
+    // container transform: translate(-50%,-50%) translate(tx,ty) scale(s)
+    // (rightmost applied first), we need tx = -s * cx, ty = -s * cy
+    const targetX = Math.round((-cardCenterX * getZoomLevel()) * 100) / 100;
+    const targetY = Math.round((-cardCenterY * getZoomLevel()) * 100) / 100;
 
     console.log('Card focus debug:', {
       cardIndex: clampedIndex,
@@ -86,6 +85,29 @@ export function useCardFocus(
 
     // Apply the transform with smooth animation
     updateTransform(newTransform, true);
+
+    // After the transition completes, measure and apply one-shot correction
+    if (correctionTimerRef.current) {
+      window.clearTimeout(correctionTimerRef.current);
+    }
+    correctionTimerRef.current = window.setTimeout(() => {
+      const el = document.querySelector(`[data-item-id="${card.id}"]`) as HTMLElement | null;
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      const vx = window.innerWidth / 2;
+      const vy = window.innerHeight / 2;
+      const dx = cx - vx;
+      const dy = cy - vy;
+      if (typeof console !== 'undefined') {
+        console.log('[Focus Debug] world', { cx: cardCenterX, cy: cardCenterY }, 'transform', newTransform, 'screen', { cx, cy }, 'delta', { dx, dy });
+      }
+      // Adjust translation directly in screen space
+      if (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) {
+        updateTransform({ x: newTransform.x - dx, y: newTransform.y - dy, scale: newTransform.scale }, false);
+      }
+    }, 1150); // slightly longer than CSS transition (1s)
   }, [items, updateTransform, currentTransform]);
 
   const onFocusPrev = useCallback(() => {

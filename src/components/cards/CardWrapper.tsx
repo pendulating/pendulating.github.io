@@ -2,6 +2,7 @@ import React, { useRef, useState, useMemo, useEffect } from 'react';
 import type { CSSProperties } from 'react';
 import { Maximize2, Minimize2 } from 'lucide-react';
 import '../../styles/photog.css';
+import postitSchemes from '../../assets/postit-schemes.json';
 
 interface CardWrapperProps {
   id: string;
@@ -21,14 +22,11 @@ const animationTypes = [
   'flutter-subtle'
 ];
 
-// Post-it colors from CSS
-const stickyNoteColors = [
-  '#fff68f', // Classic Canary Yellow
-  '#ff7eb9', // Electric Rose
-  '#7afcff', // Electric Blue
-  '#ff99c8', // Pale Pink
-  '#ffa07a', // Neon Orange
-  '#98ff98'  // Mint Green
+// Select scheme (current: Marseilles; fallback to default then hardcoded)
+const stickyNoteColors: string[] = (postitSchemes as any)?.Marseilles
+  ?? (postitSchemes as any)?.default
+  ?? [
+  '#fff68f', '#ff7eb9', '#7afcff', '#ff99c8', '#ffa07a', '#98ff98'
 ];
 
 const CardWrapper: React.FC<CardWrapperProps> = ({
@@ -48,22 +46,26 @@ const CardWrapper: React.FC<CardWrapperProps> = ({
   // Use the actual item's expanded state instead of local state
   const isExpanded = item.position.expanded || false;
 
-  // Generate consistent animation properties based on card ID
+  // Generate consistent animation properties based on card ID (seeded hash for better spread)
   const animationProperties = useMemo(() => {
-    // Use the numeric part of the ID (if any) or convert the string to a number
-    const idNumber = parseInt(id.replace(/\D/g, '')) || 
-                     id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const djb2 = (str: string) => {
+      let h = 5381;
+      for (let i = 0; i < str.length; i++) {
+        h = ((h << 5) + h) + str.charCodeAt(i);
+      }
+      return h >>> 0; // unsigned
+    };
+    const seed = djb2(id);
+    const pick = (mod: number) => seed % mod;
     
-    // Create deterministic but seemingly random properties
     return {
-      animationType: animationTypes[idNumber % animationTypes.length],
-      duration: 6 + (idNumber % 7) + Math.floor((idNumber % 100) / 33), // 6-14s
-      delay: (idNumber % 20) / 10, // 0-1.9s
-      direction: idNumber % 2 === 0 ? 'normal' : 'alternate',
-      color: stickyNoteColors[idNumber % stickyNoteColors.length],
-      // Always hinge at the top, but vary between left, center, right
-      transformOrigin: `top ${idNumber % 3 === 0 ? 'left' : idNumber % 3 === 1 ? 'center' : 'right'}`,
-      amplitude: 0.8 + ((idNumber % 10) / 10), // 0.8-1.7
+      animationType: animationTypes[pick(animationTypes.length)],
+      duration: 6 + (seed % 7) + Math.floor((seed % 100) / 33), // 6-14s
+      delay: (seed % 20) / 10, // 0-1.9s
+      direction: seed % 2 === 0 ? 'normal' : 'alternate',
+      color: stickyNoteColors[pick(stickyNoteColors.length)],
+      transformOrigin: `top ${seed % 3 === 0 ? 'left' : seed % 3 === 1 ? 'center' : 'right'}`,
+      amplitude: 0.8 + ((seed % 10) / 10), // 0.8-1.7
     };
   }, [id]);
 
@@ -185,10 +187,13 @@ const CardWrapper: React.FC<CardWrapperProps> = ({
 
   // Start animation as soon as the card is visible (even during transitions)
   if (isVisible) {
-    // Focused cards sway; non-focused flutter
-    const focusedAnim = `var(--focused-wind-animation-name, focused-wind-sway) 6s ease-in-out infinite`;
-    const flutterAnim = `${animationProperties.animationType} var(--flutter-duration) ease-in-out infinite ${animationProperties.delay}s`;
-    (stickyNoteStyle as any).animation = isFocused ? focusedAnim : flutterAnim;
+    // Focused cards sway; non-focused flutter. Avoid mixing shorthand/non-shorthand warnings.
+    const animName = isFocused ? 'var(--focused-wind-animation-name, focused-wind-sway)' : animationProperties.animationType;
+    (stickyNoteStyle as any).animationName = animName as any;
+    (stickyNoteStyle as any).animationDuration = isFocused ? '6s' : `var(--flutter-duration)`;
+    (stickyNoteStyle as any).animationTimingFunction = 'ease-in-out';
+    (stickyNoteStyle as any).animationIterationCount = 'infinite';
+    (stickyNoteStyle as any).animationDelay = isFocused ? '0s' : `${animationProperties.delay}s`;
     (stickyNoteStyle as any).animationDirection = animationProperties.direction as any;
   }
 
@@ -199,7 +204,7 @@ const CardWrapper: React.FC<CardWrapperProps> = ({
       onMouseUp={handleMouseUp}
       onMouseLeave={handleMouseLeave}
       style={cardStyle}
-      className={`draggable-area ${!isVisible ? 'paused-animation' : ''} ${isInteracting ? 'is-interacting' : ''}`}
+      className={`draggable-area ${!isVisible ? 'paused-animation' : ''} ${isInteracting ? 'is-interacting' : ''} ${isFocused ? 'is-focused' : ''}`}
       data-item-id={id}
     >
       <div 

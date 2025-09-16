@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import type { WhiteboardProps, WhiteboardItem, PhotoData, Transform } from '../types/whiteboard';
-import { WhiteboardContainer } from './whiteboard/WhiteboardContainer';
 import { WhiteboardContent } from './whiteboard/WhiteboardContent';
 import { WhiteboardToolbar } from './whiteboard/WhiteboardToolbar';
 import { WhiteboardGrid } from './whiteboard/WhiteboardGrid';
@@ -15,9 +14,11 @@ import { loadPositions, savePositions } from '../utils/whiteboardStorage';
 import ErrorBoundary from './ErrorBoundary';
 import TagFilterPanel from './TagFilterPanel';
 import '../styles/whiteboard.css';
+import vistaUrl from '../assets/vista.jpg?url';
 
 // Debug flag to control logging
 const DEBUG = false;
+const SHOW_DEBUG_HUD = false;
 
 export default function WhiteboardLayout({
   albums,
@@ -81,12 +82,10 @@ export default function WhiteboardLayout({
     
     // Only proceed if we need to zoom out
     if (targetScale < transform.scale) {
-      // Calculate transform to center the card with pre-scale translation.
-      // Our container applies translate() before scale(), so translation is unscaled in world space.
-      // To center (cardX, cardY), use x = -cardX, y = -cardY (no scale factor).
+      // Under translate(tx,ty) scale(s), to center world (x,y): t = -s * [x,y]
       const newTransform: Transform = {
-        x: -cardX,
-        y: -cardY,
+        x: -cardX * targetScale,
+        y: -cardY * targetScale,
         scale: targetScale
       };
       
@@ -129,6 +128,10 @@ export default function WhiteboardLayout({
   // Tag filtering state
   const [selectedTags, setSelectedTags] = useState<Set<string>>(new Set());
   const [matchAll, setMatchAll] = useState(false);
+
+  // Track previous tag filter to ensure autofocus only runs on real tag changes
+  const prevTagKeyRef = useRef<string>('');
+  const prevMatchAllRef = useRef<boolean>(false);
 
   // Compute all unique tags from items' data
   const allTags = useMemo(() => {
@@ -198,28 +201,10 @@ export default function WhiteboardLayout({
         : Array.from(selected).some(t => tags.includes(t));
     };
 
-    const matching = items.filter(isMatch);
-    const layoutFn = clustered ? calculateClusteredLayout : calculateInitialLayout;
-    const relayout = layoutFn(matching);
-
-    // Map new x/y onto matching items; move non-matching offscreen
-    const relayoutMap = new Map<string, { x: number; y: number; z: number }>();
-    relayout.forEach(it => relayoutMap.set(it.id, { x: it.position.x, y: it.position.y, z: it.position.z }));
-
+    // Keep world positions intact so dragging continues to work.
+    // Only hide non-matching items by moving them far off-screen.
     return items.map(it => {
-      if (relayoutMap.has(it.id)) {
-        const pos = relayoutMap.get(it.id)!;
-        return {
-          ...it,
-          position: {
-            ...it.position,
-            x: pos.x,
-            y: pos.y,
-            z: pos.z
-          }
-        };
-      }
-      // hide non-matching offscreen
+      if (isMatch(it)) return it;
       return {
         ...it,
         position: { ...it.position, x: it.position.x + 10000, y: it.position.y + 10000 }
@@ -266,11 +251,16 @@ export default function WhiteboardLayout({
     }
   }, [focusedCardId, focusableItems, laidOutItems, items]);
 
-  // Mobile autofocus adaptation on tag toggle (only real mobile/coarse pointer)
+  // Autofocus on tag toggle: if the active focus would change due to filtering,
+  // smoothly move the camera to the chosen target card. Runs ONLY when tag filter changes.
   useEffect(() => {
-    const isMobileDevice = typeof navigator !== 'undefined' && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-    const isCoarsePointer = typeof window !== 'undefined' && typeof window.matchMedia === 'function' && window.matchMedia('(pointer: coarse)').matches;
-    if (!(isMobileDevice || isCoarsePointer)) return;
+    // Build a stable signature for the current tag filter
+    const tagKey = Array.from(selectedTags).sort().join('|');
+    const tagChanged = prevTagKeyRef.current !== tagKey || prevMatchAllRef.current !== matchAll;
+    if (!tagChanged) return; // Ignore runs caused by unrelated re-renders (e.g., pan/zoom)
+    prevTagKeyRef.current = tagKey;
+    prevMatchAllRef.current = matchAll;
+
     const now = (typeof performance !== 'undefined' && performance.now) ? performance.now() : Date.now();
     if (now - lastManualInteractionRef.current < 500) return;
     const visibleIds = focusableItems.map(it => it.id);
@@ -338,6 +328,23 @@ export default function WhiteboardLayout({
   const onGestureStart = useCallback((e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
     markManualInteraction();
     handleGestureStart(e);
+  }, [handleGestureStart, markManualInteraction]);
+
+  // Capture-phase start to allow panning even when clicking on cards when Shift is held
+  const onGestureStartCapture = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
+    const target = e.target as HTMLElement;
+    const onCard = !!target.closest('.draggable-area');
+    const isModifierPan = (e.shiftKey || e.metaKey || e.altKey || e.button === 1);
+    if (onCard && !isModifierPan) {
+      return; // let card drag handle this
+    }
+    markManualInteraction();
+    handleGestureStart(e);
+    // prevent card drag from starting when we intend to pan
+    if (onCard) {
+      e.stopPropagation();
+      e.preventDefault();
+    }
   }, [handleGestureStart, markManualInteraction]);
 
   // Wrap toolbar and focus controls to record manual interaction
@@ -408,9 +415,12 @@ export default function WhiteboardLayout({
   const onDragStart = useCallback(
     (id: string, event: React.MouseEvent) => {
       markManualInteraction();
+      // If panning is active (or user is starting a modifier-pan), skip card drag
+      const isModifierPan = (event.shiftKey || event.metaKey || event.altKey || event.button === 1);
+      if (isPanning || isModifierPan) return;
       handleDragStart(id, event);
     },
-    [handleDragStart, markManualInteraction]
+    [handleDragStart, markManualInteraction, isPanning]
   );
 
   // Initialize view based on device type
@@ -475,6 +485,49 @@ export default function WhiteboardLayout({
       <div className={`fixed inset-0 ${brainTheme === 'dark' ? 'bg-gradient-to-br from-slate-800 to-slate-900' : 'bg-gradient-to-br from-zinc-50 to-zinc-200'}`}>
         {/* Top-left Home button */}
         <a href="/" className={`fixed top-3 left-3 z-[60] rounded-full border px-3 py-2 font-mono text-xs ${brainTheme === 'dark' ? 'bg-black/80 border-cyan-500/20 text-cyan-300' : 'bg-white/90 border-zinc-300 text-zinc-700'} hover:opacity-90 transition`}>Home</a>
+        {/* DEBUG: camera/centering overlay - must NOT be inside transformed container */}
+        {SHOW_DEBUG_HUD && (
+          <div className="debug-hud">
+            {(() => {
+              const scale = transform.scale.toFixed(3);
+              const tx = transform.x.toFixed(2);
+              const ty = transform.y.toFixed(2);
+              const focused = focusedCardId ? laidOutItems.find(it => it.id === focusedCardId) : undefined;
+              let world = 'n/a';
+              let screen = 'n/a';
+              let delta = 'n/a';
+              try {
+                if (focused) {
+                  const cx = focused.position.x;
+                  const cy = focused.position.y;
+                  world = `${cx.toFixed(1)}, ${cy.toFixed(1)}`;
+                  const el = document.querySelector(`[data-item-id="${focused.id}"]`) as HTMLElement | null;
+                  if (el) {
+                    const r = el.getBoundingClientRect();
+                    const sx = (r.left + r.width / 2).toFixed(1);
+                    const sy = (r.top + r.height / 2).toFixed(1);
+                    screen = `${sx}, ${sy}`;
+                    const dx = (r.left + r.width / 2) - window.innerWidth / 2;
+                    const dy = (r.top + r.height / 2) - window.innerHeight / 2;
+                    delta = `${dx.toFixed(1)}, ${dy.toFixed(1)}`;
+                  }
+                }
+              } catch {}
+              return (
+                <div>
+                  <div>scale: {scale}</div>
+                  <div>translate: {tx}, {ty}</div>
+                  <div>focused: {focusedCardId || 'none'}</div>
+                  <div>worldCenter: {world}</div>
+                  <div>screenCenter: {screen}</div>
+                  <div>delta(px): {delta}</div>
+                </div>
+              );
+            })()}
+          </div>
+        )}
+
+        {/* Full viewport gesture catcher on the container */}
         <div
           className={`transform-container ${isTransitioning ? 'is-transitioning' : ''}`}
           style={{
@@ -482,9 +535,9 @@ export default function WhiteboardLayout({
             "--translateY": `${transform.y}px`,
             "--scale": transform.scale,
           } as React.CSSProperties}
-          // Disable manual gestures on mobile, keep them on desktop
           {...(!isMobile && {
             onWheel: handleWheel,
+            onMouseDownCapture: onGestureStartCapture,
             onMouseDown: onGestureStart,
             onMouseMove: handleGestureMove,
             onMouseUp: handleGestureEnd,
@@ -494,6 +547,18 @@ export default function WhiteboardLayout({
             onTouchEnd: handleGestureEnd,
           })}
         >
+          <div className="world">
+          {/* World-space painting background that follows camera */}
+          <div
+            className="whiteboard-background"
+            aria-hidden
+            style={{
+              backgroundImage: `url(${vistaUrl})`,
+              // Subtle theme-aware tint to keep notes readable
+              filter: brainTheme === 'dark' ? 'brightness(0.7) saturate(1.05)' : 'brightness(0.95) saturate(1.05)'
+            } as React.CSSProperties}
+          />
+
           <WhiteboardContent
             items={laidOutItems}
             focusedCardId={focusedCardId}
@@ -504,6 +569,7 @@ export default function WhiteboardLayout({
             onResizeToContent={handleResizeToContent}
             photosByAlbum={photosByAlbum}
           />
+          </div>
         </div>
         
         {/* Tag filter panel */}
