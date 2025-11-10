@@ -1,6 +1,6 @@
 ---
 author: Matt Franchi
-pubDatetime: 2025-01-15T12:00:00.000Z
+pubDatetime: 2025-11-10T12:00:00.000Z
 modDatetime:
 title: Sensing AI Incidents & Risks from Global News
 slug: uair-brief
@@ -16,13 +16,7 @@ tags:
 description: An LLM-based Urban AI Risks (UAIR) assessment pipeline for extracting, verifying, and classifying risk information about AI use cases from large-scale news article collections. The pipeline processes articles through a five-stage workflow combining large language model inference, semantic verification, and regulatory classification.
 bibliography: sample.bib
 ---
-
 <div class="fullwidth">
-
-<img src="Images/cornell-tech.png" style="width:4cm" alt="image" />
-<img src="Images/nokia.png" style="width:4cm" alt="image" />
-
-**
 
 </div>
 
@@ -236,13 +230,7 @@ distribution of articles, with countries colored by article count using
 a yellow-orange-red colormap. Countries with no articles are shown in
 gray.
 
-<figure id="fig:world_map_articles" data-latex-placement="htbp">
-<embed src="figures/world_map_articles_count.pdf" />
-<figcaption>Geographic distribution of articles in the UAIR dataset.
-Countries are colored by article count (yellow to red), with countries
-containing no articles shown in gray. The dataset includes 415,821 total
-articles across 49 countries.</figcaption>
-</figure>
+![Geographic distribution of articles in the UAIR dataset. Countries are colored by article count (yellow to red), with countries containing no articles shown in gray. The dataset includes 415,821 total articles across 49 countries.](@assets/uair-brief/world_map_articles_count.png "Geographic distribution of articles in the UAIR dataset. Countries are colored by article count (yellow to red), with countries containing no articles shown in gray. The dataset includes 415,821 total articles across 49 countries.")
 
 Table <a href="#tab:country_article_counts_all" data-reference-type="ref"
 data-reference="tab:country_article_counts_all">[tab:country_article_counts_all]</a>
@@ -1246,17 +1234,7 @@ each pipeline stage. The pipeline achieves a final retention rate of
 filtering rate reflects the pipeline’s focus on high-quality, verifiable
 AI risk information suitable for regulatory analysis.
 
-<figure id="fig:pipeline-flow-sankey" data-latex-placement="htbp">
-<embed src="figures/pipeline_flow_sankey.pdf" style="width:95.0%" />
-<figcaption>Sankey diagram showing the flow of articles through the UAIR
-pipeline. The diagram visualizes article counts at each stage (nodes)
-and the flow of articles between stages (links). Blue flows represent
-articles progressing through the pipeline, while red flows represent
-articles lost at filtering stages. The pipeline processes 29,372 input
-articles, filtering to 578 relevant articles at classification (98.0%
-loss) and further reducing to 61 verified articles at verification
-(89.4% loss from decomposed articles).</figcaption>
-</figure>
+![Sankey diagram showing the flow of articles through the UAIR pipeline. The diagram visualizes article counts at each stage (nodes) and the flow of articles between stages (links). Blue flows represent articles progressing through the pipeline, while red flows represent articles lost at filtering stages. The pipeline processes 29,372 input articles, filtering to 578 relevant articles at classification (98.0% loss) and further reducing to 61 verified articles at verification (89.4% loss from decomposed articles).](@assets/uair-brief/pipeline_flow_sankey.png "Sankey diagram showing the flow of articles through the UAIR pipeline. The diagram visualizes article counts at each stage (nodes) and the flow of articles between stages (links). Blue flows represent articles progressing through the pipeline, while red flows represent articles lost at filtering stages. The pipeline processes 29,372 input articles, filtering to 578 relevant articles at classification (98.0% loss) and further reducing to 61 verified articles at verification (89.4% loss from decomposed articles).")
 
 <div id="tab:pipeline-flow-summary">
 
@@ -2029,15 +2007,7 @@ employment—show higher proportions of High Risk classifications,
 consistent with the EU AI Act’s focus on protecting fundamental rights
 in these contexts.
 
-<figure id="fig:eu-ai-act-classifications" data-latex-placement="htbp">
-<embed src="figures/eu_ai_act_classifications_heatmap.pdf"
-style="width:75.0%" />
-<figcaption>Heatmap showing distribution of EU AI Act risk
-classifications across deployment domains and risk categories.
-Prohibited practices are rare but concentrated in specific domains
-(e.g., biometric identification). High Risk classifications dominate in
-healthcare and law enforcement domains.</figcaption>
-</figure>
+![Heatmap showing distribution of EU AI Act risk classifications across deployment domains and risk categories. Prohibited practices are rare but concentrated in specific domains (e.g., biometric identification). High Risk classifications dominate in healthcare and law enforcement domains.](@assets/uair-brief/eu_ai_act_classifications_heatmap.png "Heatmap showing distribution of EU AI Act risk classifications across deployment domains and risk categories. Prohibited practices are rare but concentrated in specific domains (e.g., biometric identification). High Risk classifications dominate in healthcare and law enforcement domains.")
 
 ### Temporal Trends in AI-Relevant News Coverage
 
@@ -2059,16 +2029,7 @@ interest in AI-related topics. This trend has implications for risk
 monitoring and regulatory compliance, as increased coverage may indicate
 both greater AI adoption and heightened public scrutiny of AI systems.
 
-<figure id="fig:growth-of-ai-relevant-articles"
-data-latex-placement="htbp">
-<embed src="figures/fraction_relevant_articles_per_year.pdf"
-style="width:80.0%" />
-<figcaption>Temporal trends in AI-relevant article fraction. The
-proportion of articles classified as AI-relevant has increased steadily
-over time, with a dip during the Coronavirus pandemic, reflecting both
-growing AI deployment and improved media coverage of AI-related
-topics.</figcaption>
-</figure>
+![Temporal trends in AI-relevant article fraction. The proportion of articles classified as AI-relevant has increased steadily over time, with a dip during the Coronavirus pandemic, reflecting both growing AI deployment and improved media coverage of AI-related topics.](@assets/uair-brief/fraction_relevant_articles_per_year.png "Temporal trends in AI-relevant article fraction. The proportion of articles classified as AI-relevant has increased steadily over time, with a dip during the Coronavirus pandemic, reflecting both growing AI deployment and improved media coverage of AI-related topics.")
 
 </div>
 
@@ -2220,5 +2181,1661 @@ reproducibility.
 # Appendices
 
 <div class="appendices">
+
+1em 1em 1em
+
+# Relevance Classification Prompt
+
+## System Prompt
+
+As a Senior Technology Specialist, you specialize in the latest
+developments in Artificial Intelligence (AI) technology. You focus on
+Responsible AI development and use. As part of this, you investigate
+real-world AI incidents from news articles and try to understand both
+the original AI uses as well as specific, sometimes malicious,
+instantiations of those uses that caused the incidents. In this pivotal
+role, you are entrusted with reviewing and cataloguing the diverse
+applications, use cases, and incidents of AI technology across multiple
+domains.
+
+## User Template
+
+Read the following article chunk and answer strictly YES or NO to the
+question: Does this article describe a use of artificial intelligence
+technology?
+
+\[article_id={article_id} chunk={chunk_id}/{num_chunks}\] {chunk_text}
+
+## Output Instructions
+
+The model must return only “YES” or “NO”. The classification uses guided
+decoding with a choice constraint limiting outputs to “YES” or “NO,”
+ensuring deterministic binary classification without post-processing.
+This eliminates parsing errors and ensures consistent output format.
+
+## Configuration
+
+The stage supports optional keyword-based pre-filtering to reduce
+computational costs by gating articles before LLM processing. The
+keyword regex matches AI-related terms including “artificial
+intelligence,” “machine learning,” “neural network,” “large language
+model,” and common model names (GPT, Claude, Gemini, etc.).
+
+Batch size is typically 16 articles per batch, GPU memory utilization
+0.8, and maximum model context length 8,192 tokens. The stage outputs
+two datasets: all articles with relevance scores, and a filtered set
+containing only relevant articles. On the US dataset, this filtered set
+contains 578 articles (1.97% of 29,372 input articles) for downstream
+processing.
+
+1em 1em 1em
+
+# Tuple Decomposition Prompt
+
+## System Prompt
+
+You are an expert artificial intelligence safety researcher trained in
+extracting and summarizing urban AI risks from news articles. Given a
+single news article that pertains to an urban artificial intelligence
+(AI) use case, extract a structured template of the use, including the
+deployment domain, deployment purpose, deployment capability, identity
+of the AI deployer, identity of the AI subject, identity of the AI
+developer, location of the AI deployer, location of the AI subject, and
+date & time of the event. For any field that is missing, vague, unclear,
+or not specified, set it to null and list it under missing. You can
+provide multiple values for a field.
+
+## User Template
+
+You will be provided input with the text of a news article randomly
+sampled from a global news database. Only focus on the article
+narrative, not advertisements or other scraping artifacts. Based on the
+input information, formulate the following outputs:
+
+### I) Original Intended AI Use
+
+You need to focus on the original AI use, as it might have been intended
+for potentially beneficial applications, even if it has been misused or
+its unintended applications resulted in the incident. DO NOT FILL IN THE
+FIELDS IF THEY ARE NOT SPECIFIED IN THE INPUT ARTICLE TEXT; instead,
+list them under “missing”.
+
+The definition of the use must contain specific details about how the
+technology is used by using action verbs that clearly describe the
+actions, activities, or processes of the uses. The level of specificity
+should be general and not on the very concrete instance. For each of
+these uses, you must output the following 10 elements each in less than
+7 words:
+
+1.  **Domain:** The domain that represents the area or sector in which
+    the AI system is intended to be used.
+
+2.  **Purpose:** The purpose or objective that is intended to be
+    accomplished by using an AI system.
+
+3.  **Capability:** The capability of the AI system that enables the
+    realization of its purpose and reflects the technological
+    capability.
+
+4.  **Deployment Space:** The type of space in which the use took place.
+    Can be one of: Online space; Publicly accessible space; Not publicly
+    accessible space.
+
+5.  **AI Deployer:** The entity or individual in charge of deploying and
+    managing the AI system, including individuals, organizations,
+    corporations, public authorities, and agencies responsible for its
+    operation and management. Even if the deployer of a general intended
+    use is specified, such as the AI system provider, or if a specific
+    person or entity misused the original use, do not name that entity
+    directly but instead output the more general intended original
+    deployer (e.g., “Social media company” instead of “Company X”).
+
+6.  **Location of AI Deployer:** The location of the AI deployer,
+    including countries, cities, or regions.
+
+7.  **AI Subject:** The entity or individual directly affected by the
+    use of the AI system, experiencing its effects and consequences.
+    They interact with or are impacted by the AI system’s processes,
+    decisions, or outcomes. If the general AI Deployer of the original
+    intended AI use is specified, you should include it. If a specific
+    person or entity were intentionally or unintentionally harmed but
+    does not represent well the general deployer, output instead the
+    general intended original deployer (e.g., “Social media users”
+    instead of “John Doe”).
+
+8.  **Location of AI Subject:** The location of the AI subject,
+    including countries, cities, or regions.
+
+9.  **Date & Time of Event:** The date and time of the event, including
+    the year, month, day, hour, and minute.
+
+10. **Missing:** List of missing or uncertain fields.
+
+Ensure that each concept is specific and easy to understand for
+non-experts. Avoid duplicate purposes or objectives and use clear and
+precise language to describe the uses’ concepts.
+
+### Capability Formatting
+
+For the “Capability”, write it by combining action verbs in gerund form
+(i.e., ending with “ing”), inferences and data, entity or metric.
+
+1.  **Action verbs** clearly describe the actions, activities, or
+    processes taken by the AI system, e.g., identify. Choose the most
+    suitable action verb from the following list:
+
+    - \(A\) Estimating (e.g., Rating, Grading, Measuring, Assessing)
+
+    - \(B\) Forecasting (e.g., Predicting, Guessing, Speculating)
+
+    - \(C\) Comparing (e.g., Ranking, Ordering, Finding Best, Finding
+      Cheapest, Recommending)
+
+    - \(D\) Detecting (e.g., Monitoring, Sensing, Noticing, Classifying,
+      Discriminating)
+
+    - \(E\) Identifying (e.g., Recognizing, Discerning, Finding,
+      Classifying, Perceiving)
+
+    - \(F\) Discovering (e.g., Extracting, Noticing, Organizing,
+      Clustering, Grouping, Connecting, Revealing)
+
+    - \(G\) Generating (e.g., Making, Composing, Constructing, Creating,
+      Authoring)
+
+    - \(H\) Acting (e.g., Doing, Executing, Playing, Going, Learning,
+      Operating)
+
+2.  **Inference** clearly describes the output or conclusion drawn by
+    the AI system based on the data it processes, e.g., crop yield,
+    floods, trend, anomaly, wildfires, pattern, and probability
+
+3.  **Data, Entity or Metric** clearly describes the source, type, or
+    nature of the data used by the AI system, e.g., from an optical
+    camera, from an infrared camera, user input, sensor readings,
+    transaction records, biometric data, environmental data, social
+    media posts, geographical information, medical records, and
+    financial metrics.
+
+For “Purpose”, write it also in a gerund verb form (i.e., ending with
+“ing”).
+
+Double-check that you are outputting realistic, i.e., plausible,
+meaningful, and useful uses.
+
+### II) Specific AI Risks
+
+Describe the specific AI risks that are mentioned in the input. Format
+each risk as one sentence, starting with the concrete risk if specified,
+or else your identified/inferred risk. Follow this by a verb in past
+tense specifying how it was mentioned, and then “due to” and the
+specific reason (e.g., unintended use of the AI system, malfunctioning,
+misuse, technical capability risk or failure).
+
+For this part of the output, unlike the general AI use concepts, you
+must use the specific and concrete parties involved if they were named
+in the input (e.g., “Company X” instead of “Social media company” and
+“John Doe” instead of “social media users”). If the parties are not
+named in the input, use general terms without making up connections.
+
+List as many distinct risks as you can clearly identify from the
+incident, but do not duplicate risks if the same or a similar risk
+affected multiple parties. Instead, include all those parties in a
+single risk description. Be specific and name any parties involved—both
+the at-risk ones and the AI deployers/providers—but only if they are
+listed in the input. End each risk description with a full stop
+(period).
+
+### III) Specific AI Harms
+
+Describe the specific AI harms that occurred. Format each harm as one
+sentence, starting with the concrete harmed parties if specified, or
+else your identified/inferred harmed parties or subjects. Follow this by
+a verb in past tense specifying how they were harmed, and then “due to”
+and the specific reason (e.g., unintended use of the AI system,
+malfunctioning, misuse, technical capability risk or failure).
+
+For this part of the output, unlike the general AI use concepts, you
+must use the specific and concrete parties involved if they were named
+in the input (e.g., “Company X” instead of “Social media company” and
+“John Doe” instead of “social media users”). If the parties are not
+named in the input, use general terms without making up connections.
+
+List as many distinct harms as you can clearly identify from the
+incident, but do not duplicate harms if the same or a similar harm
+affected multiple parties. Instead, include all those parties in a
+single harm description. Be specific and name any parties involved—both
+the harmed ones and the AI deployers/providers—but only if they are
+listed in the input. End each harm description with a full stop
+(period).
+
+### IV) Specific AI Benefits
+
+Describe the specific AI benefits that are mentioned in the input.
+Format each benefit as one sentence, starting with the concrete benefit
+if specified, or else your identified/inferred benefit. Follow this by a
+verb in past tense specifying how it was mentioned, and then “due to”
+and the specific reason (e.g., unintended use of the AI system,
+malfunctioning, misuse, technical capability risk or failure).
+
+For this part of the output, unlike the general AI use concepts, you
+must use the specific and concrete parties involved if they were named
+in the input (e.g., “Company X” instead of “Social media company” and
+“John Doe” instead of “social media users”). If the parties are not
+named in the input, use general terms without making up connections.
+
+List as many distinct benefits as you can clearly identify from the
+incident, but do not duplicate benefits if the same or a similar benefit
+affected multiple parties. Instead, include all those parties in a
+single benefit description. Be specific and name any parties
+involved—both the benefited ones and the AI deployers/providers—but only
+if they are listed in the input. End each benefit description with a
+full stop (period).
+
+**Important:** Double-check your whole output and ensure that the AI use
+is described in general terms, while the benefits are described in
+specific terms.
+
+## Output Format
+
+The extraction must be returned as a correctly formatted JSON document
+with the following structure:
+
+    {
+        "deployment_domain": "...",
+        "deployment_purpose": "...",
+        "deployment_capability": "...",
+        "deployment_space": "...",
+        "identity_of_ai_deployer": "...",
+        "location_of_ai_deployer": "...",
+        "identity_of_ai_subject": "...",
+        "location_of_ai_subject": "...",
+        "identity_of_ai_developer": "...",
+        "date_and_time_of_event": "...",
+        "missing": [...],
+        "list_of_harms_that_occurred": [...],
+        "list_of_risks_that_occurred": [...],
+        "list_of_benefits_that_occurred": [...]
+    }
+
+The extraction uses guided decoding with a JSON schema generated from a
+Pydantic model. The schema defines field types (strings, enums, arrays)
+and required fields. Schema references (`$ref`) are inlined for xgrammar
+compatibility. The guided decoding configuration enforces strict schema
+compliance (`disable_fallback: true`,
+`disable_additional_properties: true`), ensuring outputs conform to the
+expected structure without post-processing.
+
+Ensure to output only the correctly formatted JSON and nothing else.
+
+## Input
+
+Article: {article_text}
+
+1em 1em 1em
+
+# Tuple Verification Methodology
+
+## Overview
+
+The verification stage validates extracted tuples against source article
+text using a combination of semantic similarity and natural language
+inference (NLI). Unlike other pipeline stages that use LLM prompts,
+verification employs specialized embedding and NLI models to assess
+whether extracted claims are supported by evidence in the source text.
+
+## Verification Models
+
+### Embedding Model
+
+The system uses intfloat/e5-base, a multilingual embedding model with
+E5-style query/passage prefixes. Text is encoded with mean pooling over
+token embeddings, normalized to unit vectors, and compared via cosine
+similarity. The model supports batch encoding for efficiency.
+
+### NLI Model
+
+The system uses mDeBERTa-v3-base-xnli-multilingual for three-way
+classification (entailment, neutral, contradiction). The model handles
+multilingual text and outputs probability distributions over the three
+classes. Label indices are resolved dynamically from model config to
+handle different model architectures.
+
+## Verification Process
+
+The verification method employs a “combo” approach that combines
+similarity scores, entailment probabilities, and contradiction
+detection. The process for each tuple field proceeds as follows:
+
+1.  **Text Preprocessing:** Split article text into sentences for
+    granular matching.
+
+2.  **Encoding:** Encode the extracted claim (tuple field value) and all
+    article sentences using the embedding model. Both claim and
+    sentences are encoded with appropriate prefixes (query for claim,
+    passage for sentences).
+
+3.  **Similarity Matching:** Compute cosine similarities between the
+    claim embedding and all sentence embeddings. Identify the top-k most
+    relevant text spans (typically $`k=5`$) from the article for each
+    tuple field.
+
+4.  **Natural Language Inference:** Run NLI on claim-premise pairs,
+    where the premise is each of the top-k matching sentences. The NLI
+    model outputs probabilities for entailment, neutral, and
+    contradiction classes.
+
+5.  **Score Combination:** Combine scores using configurable thresholds.
+    The “combo” method requires:
+
+    - Similarity $`\geq 0.55`$
+
+    - Entailment probability $`\geq 0.85`$
+
+    - Contradiction probability $`\leq 0.05`$
+
+6.  **Field Verification:** A tuple field is considered verified if at
+    least one of the top-k sentences meets all three thresholds.
+
+7.  **Core Tuple Verification:** A core tuple is considered verified if
+    its key fields (domain, purpose, capability, deployer, subject) all
+    meet the verification thresholds.
+
+## Windowing (Optional)
+
+Optional windowing groups consecutive sentences into windows
+(configurable size and stride) to handle multi-sentence evidence spans.
+This is particularly useful for complex claims that span multiple
+sentences. When windowing is enabled, the system:
+
+- Groups sentences into overlapping windows (default window size: 5
+  sentences, stride: 2)
+
+- Encodes each window as a single passage
+
+- Computes similarities and runs NLI on claim-window pairs
+
+- Selects the best-matching window for verification
+
+## Configuration Parameters
+
+Default thresholds are:
+
+- Similarity threshold: $`\geq 0.55`$
+
+- Entailment threshold: $`\geq 0.85`$
+
+- Contradiction threshold: $`\leq 0.05`$
+
+- Top-k sentences: 5
+
+- Windowing: disabled by default
+
+- Window size: 5 sentences (when enabled)
+
+- Window stride: 2 sentences (when enabled)
+
+## Output
+
+The verification stage produces verification scores and flags for each
+tuple field:
+
+- `sim_score` — Cosine similarity score between claim and best-matching
+  sentence
+
+- `ent_prob` — Entailment probability from NLI model
+
+- `contra_prob` — Contradiction probability from NLI model
+
+- `verified` — Boolean flag indicating if field meets all thresholds
+
+- `core_tuple_verified` — Boolean flag indicating if all core fields
+  (domain, purpose, capability, deployer, subject) are verified
+
+On the US dataset, 61 of 578 decomposed articles (10.5%) pass core tuple
+verification.
+
+1em 1em 1em
+
+# EU AI Act Risk Classification Prompt
+
+## System Prompt
+
+You are an experienced regulatory compliance specialist who works in the
+field of artificial intelligence (AI) technology regulation. You are
+thoughtful, decisive, experienced and conscientious. You have access to
+the entirety of the EU AI Act and its amendments, which outline how
+various AI technologies are to be regulated and risk-classified within
+the European Union.
+
+## Classification Instructions
+
+Classify the following urban AI use by utilizing a three-tier
+classification: 1) Prohibited, 2) High Risk, and 3) Limited or Low Risk.
+
+### Four Classification Steps
+
+1.  **Write a Brief Description:** Write a brief description of the
+    urban AI usage, using similar language to the EU AI Act. The
+    description should start with “The urban AI usage intended to be
+    used...”, and be written in a single sentence.
+
+2.  **Determine Risk Level:** Determine whether the urban AI usage is
+    Prohibited or of High Risk, providing the exact text from the EU AI
+    Act and explaining the reasoning. Be very strict and verify the
+    reasoning. Assume High Risk unless there is clear evidence that it
+    is Prohibited. Pay particular attention to the subject and user of
+    the urban AI usage, as this is critical for classification. Ensure
+    that the subject and user align with the text. They are very
+    important. Also, ensure that you understand the purpose and the
+    capability of the urban AI usage as this is highly critical for the
+    risk classification. For example, the capability to verify patient
+    identities by using urban AI usage implies the use of biometric
+    identification of patients. Be aware of these and similar cases.
+
+3.  **Review Amendments:** Go through all the amendments to the EU AI
+    Act and ensure that nothing has changed that would affect the
+    classification. If something has changed, update the classification
+    accordingly and explicitly reference the amendment that most closely
+    resembles the urban AI usage. The amendments can be found under the
+    text: “Here are some important amendments to the Act:”
+
+4.  **Default Classification:** If the urban AI usage is neither
+    Prohibited nor High Risk, classify it as Limited or Low Risk.
+
+It is of utmost importance to exercise precision and make accurate
+judgments when classifying the risk associated with the urban AI usage.
+Please carefully consider all the regulations listed below during the
+risk classification of the urban AI usage.
+
+## Article 5: Prohibited Artificial Intelligence Practices
+
+### Paragraph 1: Prohibited Practices
+
+The following artificial intelligence practices shall be prohibited:
+
+1.  The placing on the market, putting into service or use of an AI
+    system that deploys subliminal techniques beyond a person’s
+    consciousness or purposefully manipulative or deceptive techniques,
+    with the objective to or the effect of materially distorting a
+    person’s or a group of persons’ behaviour by appreciably impairing
+    the person’s ability to make an informed decision, thereby causing
+    the person to take a decision that that person would not have
+    otherwise taken in a manner that causes or is likely to cause that
+    person, another person or group of persons significant harm;
+
+2.  The placing on the market, putting into service or use of an AI
+    system that exploits any of the vulnerabilities of a person or a
+    specific group of persons due to their age, disability or a specific
+    social or economic situation, with the objective to or the effect of
+    materially distorting the behaviour of that person or a person
+    pertaining to that group in a manner that causes or is reasonably
+    likely to cause that person or another person significant harm;
+
+3.  The placing on the market or putting into service for this specific
+    purpose, or use of biometric categorisation systems that categorise
+    individually natural persons based on their biometric data to deduce
+    or infer their race, political opinions, trade union membership,
+    religious or philosophical beliefs, sex life or sexual orientation.
+    This prohibition does not cover any labelling or filtering of
+    lawfully acquired biometric datasets, such as images, based on
+    biometric data or categorizing of biometric data in the area of law
+    enforcement;
+
+4.  The placing on the market, putting into service or use of AI systems
+    for the evaluation or classification of natural persons or groups
+    thereof over a certain period of time based on their social
+    behaviour or known, inferred or predicted personal or personality
+    characteristics, with the social score leading to either or both of
+    the following:
+
+    1.  detrimental or unfavourable treatment of certain natural persons
+        or whole groups thereof in social contexts that are unrelated to
+        the contexts in which the data was originally generated or
+        collected;
+
+    2.  detrimental or unfavourable treatment of certain natural persons
+        or groups thereof that is unjustified or disproportionate to
+        their social behaviour or its gravity;
+
+5.  The use of ‘real-time’ remote biometric identification systems in
+    publicly accessible spaces for the purpose of law enforcement unless
+    and in as far as such use is strictly necessary for one of the
+    following objectives:
+
+    1.  the targeted search for specific victims of abduction,
+        trafficking in human beings and sexual exploitation of human
+        beings as well as search for missing persons;
+
+    2.  the prevention of a specific, substantial and imminent threat to
+        the life or physical safety of natural persons or a genuine and
+        present or genuine and foreseeable threat of a terrorist attack;
+
+    3.  the localisation or identification of a person suspected of
+        having committed a criminal offence, for the purposes of
+        conducting a criminal investigation, prosecution or executing a
+        criminal penalty for offences, referred to in Annex II and
+        punishable in the Member State concerned by a custodial sentence
+        or a detention order for a maximum period of at least four
+        years.
+
+    This paragraph is without prejudice to the provisions in Article 9
+    of the GDPR for the processing of biometric data for purposes other
+    than law enforcement;
+
+6.  The placing on the market, putting into service for this specific
+    purpose, or use of an AI system for making risk assessments of
+    natural persons in order to assess or predict the risk of a natural
+    person to commit a criminal offence, based solely on the profiling
+    of a natural person or on assessing their personality traits and
+    characteristics; This prohibition shall not apply to AI systems used
+    to support the human assessment of the involvement of a person in a
+    criminal activity, which is already based on objective and
+    verifiable facts directly linked to a criminal activity;
+
+7.  The placing on the market, putting into service for this specific
+    purpose, or use of AI systems that create or expand facial
+    recognition databases through the untargeted scraping of facial
+    images from the internet or CCTV footage;
+
+8.  The placing on the market, putting into service for this specific
+    purpose, or use of AI systems to infer emotions of a natural person
+    in the areas of workplace and education institutions except in cases
+    where the use of the AI system is intended to be put in place or
+    into the market for medical or safety reasons;
+
+### Paragraph 1a
+
+This Article shall not affect the prohibitions that apply where an
+artificial intelligence practice infringes other Union law.
+
+### Paragraphs 2–6: Real-Time Remote Biometric Identification
+
+**Paragraph 2.** The use of ‘real-time’ remote biometric identification
+systems in publicly accessible spaces for the purpose of law enforcement
+for any of the objectives referred to in paragraph 1 point d) shall only
+be deployed for the purposes under paragraph 1, point d) to confirm the
+specifically targeted individual’s identity and it shall take into
+account the following elements:
+
+1.  the nature of the situation giving rise to the possible use, in
+    particular the seriousness, probability and scale of the harm caused
+    in the absence of the use of the system;
+
+2.  the consequences of the use of the system for the rights and
+    freedoms of all persons concerned, in particular the seriousness,
+    probability and scale of those consequences.
+
+In addition, the use of ‘real-time’ remote biometric identification
+systems in publicly accessible spaces for the purpose of law enforcement
+for any of the objectives referred to in paragraph 1 point d) shall
+comply with necessary and proportionate safeguards and conditions in
+relation to the use in accordance with national legislations authorizing
+the use thereof, in particular as regards the temporal, geographic and
+personal limitations. The use of the ‘real-time’ remote biometric
+identification system in publicly accessible spaces shall only be
+authorised if the law enforcement authority has completed a fundamental
+rights impact assessment as provided for in Article 27 and has
+registered the system in the database according to Article 49. However,
+in duly justified cases of urgency, the use of the system may be
+commenced without the registration, provided that the registration is
+completed without undue delay.
+
+**Paragraph 3.** As regards paragraphs 1, point (d) and 2, each use for
+the purpose of law enforcement of a ‘real-time’ remote biometric
+identification system in publicly accessible spaces shall be subject to
+a prior authorisation granted by a judicial authority or an independent
+administrative authority whose decision is binding of the Member State
+in which the use is to take place, issued upon a reasoned request and in
+accordance with the detailed rules of national law referred to in
+paragraph 4. However, in a duly justified situation of urgency, the use
+of the system may be commenced without an authorisation provided that,
+such authorisation shall be requested without undue delay, at the latest
+within 24 hours. If such authorisation is rejected, its use shall be
+stopped with immediate effect and all the data, as well as the results
+and outputs of this use shall be immediately discarded and deleted.
+
+**Paragraph 3a.** Without prejudice to paragraph 3, each use of a
+‘real-time’ remote biometric identification system in publicly
+accessible spaces for law enforcement purposes shall be notified to the
+relevant market surveillance authority and the national data protection
+authority in accordance with the national rules referred to in paragraph
+4.
+
+**Paragraph 4.** A Member State may decide to provide for the
+possibility to fully or partially authorise the use of ‘real-time’
+remote biometric identification systems in publicly accessible spaces
+for the purpose of law enforcement within the limits and under the
+conditions listed in paragraphs 1, point (d), 2 and 3.
+
+**Paragraph 5.** National market surveillance authorities and the
+national data protection authorities of Member States that have been
+notified of the use of ‘real-time’ remote biometric identification
+systems in publicly accessible spaces for law enforcement purposes
+pursuant to paragraph 3a shall submit to the Commission annual reports
+on such use.
+
+**Paragraph 6.** The Commission shall publish annual reports on the use
+of ‘real-time’ remote biometric identification systems in publicly
+accessible spaces for law enforcement purposes based on aggregated data
+in Member States based on the annual reports referred to in paragraph 5.
+
+### Definition: Publicly Accessible Space
+
+For the purposes of this Regulation the notion of *publicly accessible*
+space should be understood as referring to any physical place that is
+accessible to an undetermined number of natural persons, and
+irrespective of whether the place in question is privately or publicly
+owned and irrespective of the activity for which the place may be used,
+such as commerce (for instance, shops, restaurants, cafés), services
+(for instance, banks, professional activities, hospitality), sport (for
+instance, swimming pools, gyms, stadiums), transport (for instance, bus,
+metro and railway stations, airports, means of transport), entertainment
+(for instance, cinemas, theatres, museums, concert and conference halls)
+leisure or otherwise (for instance, public roads and squares, parks,
+forests, playgrounds).
+
+A place should be classified as publicly accessible also if, regardless
+of potential capacity or security restrictions, access is subject to
+certain predetermined conditions, which can be fulfilled by an
+undetermined number of persons, such as purchase of a ticket or title of
+transport, prior registration or having a certain age. By contrast, a
+place should not be considered publicly accessible if access is limited
+to specific and defined natural persons through either Union or national
+law directly related to public safety or security or through the clear
+manifestation of will by the person having the relevant authority on the
+place.
+
+The factual possibility of access alone (e.g. an unlocked door, an open
+gate in a fence) does not imply that the place is publicly accessible in
+the presence of indications or circumstances suggesting the contrary
+(e.g. signs prohibiting or restricting access). Company and factory
+premises as well as offices and workplaces that are intended to be
+accessed only by relevant employees and service providers are places
+that are not publicly accessible. Publicly accessible spaces should not
+include prisons or border control.
+
+Some other areas may be composed of both not publicly accessible and
+publicly accessible areas, such as the hallway of a private residential
+building necessary to access a doctor’s office or an airport. Online
+spaces are not covered either, as they are not physical spaces. Whether
+a given space is accessible to the public should however be determined
+on a case-by-case basis, having regard to the specificities of the
+individual situation at hand.
+
+## Article 6: Classification Rules for High-Risk AI Systems
+
+### Paragraph 1: Safety Components
+
+Irrespective of whether an AI system is placed on the market or put into
+service independently from the products referred to in points (a) and
+(b), that AI system shall be considered high-risk where both of the
+following conditions are fulfilled:
+
+1.  the AI system is intended to be used as a safety component of a
+    product, or the AI system is itself a product, covered by the Union
+    harmonisation legislation listed in Annex I;
+
+2.  the product whose safety component pursuant to point (a) is the AI
+    system, or the AI system itself as a product, is required to undergo
+    a third party conformity assessment, with a view to the placing on
+    the market or putting into service of that product pursuant to the
+    Union harmonisation legislation listed in Annex I.
+
+### Paragraph 2: Annex III High-Risk Systems
+
+In addition to the high-risk AI systems referred to in paragraph 1, AI
+systems referred to in Annex III shall also be considered high-risk.
+
+### Paragraph 2a: Derogation from High-Risk Classification
+
+By derogation from paragraph 2 AI systems shall not be considered as
+high risk if they do not pose a significant risk of harm, to the health,
+safety or fundamental rights of natural persons, including by not
+materially influencing the outcome of decision making. This shall be the
+case if one or more of the following criteria are fulfilled:
+
+1.  the AI system is intended to perform a narrow procedural task;
+
+2.  the AI system is intended to improve the result of a previously
+    completed human activity;
+
+3.  the AI system is intended to detect decision-making patterns or
+    deviations from prior decision-making patterns and is not meant to
+    replace or influence the previously completed human assessment,
+    without proper human review; or
+
+4.  the AI system is intended to perform a preparatory task to an
+    assessment relevant for the purpose of the use cases listed in Annex
+    III.
+
+Notwithstanding first subparagraph of this paragraph, an AI system shall
+always be considered high-risk if the AI system performs profiling of
+natural persons.
+
+### Paragraph 2b: Documentation Requirements
+
+A provider who considers that an AI system referred to in Annex III is
+not high-risk shall document its assessment before that system is placed
+on the market or put into service. Such provider shall be subject to the
+registration obligation set out in Article 49(1a). Upon request of
+national competent authorities, the provider shall provide the
+documentation of the assessment.
+
+### Paragraph 2c: Commission Guidelines
+
+The Commission shall, after consulting the AI Board, and no later than
+\[18 months\] after the entry into force of this Regulation, provide
+guidelines specifying the practical implementation of this article
+completed by a comprehensive list of practical examples of high risk and
+non-high risk use cases on AI systems pursuant to Article 82b.
+
+### Paragraph 2d: Delegated Acts
+
+The Commission is empowered to adopt delegated acts in accordance with
+Article 97 to amend the criteria laid down in points a) to d) of the
+first subparagraph of paragraph 2a. The Commission may adopt delegated
+acts adding new criteria to those laid down in points a) to d) of the
+first subparagraph of paragraph 2a, or modifying them, only where there
+is concrete and reliable evidence of the existence of AI systems that
+fall under the scope of Annex III but that do not pose a significant
+risk of harm to the health, safety and fundamental rights.
+
+## Annex I: Union Harmonisation Legislation
+
+### Part I Section A: New Legislative Framework
+
+1.  Directive 2006/42/EC on machinery (as repealed by the Machinery
+    Regulation)
+
+2.  Directive 2009/48/EC on the safety of toys
+
+3.  Directive 2013/53/EU on recreational craft and personal watercraft
+
+4.  Directive 2014/33/EU on lifts and safety components for lifts
+
+5.  Directive 2014/34/EU on equipment and protective systems for
+    potentially explosive atmospheres
+
+6.  Directive 2014/53/EU on radio equipment
+
+7.  Directive 2014/68/EU on pressure equipment
+
+8.  Regulation (EU) 2016/424 on cableway installations
+
+9.  Regulation (EU) 2016/425 on personal protective equipment
+
+10. Regulation (EU) 2016/426 on appliances burning gaseous fuels
+
+11. Regulation (EU) 2017/745 on medical devices
+
+12. Regulation (EU) 2017/746 on in vitro diagnostic medical devices
+
+### Part II Section B: Other Union Harmonisation Legislation
+
+1.  Regulation (EC) No 300/2008 on civil aviation security
+
+2.  Regulation (EU) No 168/2013 on two- or three-wheel vehicles and
+    quadricycles
+
+3.  Regulation (EU) No 167/2013 on agricultural and forestry vehicles
+
+4.  Directive 2014/90/EU on marine equipment
+
+5.  Directive (EU) 2016/797 on the interoperability of the rail system
+
+6.  Regulation (EU) 2018/858 on motor vehicles and their trailers
+
+7.  Regulation (EU) 2019/2144 on type-approval requirements for motor
+    vehicles
+
+8.  Regulation (EU) 2018/1139 on civil aviation and European Union
+    Aviation Safety Agency (for unmanned aircraft)
+
+## Annex II: List of Criminal Offences
+
+Criminal offences referred to in Article 5(1)(iii):
+
+- Terrorism
+
+- Trafficking in human beings
+
+- Sexual exploitation of children and child pornography
+
+- Illicit trafficking in narcotic drugs and psychotropic substances
+
+- Illicit trafficking in weapons, munitions and explosives
+
+- Murder
+
+- Grievous bodily injury
+
+- Illicit trade in human organs and tissue
+
+- Illicit trafficking in nuclear or radioactive materials
+
+- Kidnapping, illegal restraint and hostage-taking
+
+- Crimes within the jurisdiction of the International Criminal Court
+
+- Unlawful seizure of aircraft/ships
+
+- Rape
+
+- Environmental crime
+
+- Organised or armed robbery
+
+- Sabotage
+
+- Participation in a criminal organisation involved in one or more
+  offences listed above
+
+## Annex III: High-Risk AI Systems
+
+High-risk AI systems pursuant to Article 6(2) are the AI systems listed
+in any of the following areas:
+
+### 1. Biometrics
+
+Insofar as their use is permitted under relevant Union or national law:
+
+1.  Remote biometric identification systems. This shall not include AI
+    systems intended to be used for biometric verification whose sole
+    purpose is to confirm that a specific natural person is the person
+    he or she claims to be;
+
+2.  AI systems intended to be used for biometric categorisation,
+    according to sensitive or protected attributes or characteristics
+    based on the inference of those attributes or characteristics;
+
+3.  AI systems intended to be used for emotion recognition.
+
+### 2. Critical Infrastructure
+
+1.  AI systems intended to be used as safety components in the
+    management and operation of critical digital infrastructure, road
+    traffic and the supply of water, gas, heating and electricity.
+
+### 3. Education and Vocational Training
+
+1.  AI systems intended to be used to determine access or admission or
+    to assign natural persons to educational and vocational training
+    institutions at all levels;
+
+2.  AI systems intended to be used to evaluate learning outcomes,
+    including when those outcomes are used to steer the learning process
+    of natural persons in educational and vocational training
+    institutions at all levels;
+
+3.  AI systems intended to be used for the purpose of assessing the
+    appropriate level of education that individual will receive or will
+    be able to access, in the context of/within education and vocational
+    training institution;
+
+4.  AI systems intended to be used for monitoring and detecting
+    prohibited behaviour of students during tests in the context
+    of/within education and vocational training institutions.
+
+### 4. Employment, Workers Management and Access to Self-Employment
+
+1.  AI systems intended to be used for recruitment or selection of
+    natural persons, notably to place targeted job advertisements, to
+    analyse and filter job applications, and to evaluate candidates;
+
+2.  AI intended to be used to make decisions affecting terms of the work
+    related relationships, promotion and termination of work-related
+    contractual relationships, to allocate tasks based on individual
+    behaviour or personal traits or characteristics and to monitor and
+    evaluate performance and behaviour of persons in such relationships.
+
+### 5. Access to and Enjoyment of Essential Private and Public Services
+
+1.  AI systems intended to be used by public authorities or on behalf of
+    public authorities to evaluate the eligibility of natural persons
+    for essential public assistance benefits and services, including
+    healthcare services, as well as to grant, reduce, revoke, or reclaim
+    such benefits and services;
+
+2.  AI systems intended to be used to evaluate the creditworthiness of
+    natural persons or establish their credit score, with the exception
+    of AI systems used for the purpose of detecting financial fraud;
+
+3.  AI systems intended to evaluate and classify emergency calls by
+    natural persons or to be used to dispatch, or to establish priority
+    in the dispatching of emergency first response services, including
+    by police, firefighters and medical aid, as well as of emergency
+    healthcare patient triage systems;
+
+4.  AI systems intended to be used for risk assessment and pricing in
+    relation to natural persons in the case of life and health
+    insurance.
+
+### 6. Law Enforcement
+
+Insofar as their use is permitted under relevant Union or national law:
+
+1.  AI systems intended to be used by or on behalf of law enforcement
+    authorities, or by Union institutions, agencies, offices or bodies
+    in support of law enforcement authorities or on their behalf to
+    assess the risk of a natural person to become a victim of criminal
+    offences;
+
+2.  AI systems intended to be used by or on behalf of law enforcement
+    authorities or by Union institutions, bodies and agencies in support
+    of law enforcement authorities as polygraphs and similar tools;
+
+3.  AI systems intended to be used by or on behalf of law enforcement
+    authorities, or by Union institutions, agencies, offices or bodies
+    in support of law enforcement authorities to evaluate the
+    reliability of evidence in the course of investigation or
+    prosecution of criminal offences;
+
+4.  AI systems intended to be used by law enforcement authorities or on
+    their behalf or by Union institutions, agencies, offices or bodies
+    in support of law enforcement authorities for assessing the risk of
+    a natural person of offending or re-offending not solely based on
+    profiling of natural persons as referred to in Article 3(4) of
+    Directive (EU) 2016/680 or to assess personality traits and
+    characteristics or past criminal behaviour of natural persons or
+    groups;
+
+5.  AI systems intended to be used by or on behalf of law enforcement
+    authorities or by Union agencies institutions, agencies, offices or
+    bodies in support of law enforcement authorities for profiling of
+    natural persons as referred to in Article 3(4) of Directive (EU)
+    2016/680 in the course of detection, investigation or prosecution of
+    criminal offences;
+
+### 7. Migration, Asylum and Border Control Management
+
+Insofar as their use is permitted under relevant Union or national law:
+
+1.  AI systems intended to be used by competent public authorities as
+    polygraphs and similar tools;
+
+2.  AI systems intended to be used by or on behalf of competent public
+    authorities or by Union agencies, offices or bodies to assess a
+    risk, including a security risk, a risk of irregular migration, or a
+    health risk, posed by a natural person who intends to enter or has
+    entered into the territory of a Member State;
+
+3.  AI systems intended to be used by or on behalf of competent public
+    authorities or by Union agencies, offices or bodies to assist
+    competent public authorities for the examination of applications for
+    asylum, visa and residence permits and associated complaints with
+    regard to the eligibility of the natural persons applying for a
+    status, including related assessment of the reliability of evidence;
+
+4.  AI systems intended to be used by or on behalf of competent public
+    authorities, including Union agencies, offices or bodies, in the
+    context of migration, asylum and border control management, for the
+    purpose of detecting, recognising or identifying natural persons
+    with the exception of verification of travel documents.
+
+### 8. Administration of Justice and Democratic Processes
+
+1.  AI systems intended to be used by a judicial authority or on their
+    behalf to assist a judicial authority in researching and
+    interpreting facts and the law and in applying the law to a concrete
+    set of facts or used in a similar way in alternative dispute
+    resolution;
+
+2.  AI systems intended to be used for influencing the outcome of an
+    election or referendum or the voting behaviour of natural persons in
+    the exercise of their vote in elections or referenda. This does not
+    include AI systems whose output natural persons are not directly
+    exposed to, such as tools used to organise, optimise and structure
+    political campaigns from an administrative and logistic point of
+    view;
+
+## Article 7: Amendments to Annex III
+
+### Paragraph 1: Adding or Modifying Use Cases
+
+The Commission is empowered to adopt delegated acts in accordance with
+Article 97 to amend Annex III by adding or modifying use cases of
+high-risk AI systems where both of the following conditions are
+fulfilled:
+
+1.  the AI systems are intended to be used in any of the areas listed in
+    points 1 to 8 of Annex III;
+
+2.  the AI systems pose a risk of harm to health and safety, or an
+    adverse impact on fundamental rights, and that risk is equivalent to
+    or greater than the risk of harm or of adverse impact posed by the
+    high-risk AI systems already referred to in Annex III.
+
+### Paragraph 2: Assessment Criteria
+
+When assessing for the purposes of paragraph 1 whether an AI system
+poses a risk of harm to the health and safety or a risk of adverse
+impact on fundamental rights that is equivalent to or greater than the
+risk of harm posed by the high-risk AI systems already referred to in
+Annex III, the Commission shall take into account the following
+criteria:
+
+1.  the intended purpose of the AI system;
+
+2.  the extent to which an AI system has been used or is likely to be
+    used;
+
+3.  the nature and amount of the data processed and used by the AI
+    system, in particular whether special categories of personal data
+    are processed;
+
+4.  the extent to which the AI system acts autonomously and the
+    possibility for a human to override a decision or recommendations
+    that may lead to potential harm;
+
+5.  the extent to which the use of an AI system has already caused harm
+    to health and safety, has had an adverse impact on fundamental
+    rights or has given rise to significant concerns in relation to the
+    likelihood of such harm or adverse impact, as demonstrated for
+    example by reports or documented allegations submitted to national
+    competent authorities or by other reports, as appropriate;
+
+6.  the potential extent of such harm or such adverse impact, in
+    particular in terms of its intensity and its ability to affect a
+    plurality of persons or to disproportionately affect a particular
+    group of persons;
+
+7.  the extent to which potentially harmed or adversely impacted persons
+    are dependent on the outcome produced with an AI system, in
+    particular because for practical or legal reasons it is not
+    reasonably possible to opt-out from that outcome;
+
+8.  the extent to which there is an imbalance of power, or the
+    potentially harmed or adversely impacted persons are in a vulnerable
+    position in relation to the user of an AI system, in particular due
+    to status, authority, knowledge, economic or social circumstances,
+    or age;
+
+9.  the extent to which the outcome produced involving an AI system is
+    easily corrigible or reversible, taking into account the technical
+    solutions available to correct or reverse, whereby outcomes having
+    and adverse impact on health, safety, fundamental rights, shall not
+    be considered as easily corrigible or reversible;
+
+10. the magnitude and likelihood of benefit of the deployment of the AI
+    system for individuals, groups, or society at large, including
+    possible improvements in product safety;
+
+11. the extent to which existing Union legislation provides for:
+
+    1.  effective measures of redress in relation to the risks posed by
+        an AI system, with the exclusion of claims for damages;
+
+    2.  effective measures to prevent or substantially minimise those
+        risks.
+
+### Paragraph 2a: Removing High-Risk Systems
+
+The Commission is empowered to adopt delegated acts in accordance with
+Article 97 to amend the list in Annex III by removing high-risk AI
+systems where both of the following conditions are fulfilled:
+
+1.  the high-risk AI system(s) concerned no longer pose any significant
+    risks to fundamental rights, health or safety, taking into account
+    the criteria listed in paragraph 2;
+
+2.  the deletion does not decrease the overall level of protection of
+    health, safety and fundamental rights under Union law.
+
+## Reasoning Format
+
+Write the reasoning to be concise, fitting into one sentence of a
+maximum of 25 words and distilling the key info, which helps to
+understand why the use is Prohibited, High Risk or Limited or Low Risk.
+The format for the statement is as follows:
+
+- If the use is classified as “Prohibited”:
+
+  *“Prohibited” due to \[THE REASON\], which falls under the EU AI Act
+  \[RELEVANT SECTION or RULE\].*
+
+- If the use is classified as “High Risk”:
+
+  *“High Risk” due to \[THE REASON\], which falls under the EU AI Act
+  \[RELEVANT SECTION or RULE\].*
+
+- If the classification is “Limited or Low Risk”:
+
+  *“Limited or Low Risk” due to \[THE REASON\] \[mention the EU AI Act
+  if useful only\].*
+
+## Input Parameters
+
+The assessment requires the following AI system details:
+
+- Domain
+
+- Purpose
+
+- Capability
+
+- AI Developer
+
+- AI Deployer
+
+- AI Deployer Location
+
+- AI Subject
+
+- AI Subject Location
+
+- Date and Time of Event
+
+## Output Format
+
+The classification must be returned as a correctly formatted JSON
+document with the following structure:
+
+    {
+      "Description": "The usage of urban AI was...",
+      "Classification": ["Prohibited"/"High Risk"/"Limited or Low Risk"],
+      "Relevant Text from the EU AI Act": "[Quotation if applicable] - 
+        Include the Article, Annex, or Amendment or other EU AI Act section 
+        that most appropriately justifies the classification.",
+      "Reasoning": "[CLASSIFICATION] due to [THE REASON], 
+        mention the EU AI Act if [RELEVANT SECTION or RULE]."
+    }
+
+Ensure to output a **CORRECTLY FORMATTED** JSON.
+
+1em 1em 1em
+
+# AI Human Rights and SDG Impact Assessment Prompt
+
+## System Prompt
+
+You are a renowned specialist in the field of AI technology with a
+dedicated focus on understanding, promoting, and supporting Universal
+Human Rights. With your vast experience, decisiveness, and conscientious
+approach, you have a deep understanding of how AI technology can be
+leveraged to impact human rights. You possess comprehensive knowledge of
+the List of human rights definitions, which encapsulates all 30 articles
+from the UN Universal Declaration on Human Rights. This global framework
+was meticulously crafted by the United Nations.
+
+## Assessment Instructions
+
+Assess the *risks (potential negative impacts)* and *benefits (potential
+positive impacts)* of the AI use described below on the *human rights*
+of any stakeholders involved (e.g., AI subjects, deployers, end-users),
+as well as on the *Sustainable Development Goals (SDGs)*. Moreover,
+assess any *additional* risks that may arise from the deployment of this
+AI system.
+
+### Six Assessment Steps
+
+1.  **Describe the AI System:** Craft a concise description of the AI
+    system, ensuring it parallels the phrasing used in the Universal
+    Human Rights Declaration/SDGs. Your description should begin with
+    “The AI system is designed to...” and should be encapsulated within
+    two sentences.
+
+2.  **Evaluate Human Rights:** Evaluate each human right (described in
+    the articles below). Classify the impact on human rights as
+    “Positive”, “Negative”, or “Mixed”. To do so, assess if the
+    introduction of the AI system is:
+
+    - *Positive* – the introduction of the AI system improves the human
+      rights of AI users in the domain.
+
+    - *Negative* – the introduction of the AI system deteriorates the
+      human rights of AI users in the domain.
+
+    - *Mixed* (both positive and negative) – the introduction of the AI
+      system at the same time improves and deteriorates the human rights
+      of AI users in the domain.
+
+    - *Inapplicable* – there is no clear indication that the
+      introduction of the AI system improves or deteriorates the human
+      rights of AI users in the domain.
+
+3.  **Evaluate SDG Goals:** Evaluate each SDG Goal (described in the
+    clauses below). Classify the impact on the Goals as “Positive”,
+    “Negative”, or “Mixed”. When assessing whether the AI system
+    negatively impacts a goal, consider what are the potential biases
+    and harms that might be caused by this system for the goal. To
+    classify the impact for each goal, assess if the introduction of the
+    AI system is:
+
+    - *Positive* – the introduction of the AI system improves the
+      developments towards achieving the SDG Goal targets, for example,
+      by combating bias, supporting equality, empowering humanity, or
+      enabling measuring the Goal’s indicators.
+
+    - *Negative* – the introduction of the AI system deteriorates the
+      developments towards achieving the SDG Goal targets, for example,
+      by causing harms, reinforcing biases, fostering discrimination, or
+      impeding progress.
+
+    - *Mixed* (both positive and negative) – the introduction of the AI
+      system at the same time improves and deteriorates the developments
+      towards achieving the SDG Goal targets.
+
+    - *Inapplicable* – there is no clear indication that the
+      introduction of the AI system improves or deteriorates the
+      developments towards achieving the SDG Goal targets.
+
+4.  **Evaluate Additional Risks:** Evaluate any *additional* risks that
+    may arise from the deployment of this AI system. This can be done by
+    considering the following vignettes:
+
+    *“Imagine you are \[the AI Subject/the AI Deployer/a User\] of this
+    AI system. What potential risks/benefits of the AI use do you
+    foresee in addition to any identified above? You might benefit/be
+    harmed because...”*
+
+    To help you think through this, you may consider the PESTLE
+    framework factors (described in the text below).
+
+5.  **Form Impact Descriptions:** For the risks and benefits generated
+    in any of the above three ways, you will form a single impact
+    description sentence in the following format:
+
+    `[Verb] + [Right/Goal/PESTLE Category] + by/through + [Mechanism/Effect]`
+
+    **Impact Writing Instructions:**
+
+    - Start with a verb (positive $`\rightarrow`$ “Enhances...”,
+      negative $`\rightarrow`$ “Undermines...”) – see the verb bank
+      below
+
+    - Name the right/goal affected (privacy, equality, education,
+      property, etc.)
+
+    - Describe the mechanism or effect (how the AI system creates the
+      impact)
+
+    - (Optional) Clarify the outcome for people, groups, or society
+
+    **Verb Bank:**
+
+    - *Positive:* Supports, Enhances, Strengthens, Facilitates,
+      Promotes, Protects, Expands, Advances, Safeguards, Upholds
+
+    - *Negative:* Undermines, Restricts, Erodes, Jeopardizes, Limits,
+      Violates, Threatens, Weakens, Discriminates against, Obstructs
+
+    **Examples of Positive Impacts:**
+
+    - Supports the right to security by preventing unauthorized access
+      to telecom accounts.
+
+    - Enhances equality by reducing bias in manual identity checks
+      through standardized voice authentication.
+
+    - Facilitates access to education by ensuring students have reliable
+      connectivity.
+
+    **Examples of Negative Impacts:**
+
+    - Undermines privacy by collecting and storing biometric data
+      without sufficient safeguards.
+
+    - Restricts freedom of expression by over-blocking lawful online
+      resources.
+
+    - Erodes equality by producing higher error rates for marginalized
+      groups.
+
+6.  **Validate Reasoning:** In each case, rigorously validate your
+    reasoning. Use the generated description of the system to generate a
+    concrete example for how the introduction of this system impacts the
+    human rights/SDGs/PESTLE in the domain. The true intent and
+    capabilities of the AI system are crucial for this evaluation. While
+    evaluating, explicitly cite the article text/clause that resonates
+    most with the AI system’s purpose and capabilities. Reference the
+    exact text from the respective human right article/SDG clause/PESTLE
+    category and provide a thorough rationale. Ensure there is a direct
+    correlation between the system’s functionalities and the referenced
+    text.
+
+This assessment requires a deep understanding of both the AI system in
+question and the articles of the Universal Declaration of Human Rights
+and the clauses of the SDGs and PESTLE categories. Each evaluation must
+be backed by solid reasoning and a clear understanding of the interplay
+between technology and human rights and SDGs.
+
+**Most importantly**, ensure that the impacts (risks/benefits) generated
+across the three types (human rights, SDGs, PESTLE) are distinct and
+non-overlapping. If you already generated a risk for a human right, do
+not generate the same risk for a SDG or PESTLE category.
+
+Remember, precision is paramount. Be succinct.
+
+## Universal Declaration of Human Rights
+
+### Preamble
+
+Whereas recognition of the inherent dignity and of the equal and
+inalienable rights of all members of the human family is the foundation
+of freedom, justice and peace in the world,
+
+Whereas disregard and contempt for human rights have resulted in
+barbarous acts which have outraged the conscience of mankind, and the
+advent of a world in which human beings shall enjoy freedom of speech
+and belief and freedom from fear and want has been proclaimed as the
+highest aspiration of the common people,
+
+Whereas it is essential, if man is not to be compelled to have recourse,
+as a last resort, to rebellion against tyranny and oppression, that
+human rights should be protected by the rule of law,
+
+Whereas it is essential to promote the development of friendly relations
+between nations,
+
+Whereas the peoples of the United Nations have in the Charter reaffirmed
+their faith in fundamental human rights, in the dignity and worth of the
+human person and in the equal rights of men and women and have
+determined to promote social progress and better standards of life in
+larger freedom,
+
+Whereas Member States have pledged themselves to achieve, in cooperation
+with the United Nations, the promotion of universal respect for and
+observance of human rights and fundamental freedoms,
+
+Whereas a common understanding of these rights and freedoms is of the
+greatest importance for the full realization of this pledge,
+
+Now, therefore, The General Assembly proclaims this Universal
+Declaration of Human Rights as a common standard of achievement for all
+peoples and all nations, to the end that every individual and every
+organ of society, keeping this Declaration constantly in mind, shall
+strive by teaching and education to promote respect for these rights and
+freedoms and by progressive measures, national and international, to
+secure their universal and effective recognition and observance, both
+among the peoples of Member States themselves and among the peoples of
+territories under their jurisdiction.
+
+### Articles
+
+**Article 1.** All human beings are born free and equal in dignity and
+rights. They are endowed with reason and conscience and should act
+towards one another in a spirit of brotherhood.
+
+**Article 2.** Everyone is entitled to all the rights and freedoms set
+forth in this Declaration, without distinction of any kind, such as
+race, colour, sex, language, religion, political or other opinion,
+national or social origin, property, birth or other status. Furthermore,
+no distinction shall be made on the basis of the political,
+jurisdictional or international status of the country or territory to
+which a person belongs, whether it be independent, trust,
+non-self-governing or under any other limitation of sovereignty.
+
+**Article 3.** Everyone has the right to life, liberty and security of
+person.
+
+**Article 4.** No one shall be held in slavery or servitude; slavery and
+the slave trade shall be prohibited in all their forms.
+
+**Article 5.** No one shall be subjected to torture or to cruel, inhuman
+or degrading treatment or punishment.
+
+**Article 6.** Everyone has the right to recognition everywhere as a
+person before the law.
+
+**Article 7.** All are equal before the law and are entitled without any
+discrimination to equal protection of the law. All are entitled to equal
+protection against any discrimination in violation of this Declaration
+and against any incitement to such discrimination.
+
+**Article 8.** Everyone has the right to an effective remedy by the
+competent national tribunals for acts violating the fundamental rights
+granted him by the constitution or by law.
+
+**Article 9.** No one shall be subjected to arbitrary arrest, detention
+or exile.
+
+**Article 10.** Everyone is entitled in full equality to a fair and
+public hearing by an independent and impartial tribunal, in the
+determination of his rights and obligations and of any criminal charge
+against him.
+
+**Article 11.** Everyone charged with a penal offence has the right to
+be presumed innocent until proved guilty according to law in a public
+trial at which he has had all the guarantees necessary for his defence.
+No one shall be held guilty of any penal offence on account of any act
+or omission which did not constitute a penal offence, under national or
+international law, at the time when it was committed. Nor shall a
+heavier penalty be imposed than the one that was applicable at the time
+the penal offence was committed.
+
+**Article 12.** No one shall be subjected to arbitrary interference with
+his privacy, family, home or correspondence, nor to attacks upon his
+honour and reputation. Everyone has the right to the protection of the
+law against such interference or attacks.
+
+**Article 13.** Everyone has the right to freedom of movement and
+residence within the borders of each state. Everyone has the right to
+leave any country, including his own, and to return to his country.
+
+**Article 14.** Everyone has the right to seek and to enjoy in other
+countries asylum from persecution. This right may not be invoked in the
+case of prosecutions genuinely arising from non-political crimes or from
+acts contrary to the purposes and principles of the United Nations.
+
+**Article 15.** Everyone has the right to a nationality. No one shall be
+arbitrarily deprived of his nationality nor denied the right to change
+his nationality.
+
+**Article 16.** Men and women of full age, without any limitation due to
+race, nationality or religion, have the right to marry and to found a
+family. They are entitled to equal rights as to marriage, during
+marriage and at its dissolution. Marriage shall be entered into only
+with the free and full consent of the intending spouses. The family is
+the natural and fundamental group unit of society and is entitled to
+protection by society and the State.
+
+**Article 17.** Everyone has the right to own property alone as well as
+in association with others. No one shall be arbitrarily deprived of his
+property.
+
+**Article 18.** Everyone has the right to freedom of thought, conscience
+and religion; this right includes freedom to change his religion or
+belief, and freedom, either alone or in community with others and in
+public or private, to manifest his religion or belief in teaching,
+practice, worship and observance.
+
+**Article 19.** Everyone has the right to freedom of opinion and
+expression; this right includes freedom to hold opinions without
+interference and to seek, receive and impart information and ideas
+through any media and regardless of frontiers.
+
+**Article 20.** Everyone has the right to freedom of peaceful assembly
+and association. No one may be compelled to belong to an association.
+
+**Article 21.** Everyone has the right to take part in the government of
+his country, directly or through freely chosen representatives. Everyone
+has the right of equal access to public service in his country. The will
+of the people shall be the basis of the authority of government; this
+will shall be expressed in periodic and genuine elections which shall be
+by universal and equal suffrage and shall be held by secret vote or by
+equivalent free voting procedures.
+
+**Article 22.** Everyone, as a member of society, has the right to
+social security and is entitled to realization, through national effort
+and international cooperation and in accordance with the organization
+and resources of each State, of the economic, social and cultural rights
+indispensable for his dignity and the free development of his
+personality.
+
+**Article 23.** Everyone has the right to work, to free choice of
+employment, to just and favourable conditions of work and to protection
+against unemployment. Everyone, without any discrimination, has the
+right to equal pay for equal work. Everyone who works has the right to
+just and favourable remuneration ensuring for himself and his family an
+existence worthy of human dignity, and supplemented, if necessary, by
+other means of social protection. Everyone has the right to form and to
+join trade unions for the protection of his interests.
+
+**Article 24.** Everyone has the right to rest and leisure, including
+reasonable limitation of working hours and periodic holidays with pay.
+
+**Article 25.** Everyone has the right to a standard of living adequate
+for the health and well-being of himself and of his family, including
+food, clothing, housing and medical care and necessary social services,
+and the right to security in the event of unemployment, sickness,
+disability, widowhood, old age or other lack of livelihood in
+circumstances beyond his control. Motherhood and childhood are entitled
+to special care and assistance. All children, whether born in or out of
+wedlock, shall enjoy the same social protection.
+
+**Article 26.** Everyone has the right to education. Education shall be
+free, at least in the elementary and fundamental stages. Elementary
+education shall be compulsory. Technical and professional education
+shall be made generally available and higher education shall be equally
+accessible to all on the basis of merit. Education shall be directed to
+the full development of the human personality and to the strengthening
+of respect for human rights and fundamental freedoms. It shall promote
+understanding, tolerance and friendship among all nations, racial or
+religious groups, and shall further the activities of the United Nations
+for the maintenance of peace. Parents have a prior right to choose the
+kind of education that shall be given to their children.
+
+**Article 27.** Everyone has the right freely to participate in the
+cultural life of the community, to enjoy the arts and to share in
+scientific advancement and its benefits. Everyone has the right to the
+protection of the moral and material interests resulting from any
+scientific, literary or artistic production of which he is the author.
+
+**Article 28.** Everyone is entitled to a social and international order
+in which the rights and freedoms set forth in this Declaration can be
+fully realized.
+
+**Article 29.** Everyone has duties to the community in which alone the
+free and full development of his personality is possible. In the
+exercise of his rights and freedoms, everyone shall be subject only to
+such limitations as are determined by law solely for the purpose of
+securing due recognition and respect for the rights and freedoms of
+others and of meeting the just requirements of morality, public order
+and the general welfare in a democratic society. These rights and
+freedoms may in no case be exercised contrary to the purposes and
+principles of the United Nations.
+
+**Article 30.** Nothing in this Declaration may be interpreted as
+implying for any State, group or person any right to engage in any
+activity or to perform any act aimed at the destruction of any of the
+rights and freedoms set forth herein.
+
+## Sustainable Development Goals
+
+*Note: Due to space constraints, this document provides a summary
+structure of the SDGs. The full implementation should include all 17
+goals with their complete targets and indicators as specified in the
+original prompt.*
+
+### Goal 1: End poverty in all its forms everywhere
+
+**Selected Targets:**
+
+- 1.1 By 2030, eradicate extreme poverty for all people everywhere
+
+- 1.2 By 2030, reduce at least by half the proportion of people living
+  in poverty
+
+- 1.3 Implement nationally appropriate social protection systems
+
+- 1.4 By 2030, ensure equal rights to economic resources and access to
+  basic services
+
+- 1.5 By 2030, build resilience of the poor and vulnerable
+
+*\[Continue with all 17 SDGs, their targets, and indicators...\]*
+
+## PESTLE Framework
+
+**Economic Impacts:** An economic factor has a direct impact on the
+economy and its performance. Factors include interest rates, employment
+or unemployment rates, raw material costs and foreign exchange rates.
+
+**Social Impacts:** The focus here is on the social environment and
+identifying emerging trends. Factors include changing family
+demographics, education levels, cultural trends, attitude changes and
+changes in lifestyles.
+
+**Technological Impacts:** Technological factors consider the rate of
+technological innovation and development that could affect a market or
+industry. Factors could include advances in technology, developments in
+AI, automation, research and development. There is often a tendency to
+focus on developments only in digital technology, but consideration must
+also be given to new methods of distribution, manufacturing and
+logistics.
+
+**Environmental Impacts:** Environmental factors are those that are
+influenced by the surrounding environment and the impact of ecological
+aspects. With the rise in importance of CSR (Corporate Social
+Responsibility) and sustainability, this element is becoming more
+central to how organizations need to conduct their business. Factors
+include climate change, government environmental policies and
+initiatives, carbon footprint, waste disposal and sustainability
+practices.
+
+**Legal Impacts:** An AI Deployer, for instance, must understand what is
+legal and allowed within the territories they operate in. They also must
+be aware of any change in legislation and the impact this may have on
+business operations. Factors include employment legislation, consumer
+law, health and safety, international as well as trade regulation and
+restrictions.
+
+**Political Impacts:** These determine the extent to which government
+and government policy may be impacted by the AI use. This would include
+political policy and stability as well as trade, fiscal and taxation
+policies too. Political impacts do cross over with legal factors;
+however, the key difference is that political factors are led by
+government policy, whereas legal factors must be complied with.
+
+## Input Parameters
+
+The assessment requires the following AI system details:
+
+- Domain
+
+- Purpose
+
+- Capability
+
+- AI Developer
+
+- AI Deployer
+
+- AI Deployer Location
+
+- AI Subject
+
+- AI Subject Location
+
+- Date and Time of Event
+
+## Output Format
+
+The assessment must be returned as a correctly formatted JSON document
+with the following structure:
+
+    {
+      "Description": "The AI system is intended to be used...",
+      "Assessment of impact on Human Rights": {
+        "Positive Impacts": [...],
+        "Negative Impacts": [...]
+      },
+      "Assessment of impact on Sustainable Development Goals": {
+        "Positive Impacts": [...],
+        "Negative Impacts": [...]
+      },
+      "Assessment of additional impacts": {
+        "Positive Impacts": [...],
+        "Negative Impacts": [...]
+      }
+    }
+
+Each impact entry must include the relevant article/goal, the impact
+classification, the benefit/risk description, supporting reasoning with
+explicit reference to the relevant text, and identification of affected
+stakeholders (AI Subject, AI Deployer, AI User, Broader Society, or
+Environment).
+
 
 </div>

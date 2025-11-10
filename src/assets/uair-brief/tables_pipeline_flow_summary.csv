@@ -1,0 +1,7 @@
+Stage,Article Count,Cumulative Loss,Stage Loss,Retention Rate (%)
+Raw Articles,"415,821",0,-,100.00%
+Classify AI Relevant,"8,609","407,212","407,212",2.07%
+AI Use Case Tuple Decomposition,"8,609","407,212",-,2.07%
+Claim Verification,544,"415,277","8,065",0.13%
+EU AI Act Classification,544,"415,277",-,0.13%
+Risk/Benefits Classification,544,"415,277",-,0.13%

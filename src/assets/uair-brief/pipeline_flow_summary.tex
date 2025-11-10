@@ -1,0 +1,18 @@
+\begin{table}[htbp]
+    \centering
+    \caption{Pipeline flow summary: article counts and retention rates at each stage. The pipeline processes 29,372 input articles, filtering to 578 relevant articles (1.97\% retention) at classification, then further reducing to 61 verified articles (0.21\% final retention) after verification.}
+    \label{tab:pipeline-flow-summary}
+    \begin{tabular}{lcccc}
+        \toprule
+        Stage & Article Count & Cumulative Loss & Stage Loss & Retention Rate (\%) \\
+        \midrule
+        Input & 29,372 & 0 & --- & 100.00 \\
+        Classify & 578 & 28,794 & 28,794 & 1.97 \\
+        Decompose & 578 & 28,794 & --- & 1.97 \\
+        Verify & 61 & 29,311 & 517 & 0.21 \\
+        EU AI Act & 61 & 29,311 & --- & 0.21 \\
+        Risk/Benefits & 61 & 29,311 & --- & 0.21 \\
+        \bottomrule
+    \end{tabular}
+\end{table}
+
