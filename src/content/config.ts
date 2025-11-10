@@ -104,7 +104,13 @@ const projects = defineCollection({
       site: z.string().url().optional(), // Website link
       code: z.string().url().optional(), // Code repository link
       bib: z.string().optional(), // BibTeX citation text
-      category: z.enum(["paper", "not-paper"]).default("not-paper"), // New category field
+      category: z
+        .enum([
+          "dense-street-imagery",
+          "computational-social-science",
+          "tools-for-public-space",
+        ])
+        .default("dense-street-imagery"), // Category field
       image: image().optional(),
       youtubeId: z.string().optional(),
       pubDatetime: z.date(),
@@ -113,6 +119,14 @@ const projects = defineCollection({
       tags: z.array(z.string()).default(["others"]),
       description: z.string().optional(),
       order: z.number().optional(),
+      coordinates: z.object({
+        latitude: z.number(),
+        longitude: z.number(),
+      }).optional(), // Project location on map (fallback)
+      geojson: z.any().optional(), // Full citywide GeoJSON layer for this project (inline)
+      geojsonUrl: z.string().optional(), // URL to fetch GeoJSON from
+      boundingPolygon: z.any().optional(), // Bounding polygon to crop the geojson when not selected
+      icon: z.string().optional(), // Custom icon URL/path for map marker
     }),
 });
 
