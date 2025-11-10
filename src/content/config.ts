@@ -111,7 +111,7 @@ const projects = defineCollection({
           "tools-for-public-space",
         ])
         .default("dense-street-imagery"), // Category field
-      image: image().optional(),
+      image: image().or(z.string()).optional(),
       youtubeId: z.string().optional(),
       pubDatetime: z.date(),
       featured: z.boolean().optional(),
