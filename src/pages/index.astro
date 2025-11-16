@@ -1,5 +1,6 @@
 ---
 import { getCollection } from "astro:content";
+import type { CollectionEntry } from "astro:content";
 import Layout from "@layouts/Layout.astro";
 import Header from "@components/Header.astro";
 import Footer from "@components/Footer.astro";
@@ -19,23 +20,9 @@ const featuredPosts = sortedPosts.filter(({ data }) => data.featured);
 const recentPosts = sortedPosts.filter(({ data }) => !data.featured);
 
 // Sort projects by order field
-const sortedProjects = projects.sort((a, b) => 
+const sortedProjects = projects.sort((a: CollectionEntry<"projects">, b: CollectionEntry<"projects">) => 
   (a.data.order || Infinity) - (b.data.order || Infinity)
 );
-
-// Debug logging for projects before splitting
-console.log(`Total projects: ${sortedProjects.length}`);
-sortedProjects.forEach((project, index) => {
-  console.log(`Project ${index + 1}: ${project.data.title} - Category: ${project.data.category}`);
-});
-
-// Split projects by category
-const paperProjects = sortedProjects.filter(project => project.data.category === "paper");
-const otherProjects = sortedProjects.filter(project => project.data.category === "not-paper");
-
-// Debug logging for split projects
-console.log(`Paper projects: ${paperProjects.length}`);
-console.log(`Other projects: ${otherProjects.length}`);
 
 const socialCount = SOCIALS.filter(social => social.active).length;
 ---
@@ -56,15 +43,15 @@ const socialCount = SOCIALS.filter(social => social.active).length;
           )
         }
         <p>
-          I am a Computer Science PhD Candidate at Cornell University, based at the New York City campus, <a href="https://tech.cornell.edu">Cornell Tech</a>. Before that, I completed a Bachelor's Degree in Computer Science and General & Departmental Honors curricula at the Clemson University Honors College (during the pandemic, unfortunately). This summer, I am a research fellow at the <a href="https://www.designtrust.org/projects/untaped">Design Trust for Public Space</a>. In 2024, I was a research fellow at <a href="https://hayden.ai">Hayden AI Technologies</a>.  My research is supported by the <a href="https://tech.cornell.edu/urban-tech-hub">Cornell Tech Urban Tech Hub</a>, the Cornell Dean's Excellence Fellowship, the Siegel PiTech PhD Impact Fellowship, and the <a href="https://dli.tech.cornell.edu">Digital Life Initiative</a> Doctoral Fellowship. 
+          I am a Computer Science PhD Candidate at Cornell University, based at the New York City campus, <a href="https://tech.cornell.edu" class="font-cornell-tech">Cornell Tech</a>. Before that, I completed a Bachelor's Degree in Computer Science and General & Departmental Honors curricula at the Clemson University Honors College (during the pandemic, unfortunately). This summer, I am a research fellow at the <a href="https://www.designtrust.org/projects/untaped" class="font-design-trust">Design Trust for Public Space</a>. In 2024, I was a research fellow at <a href="https://hayden.ai" class="font-hayden-ai">Hayden AI Technologies</a>.  My research is supported by the <a href="https://tech.cornell.edu/urban-tech-hub" class="font-urban-tech-hub">Cornell Tech Urban Tech Hub</a>, the Cornell Dean's Excellence Fellowship, the Siegel PiTech PhD Impact Fellowship, and the <a href="https://dli.tech.cornell.edu" class="font-digital-life-initiative">Digital Life Initiative</a> Doctoral Fellowship. 
           <br><br>
 
-          I am a co-organizer of the <a href="https://bridges.eaamo.org/working_groups/urban-ds-equitable-cities/">EAAMO Urban Data Science Working Group</a>, which meets biweekly during the academic year (if interested in joining, please sign up for our <a href="https://mfranchi.net/EAAMO-Bridges-UDS-S25/subscribe">mailing list</a>!)
+          I am a co-organizer of the <a href="https://bridges.eaamo.org/working_groups/urban-ds-equitable-cities/" class="font-eaamo">EAAMO Urban Data Science Working Group</a>, which meets biweekly during the academic year (if interested in joining, please sign up for our <a href="https://mfranchi.net/EAAMO-Bridges-UDS-S25/subscribe" class="font-mailing-list">mailing list</a>!)
           <br><br>
 
-          My dissertation will span the emerging data stream of <a target='_blank' href='https://arxiv.org/abs/2505.07085' class='font-bold'>dense street imagery</a> (DSI), presenting technical applications and approaches for insight extraction, modeling, and reconciliation; analyzing information flows and nascent norms in the DSI landscape with ethical frameworks like <a href="https://digitalcommons.law.uw.edu/wlr/vol79/iss1/10/" target="_blank" class="font-bold">contextual integrity</a>; and demonstrating DSI's potential for urban science and design, which includes juxtaposition and situation against existing urban sensing methods, human-centered design methods, design across scales, and urban planning. My research interests extend to vision language models, mapping, computational social science (particularly in issues of societal inequality, climate, or public health), statistical modeling, computer vision, and fashion & design. My research has been covered in the New York Times, The Economist, Gothamist, and other local NYC news outlets.
+          My dissertation will span the emerging data stream of <a target='_blank' href='https://arxiv.org/abs/2505.07085' class='font-dense-street-imagery'>dense street imagery</a> (DSI), presenting technical applications and approaches for insight extraction, modeling, and reconciliation; analyzing information flows and nascent norms in the DSI landscape with ethical frameworks like <a href="https://digitalcommons.law.uw.edu/wlr/vol79/iss1/10/" target="_blank" class="font-contextual-integrity">contextual integrity</a>; and demonstrating DSI's potential for urban science and design, which includes juxtaposition and situation against existing urban sensing methods, human-centered design methods, design across scales, and urban planning. My research interests extend to vision language models, mapping, computational social science (particularly in issues of societal inequality, climate, or public health), statistical modeling, computer vision, and fashion & design. My research has been covered in the New York Times, The Economist, Gothamist, and other local NYC news outlets.
           <br><br>
-          I play, compose, and <a href="https://open.spotify.com/artist/2RIA9v5X55UGXGFqk4VIsZ" target="_blank" class="font-bold">record</a> classical and neoclassical piano music, pendulate between fiction and non-fiction books, hike while on vacation, write (immediately below), and model once or twice per year.
+          I play, compose, and <a href="https://open.spotify.com/artist/2RIA9v5X55UGXGFqk4VIsZ" target="_blank" class="font-record">record</a> classical and neoclassical piano music, pendulate between fiction and non-fiction books, hike while on vacation, write (immediately below), and model once or twice per year.
         </p>
       </section>
       <section id="featured">
@@ -93,51 +80,11 @@ const socialCount = SOCIALS.filter(social => social.active).length;
     <div class="right-col">
       <section id='selected-work'>
         <h2 class="main-section-heading">Research</h2>
-        
-        <!-- Add a spacer div for extra vertical space -->
-        <div class="section-spacer"></div>
-        
-        <!-- Papers section -->
-        {paperProjects.length > 0 && (
-          <>
-            <h3 class="subsection-heading">Papers</h3>
-            <div class="projects-section-wrapper">
-              <div class="projects-grid-container" id="papers-grid-container">
-                <div class="projects-grid">
-                  {paperProjects.map(project => (
-                    <ProjectCard project={project} client:load />
-                  ))}
-                </div>
-              </div>
-              <div class="scroll-indicator" id="papers-scroll-indicator">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                  <path d="M9.29 6.71a.996.996 0 0 0 0 1.41L13.17 12l-3.88 3.88a.996.996 0 1 0 1.41 1.41l4.59-4.59a.996.996 0 0 0 0-1.41L10.7 6.7c-.38-.38-1.02-.38-1.41.01z"/>
-                </svg>
-              </div>
-            </div>
-          </>
-        )}
-        
-        <!-- Other projects section -->
-        {otherProjects.length > 0 && (
-          <>
-            <h3 class="subsection-heading mt-6">Other Research</h3>
-            <div class="projects-section-wrapper">
-              <div class="projects-grid-container" id="other-grid-container">
-                <div class="projects-grid">
-                  {otherProjects.map(project => (
-                    <ProjectCard project={project} client:load />
-                  ))}
-                </div>
-              </div>
-              <div class="scroll-indicator" id="other-scroll-indicator">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                  <path d="M9.29 6.71a.996.996 0 0 0 0 1.41L13.17 12l-3.88 3.88a.996.996 0 1 0 1.41 1.41l4.59-4.59a.996.996 0 0 0 0-1.41L10.7 6.7c-.38-.38-1.02-.38-1.41.01z"/>
-                </svg>
-              </div>
-            </div>
-          </>
-        )}
+        <div class="project-grid">
+          {sortedProjects.map((project) => (
+            <ProjectCard project={project} client:load />
+          ))}
+        </div>
       </section>
     </div>
   </main>
@@ -225,67 +172,6 @@ const socialCount = SOCIALS.filter(social => social.active).length;
         });
       }
     });
-
-    // Scroll indicator functionality
-    const initScrollIndicators = () => {
-      const gridContainers = document.querySelectorAll('.projects-grid-container');
-      
-      gridContainers.forEach(container => {
-        const grid = container.querySelector('.projects-grid');
-        const wrapper = container.closest('.projects-section-wrapper');
-        const indicator = wrapper ? wrapper.querySelector('.scroll-indicator') : null;
-        
-        if (!grid || !indicator || !wrapper) return;
-        
-        const checkScroll = () => {
-          // Show indicator only if there's content to scroll to
-          if (grid.scrollWidth > container.clientWidth) {
-            // Check if we've scrolled to the end
-            const isEnd = Math.ceil(container.scrollLeft + container.clientWidth) >= grid.scrollWidth;
-            
-            if (!isEnd) {
-              indicator.classList.add('show');
-            } else {
-              indicator.classList.remove('show');
-            }
-          } else {
-            indicator.classList.remove('show');
-          }
-        };
-        
-        // Setup indicator click action
-        indicator.addEventListener('click', () => {
-          container.scrollBy({ 
-            left: 300, 
-            behavior: 'smooth' 
-          });
-        });
-        
-        // Add scroll event listener
-        container.addEventListener('scroll', checkScroll);
-        
-        // Check on load and resize
-        checkScroll();
-        window.addEventListener('resize', checkScroll);
-        
-        // Show indicator with a slight delay for better UX
-        setTimeout(checkScroll, 500);
-      });
-    };
-    
-    // Initialize scroll indicators
-    initScrollIndicators();
-
-    // Debug helper function
-    (window as any).debugReact = function(message: string) {
-      console.log(`[Debug] ${message}`);
-      const debugElement = document.getElementById('react-debug');
-      if (debugElement) {
-        const now = new Date();
-        const timeStr = `${now.getHours()}:${now.getMinutes()}:${now.getSeconds()}`;
-        debugElement.innerHTML += `<div>${timeStr} - ${message}</div>`;
-      }
-    };
   </script>
 
 </Layout>
