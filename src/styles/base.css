@@ -1,3 +1,9 @@
+/* Toggle between tiles and map */
+.project-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 24px;
+}
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -7,6 +13,30 @@
   font-family: 'GTZirkon-Light';
   src: url('/fonts/GTZirkon-Light.ttf') format('ttf');
   font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'TradeGothic-Bold';
+  src: url('/fonts/TradeGothic Bold.ttf') format('truetype');
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'CorsaGrotesk-Regular';
+  src: url('/fonts/Typedepot - Corsa Grotesk Regular.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'TradeGothic-Bold';
+  src: url('/fonts/TradeGothic Bold.ttf') format('truetype');
+  font-weight: bold;
   font-style: normal;
   font-display: swap;
 }
@@ -103,7 +133,7 @@
     overflow-x: hidden;
     transition: var(--theme-transition);
   }
-  
+
   section {
     @apply max-w-3xl px-0;
     transition: var(--theme-transition);
@@ -468,12 +498,10 @@
     max-width: 45vw;
   }
 
-  /* Projects Section */ 
+  /* Projects Section */
   #selected-work {
-    max-width: 45vw;
+    max-width: 50vw;
   }
-
-  
 
 }
 
@@ -489,16 +517,68 @@
   
   /* Hero Links */
   #hero p a {
-    @apply text-skin-accent font-['GTAmerica-Medium'] relative;
+    color: rgb(var(--color-accent));
+    position: relative;
     text-decoration: none;
     background-image: linear-gradient(transparent 92%, currentColor 8%);
     background-repeat: no-repeat;
     background-size: 0% 100%;
     transition: background-size 0.3s ease-in-out;
   }
-  
+
   #hero p a:hover {
     background-size: 100% 100%;
+  }
+
+  #hero a.font-cornell-tech {
+    font-family: 'Arial', sans-serif !important;
+    letter-spacing: 0.08em;
+  }
+
+  #hero a.font-design-trust {
+    font-family: 'TradeGothic-Bold', sans-serif !important;
+    font-weight: bold;
+  }
+
+  #hero a.font-hayden-ai {
+    font-family: 'CorsaGrotesk-Regular', sans-serif !important;
+  }
+
+  #hero a.font-urban-tech-hub {
+    font-family: 'Arial', sans-serif !important;
+    font-weight: 700;
+  }
+
+  #hero a.font-digital-life-initiative {
+    font-family: 'Arial', sans-serif !important;
+    font-size: 1.05em;
+    display: inline-block;
+    transform: rotate(-1deg);
+  }
+
+  #hero a.font-eaamo {
+    font-family: 'Libre Franklin', sans-serif !important;
+    font-weight: 800;
+  }
+
+  #hero a.font-mailing-list {
+    font-family: 'GTAmerica-Medium', sans-serif !important;
+    font-weight: 500;
+    text-decoration-style: wavy;
+  }
+
+  #hero a.font-dense-street-imagery {
+    font-family: 'Arial', sans-serif !important;
+  }
+
+  #hero a.font-contextual-integrity {
+    font-family: 'Arial', sans-serif !important;
+    font-style: italic;
+  }
+        
+  #hero a.font-record {
+    font-family: 'Arial', sans-serif !important;
+    letter-spacing: 0.05em;
   }
   
   /* Project Cards */
@@ -1012,6 +1092,11 @@
   padding-right: 2rem;
 }
 
+.projects-section-wrapper.compact {
+  margin-bottom: 1rem;
+  padding-right: 1.5rem;
+}
+
 .projects-grid-container {
   width: 100%;
   overflow-x: auto;
@@ -1288,4 +1373,340 @@
 .no-scrollbar {
   -ms-overflow-style: none; /* IE and Edge */
   scrollbar-width: none; /* Firefox */
+}
+
+/* ===== Project Map Styles ===== */
+.project-map-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  border-radius: 20px;
+  overflow: hidden;
+  contain: strict; /* isolate layout/paint for smoother frames */
+  border: 1.5px solid rgba(15, 23, 42, 0.14);
+  background: var(--color-fill);
+}
+
+/* Project tile list sidebar */
+.project-tile-list {
+  position: absolute;
+  left: 0;
+  top: 112px;
+  bottom: 20px;
+  width: 120px;
+  z-index: 100;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  transition: top 0.3s ease;
+}
+
+/* Adjust when header shrinks */
+header#main-header.shrunk ~ * .project-tile-list,
+.shrunk-header .project-tile-list {
+  top: 88px;
+}
+
+.project-tiles-container {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0;
+  pointer-events: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.3) transparent;
+  /* Ensure scrolling works properly */
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+.project-tiles-container::-webkit-scrollbar {
+  width: 6px;
+}
+
+.project-tiles-container::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.project-tiles-container::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 3px;
+}
+
+.project-tiles-container::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+/* Individual project tile */
+.project-tile {
+  position: relative;
+  width: 100%;
+  flex-shrink: 0;
+  aspect-ratio: 1;
+  overflow: hidden;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: none;
+  background: rgb(var(--color-card));
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.project-tile:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  z-index: 10;
+}
+
+.project-tile.selected {
+  box-shadow: 0 0 0 3px rgb(var(--color-accent));
+  transform: scale(1.05);
+  z-index: 10;
+}
+
+.project-tile-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.project-tile-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, rgb(var(--color-card)), rgb(var(--color-card-muted)));
+  padding: 1rem;
+}
+
+.project-tile-title-placeholder {
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+  color: rgb(var(--color-text-base));
+}
+
+/* Overlay with title and venue - HIDDEN */
+.project-tile-overlay {
+  display: none;
+}
+
+/* Map container with bleeding edge effect */
+.map-container-bleeding {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  margin-top: 32px;
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+.map-container-bleeding .project-map-wrapper {
+  /* Make the map extend beyond container */
+  width: 100%;
+  height: 100vh;
+  transform: translateX(0);
+  contain: strict;
+}
+
+/* Map tooltip */
+.project-map-tooltip {
+  position: absolute;
+  pointer-events: none;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  padding: 8px 12px;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  /* transform is set inline for GPU-composited movement */
+  will-change: transform;
+  margin-top: -10px;
+  z-index: 10;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.project-map-tooltip .tooltip-title {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 2px;
+  color: rgb(var(--color-text-base));
+}
+
+.project-map-tooltip .tooltip-venue {
+  font-size: 12px;
+  color: rgb(var(--color-text-base) / 0.7);
+}
+
+/* Dark mode tooltip */
+html[data-theme="dark"] .project-map-tooltip {
+  background: rgba(40, 40, 40, 0.95);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Map legend */
+.project-map-legend {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(8px);
+  padding: 12px 16px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  z-index: 1;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.project-map-legend .legend-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-size: 13px;
+}
+
+.project-map-legend .legend-item:last-child {
+  margin-bottom: 0;
+}
+
+.project-map-legend .legend-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid white;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.project-map-legend .legend-label {
+  color: rgb(var(--color-text-base));
+  font-weight: 500;
+}
+
+/* Dark mode legend */
+html[data-theme="dark"] .project-map-legend {
+  background: rgba(40, 40, 40, 0.95);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Non-blocking floating modal */
+.project-modal-floating {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  max-width: 700px;
+  max-height: 85vh;
+  overflow-y: auto;
+  background: rgb(var(--color-fill));
+  border-radius: 16px;
+  padding: 32px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  animation: slideUp 0.3s ease-out;
+  pointer-events: auto;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -45%);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%);
+  }
+}
+
+/* Modal close button */
+.project-modal-close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.1);
+  color: rgb(var(--color-text-base));
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.project-modal-close:hover {
+  background: rgba(0, 0, 0, 0.2);
+  transform: scale(1.1);
+}
+
+html[data-theme="dark"] .project-modal-close {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+html[data-theme="dark"] .project-modal-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Adjust project card inside modal */
+.project-modal-floating .project-card {
+  box-shadow: none;
+  border: none;
+  padding: 0;
+}
+
+/* Mobile responsive adjustments for map */
+@media (max-width: 768px) {
+  .project-map-wrapper {
+    height: 60vh;
+  }
+  
+  .map-container-bleeding {
+    position: relative;
+    margin-top: 0;
+    margin-right: 0;
+    padding-top: 0;
+    padding-right: 0;
+  }
+  
+  .map-container-bleeding .project-map-wrapper {
+    width: 100%;
+    height: 60vh;
+    transform: none;
+  }
+  
+  /* Hide project tile list on mobile */
+  .project-tile-list {
+    display: none;
+  }
+  
+  .project-map-legend {
+    bottom: 10px;
+    left: 10px;
+    padding: 8px 12px;
+    font-size: 11px;
+  }
+  
+  .project-map-legend .legend-dot {
+    width: 10px;
+    height: 10px;
+  }
+  
+  .project-modal-floating {
+    padding: 24px;
+    max-width: 95vw;
+    max-height: 90vh;
+  }
+
+  .project-grid {
+    grid-template-columns: 1fr;
+    gap: 18px;
+  }
 }

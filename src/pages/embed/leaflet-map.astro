@@ -1,0 +1,54 @@
+---
+const url = Astro.url;
+const search = url.searchParams;
+
+const dataUrl = search.get('data') ?? '/data/springs-best-25-map.json';
+const zoomParam = Number(search.get('zoom') ?? '2');
+const centerParam = (search.get('center') ?? '20,0')
+  .split(',')
+  .map((v) => Number(v.trim()))
+  .filter((v) => !Number.isNaN(v));
+
+const initialCenter = centerParam.length === 2 ? centerParam : [20, 0];
+---
+
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Inline Map</title>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
+    <style>
+      html, body {
+        margin: 0;
+        padding: 0;
+        height: 100%;
+        background: transparent;
+      }
+      #map {
+        width: 100%;
+        height: 100%;
+        max-height: 320px;
+      }
+      .album-cover-icon img {
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+      }
+      .leaflet-popup-content-wrapper {
+        border-radius: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="map" aria-label="Album map"></div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script type="application/json" id="map-config">{JSON.stringify({ dataUrl, initialCenter, initialZoom: zoomParam })}</script>
+    <script src="/assets/leaflet-embed.js" is:inline></script>
+  </body>
+  </html>
+
+

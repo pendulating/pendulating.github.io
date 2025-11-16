@@ -1,0 +1,368 @@
+{
+  "markers": [
+    {
+      "id": "stateside",
+      "cluster": "Yokohama",
+      "clusterTitle": "Yokohama",
+      "clusterColor": "rgba(94, 129, 244, 0.82)",
+      "lat": 35.4437,
+      "lng": 139.638,
+      "title": "PinkPantheress — Stateside",
+      "subtitle": "Single (2025)",
+      "appleAlbumId": 1807036793,
+      "link": "https://music.apple.com/us/album/stateside/1807036793"
+    },
+    {
+      "id": "fancy-that",
+      "title": "PinkPantheress — Fancy That",
+      "subtitle": "Album (2025)",
+      "appleAlbumId": 1806614239,
+      "link": "https://music.apple.com/us/album/fancy-that/1806614239",
+      "locations": [
+        {
+          "id": "fancy-that-brussels",
+          "cluster": "Brussels",
+          "clusterTitle": "Brussels",
+          "clusterColor": "rgba(129, 199, 212, 0.82)",
+          "clusterLat": 50.8503,
+          "clusterLng": 4.3517,
+          "lat": 50.8503,
+          "lng": 4.3517,
+          "label": "Brussels"
+        },
+        {
+          "id": "fancy-that-nyc",
+          "cluster": "New York",
+          "clusterTitle": "New York",
+          "clusterColor": "rgba(251, 191, 36, 0.82)",
+          "clusterLat": 40.7128,
+          "clusterLng": -74.006,
+          "lat": 40.7128,
+          "lng": -74.006,
+          "label": "New York"
+        },
+        {
+          "id": "fancy-that-antwerp",
+          "cluster": "Antwerp",
+          "clusterTitle": "Antwerp",
+          "clusterColor": "rgba(244, 114, 182, 0.76)",
+          "clusterLat": 51.2194,
+          "clusterLng": 4.4025,
+          "lat": 51.2194,
+          "lng": 4.4025,
+          "label": "Antwerp"
+        }
+      ]
+    },
+    {
+      "id": "addison",
+      "cluster": "New York",
+      "clusterTitle": "New York",
+      "clusterColor": "rgba(251, 191, 36, 0.82)",
+      "lat": 40.7128,
+      "lng": -74.006,
+      "title": "Addison Rae — Addison",
+      "subtitle": "Album (2025)",
+      "appleAlbumId": 1809015416,
+      "link": "https://music.apple.com/us/album/addison/1809015416"
+    },
+    {
+      "id": "lynks",
+      "title": "Lynks — ABOMINATION",
+      "subtitle": "Album (2024)",
+      "appleAlbumId": 1721032745,
+      "link": "https://music.apple.com/us/album/abomination/1721032745",
+      "locations": [
+        {
+          "id": "lynks-brussels",
+          "cluster": "Brussels",
+          "clusterTitle": "Brussels",
+          "clusterColor": "rgba(129, 199, 212, 0.82)",
+          "clusterLat": 50.8503,
+          "clusterLng": 4.3517,
+          "lat": 50.8503,
+          "lng": 4.3517,
+          "label": "Brussels"
+        },
+        {
+          "id": "lynks-shinjuku",
+          "cluster": "Shinjuku",
+          "clusterTitle": "Shinjuku",
+          "clusterColor": "rgba(129, 140, 248, 0.82)",
+          "clusterLat": 35.6938,
+          "clusterLng": 139.7034,
+          "lat": 35.6938,
+          "lng": 139.7034,
+          "label": "Shinjuku"
+        }
+      ]
+    },
+
+    {
+      "id": "okey",
+      "cluster": "Osaka",
+      "clusterTitle": "Osaka",
+      "clusterColor": "rgba(59, 130, 246, 0.78)",
+      "clusterLat": 34.6937,
+      "clusterLng": 135.5023,
+      "lat": 34.6937,
+      "lng": 135.5023,
+      "title": "Smerz — Okey",
+      "subtitle": "EP (2016)",
+      "appleAlbumId": 1260176217,
+      "link": "https://music.apple.com/us/album/okey/1260176217"
+    },
+    {
+      "id": "big-city-life",
+      "title": "Smerz — Big City Life",
+      "subtitle": "Single (2025)",
+      "appleAlbumId": 1802661282,
+      "link": "https://music.apple.com/us/album/big-city-life/1802661282",
+      "locations": [
+        {
+          "id": "big-city-life-osaka",
+          "cluster": "Osaka",
+          "clusterTitle": "Osaka",
+          "clusterColor": "rgba(59, 130, 246, 0.78)",
+          "clusterLat": 34.6937,
+          "clusterLng": 135.5023,
+          "lat": 34.6937,
+          "lng": 135.5023,
+          "label": "Osaka"
+        },
+        {
+          "id": "big-city-life-amsterdam",
+          "cluster": "Amsterdam",
+          "clusterTitle": "Amsterdam",
+          "clusterColor": "rgba(251, 113, 133, 0.78)",
+          "clusterLat": 52.3676,
+          "clusterLng": 4.9041,
+          "lat": 52.3676,
+          "lng": 4.9041,
+          "label": "Amsterdam"
+        }
+      ]
+    },
+    {
+      "id": "icedancer",
+      "title": "Bladee — Icedancer",
+      "subtitle": "Mixtape (2018)",
+      "appleAlbumId": 1448107672,
+      "link": "https://music.apple.com/us/album/icedancer/1448107672",
+      "locations": [
+        {
+          "id": "icedancer-osaka",
+          "cluster": "Osaka",
+          "clusterTitle": "Osaka",
+          "clusterColor": "rgba(59, 130, 246, 0.78)",
+          "clusterLat": 34.6937,
+          "clusterLng": 135.5023,
+          "lat": 34.6937,
+          "lng": 135.5023,
+          "label": "Osaka"
+        },
+        {
+          "id": "icedancer-shinjuku",
+          "cluster": "Shinjuku",
+          "clusterTitle": "Shinjuku",
+          "clusterColor": "rgba(129, 140, 248, 0.82)",
+          "clusterLat": 35.6938,
+          "clusterLng": 139.7034,
+          "lat": 35.6938,
+          "lng": 139.7034,
+          "label": "Shinjuku"
+        },
+        {
+          "id": "icedancer-brussels",
+          "cluster": "Brussels",
+          "clusterTitle": "Brussels",
+          "clusterColor": "rgba(129, 199, 212, 0.82)",
+          "clusterLat": 50.8503,
+          "clusterLng": 4.3517,
+          "lat": 50.8503,
+          "lng": 4.3517,
+          "label": "Brussels"
+        },
+        {
+          "id": "icedancer-amsterdam",
+          "cluster": "Amsterdam",
+          "clusterTitle": "Amsterdam",
+          "clusterColor": "rgba(251, 113, 133, 0.78)",
+          "clusterLat": 52.3676,
+          "clusterLng": 4.9041,
+          "lat": 52.3676,
+          "lng": 4.9041,
+          "label": "Amsterdam"
+        },
+        {
+          "id": "icedancer-antwerp",
+          "cluster": "Antwerp",
+          "clusterTitle": "Antwerp",
+          "clusterColor": "rgba(244, 114, 182, 0.76)",
+          "clusterLat": 51.2194,
+          "clusterLng": 4.4025,
+          "lat": 51.2194,
+          "lng": 4.4025,
+          "label": "Antwerp"
+        }
+      ]
+    },
+
+    {
+      "id": "born-this-way",
+      "title": "Lady Gaga — Born This Way",
+      "subtitle": "Album (2011)",
+      "appleAlbumId": 1440824019,
+      "link": "https://music.apple.com/us/album/born-this-way/1440824019",
+      "locations": [
+        {
+          "id": "born-this-way-korea-village",
+          "cluster": "Korea Village",
+          "clusterTitle": "Korea Village",
+          "clusterColor": "rgba(236, 72, 153, 0.78)",
+          "clusterLat": 34.8867,
+          "clusterLng": 137.3759,
+          "lat": 34.8867,
+          "lng": 137.3759,
+          "label": "Korea Village"
+        },
+        {
+          "id": "born-this-way-shinjuku",
+          "cluster": "Shinjuku",
+          "clusterTitle": "Shinjuku",
+          "clusterColor": "rgba(129, 140, 248, 0.82)",
+          "clusterLat": 35.6938,
+          "clusterLng": 139.7034,
+          "lat": 35.6938,
+          "lng": 139.7034,
+          "label": "Shinjuku"
+        }
+      ]
+    },
+    {
+      "id": "star",
+      "cluster": "Korea Village",
+      "title": "2hollis — star",
+      "subtitle": "Album (2025)",
+      "appleAlbumId": 1803726233,
+      "link": "https://music.apple.com/us/album/star/1803726233",
+      "lat": 34.8867,
+      "lng": 137.3759
+    },
+
+    {
+      "id": "utopia",
+      "cluster": "Yokohama",
+      "title": "Björk & Arca — Utopia",
+      "subtitle": "Album (2017)",
+      "appleAlbumId": 1301580609,
+      "link": "https://music.apple.com/us/album/utopia/1301580609",
+      "lat": 35.4437,
+      "lng": 139.638
+    },
+    {
+      "id": "tango-in-the-night",
+      "cluster": "Mitakehoncho",
+      "clusterTitle": "Mitakehoncho",
+      "clusterColor": "rgba(56, 189, 248, 0.7)",
+      "lat": 35.805,
+      "lng": 139.201,
+      "title": "Fleetwood Mac — Tango in the Night",
+      "subtitle": "Album (1987)",
+      "appleAlbumId": 1196727792,
+      "link": "https://music.apple.com/us/album/tango-in-the-night-2017-remaster-deluxe-edition/1196727792"
+    },
+
+    {
+      "id": "something",
+      "title": "Lasgo — Something",
+      "subtitle": "Single (2011)",
+      "appleAlbumId": 567721789,
+      "link": "https://music.apple.com/us/album/something/567721789",
+      "locations": [
+        {
+          "id": "something-brussels",
+          "cluster": "Brussels",
+          "clusterTitle": "Brussels",
+          "clusterColor": "rgba(129, 199, 212, 0.82)",
+          "clusterLat": 50.8503,
+          "clusterLng": 4.3517,
+          "lat": 50.8503,
+          "lng": 4.3517,
+          "label": "Brussels"
+        },
+        {
+          "id": "something-kyoto",
+          "cluster": "Kyoto",
+          "clusterTitle": "Kyoto",
+          "clusterColor": "rgba(250, 204, 21, 0.75)",
+          "clusterLat": 35.0116,
+          "clusterLng": 135.7681,
+          "lat": 35.0116,
+          "lng": 135.7681,
+          "label": "Kyoto",
+          "aliases": ["Kyoto"]
+        }
+      ]
+    },
+    {
+      "id": "reverberotic",
+      "cluster": "Amsterdam",
+      "clusterTitle": "Amsterdam",
+      "clusterColor": "rgba(251, 113, 133, 0.78)",
+      "lat": 52.3676,
+      "lng": 4.9041,
+      "title": "Allison Goldfrapp — Reverberotic",
+      "subtitle": "Single (2025)",
+      "appleAlbumId": 1813382991,
+      "link": "https://music.apple.com/us/album/reverberotic-single/1813382991"
+    },
+    {
+      "id": "headphones-on",
+      "cluster": "Korea Village",
+      "clusterTitle": "Korea Village",
+      "clusterColor": "rgba(236, 72, 153, 0.78)",
+      "lat": 34.8867,
+      "lng": 137.3759,
+      "title": "Addison Rae — Headphones On",
+      "subtitle": "Single (2025)",
+      "appleAlbumId": 1808473781,
+      "link": "https://music.apple.com/us/album/headphones-on/1808473781?i=1808473785"
+    },
+    {
+      "id": "fame-is-a-gun",
+      "cluster": "Amsterdam",
+      "title": "Addison Rae — Fame is a Gun",
+      "subtitle": "Single (2025)",
+      "appleAlbumId": 1809015416,
+      "link": "https://music.apple.com/us/album/fame-is-a-gun/1809015416?i=1809015879",
+      "lat": 52.3676,
+      "lng": 4.9041
+    },
+    {
+      "id": "satan",
+      "cluster": "Amsterdam",
+      "title": "Orbital — Satan",
+      "subtitle": "Single (1991/2024)",
+      "appleAlbumId": 1738520473,
+      "link": "https://music.apple.com/us/album/satan-2024-remaster/1738520473?i=1738522504",
+      "lat": 52.3676,
+      "lng": 4.9041
+    }
+  ],
+  "routes": [
+    { "id": "new-york-to-osaka", "stops": ["New York", "Osaka"], "color": "#f97316", "weight": 4, "opacity": 0.85 },
+    { "id": "osaka-to-kyoto", "stops": ["Osaka", "Kyoto"], "color": "#fb923c", "weight": 4, "opacity": 0.85 },
+    { "id": "kyoto-to-korea-village", "stops": ["Kyoto", "Korea Village"], "color": "#f59e0b", "weight": 4, "opacity": 0.85 },
+    { "id": "korea-village-to-yokohama", "stops": ["Korea Village", "Yokohama"], "color": "#84cc16", "weight": 4, "opacity": 0.85 },
+    { "id": "yokohama-to-mitakehoncho", "stops": ["Yokohama", "Mitakehoncho"], "color": "#22c55e", "weight": 4, "opacity": 0.85 },
+    { "id": "mitakehoncho-to-shinjuku", "stops": ["Mitakehoncho", "Shinjuku"], "color": "#14b8a6", "weight": 4, "opacity": 0.85 },
+    { "id": "shinjuku-to-new-york", "stops": ["Shinjuku", "New York"], "color": "#0ea5e9", "weight": 4, "opacity": 0.85 },
+    { "id": "new-york-to-brussels", "stops": ["New York", "Brussels"], "color": "#6366f1", "weight": 4, "opacity": 0.85 },
+    { "id": "brussels-to-antwerp", "stops": ["Brussels", "Antwerp"], "color": "#a855f7", "weight": 4, "opacity": 0.85 },
+    { "id": "antwerp-to-amsterdam", "stops": ["Antwerp", "Amsterdam"], "color": "#ec4899", "weight": 4, "opacity": 0.85 },
+    { "id": "amsterdam-to-new-york", "stops": ["Amsterdam", "New York"], "color": "#f97316", "weight": 4, "opacity": 0.85 }
+  ]
+}
+
+

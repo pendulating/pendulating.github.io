@@ -124,12 +124,12 @@ export default function ProjectCard({ project, secHeading = true }: Props) {
       <div className="project-links">
         {pdf && (
           <a href={pdf} target="_blank" rel="noopener noreferrer" className="project-button pdf-button">
-            pdf
+            paper
           </a>
         )}
         {site && (
           <a href={site} target="_blank" rel="noopener noreferrer" className="project-button site-button">
-            href
+            news-highlight
           </a>
         )}
         {code && (
