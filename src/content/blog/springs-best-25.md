@@ -1,6 +1,6 @@
 ---
 author: Matt Franchi
-pubDatetime: 2025-06-22T12:47:08.994Z
+pubDatetime: 2025-12-05T16:47:08.994Z
 modDatetime:
 title: Springs's Best, '25
 slug: springs-best-25
