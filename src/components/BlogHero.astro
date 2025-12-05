@@ -1,0 +1,60 @@
+---
+export interface Props {
+  hero: {
+    type: 'map' | 'image' | 'iframe';
+    src: string;
+    alt?: string;
+    height?: number;
+    center?: string;
+    zoom?: number;
+  };
+}
+
+const { hero } = Astro.props;
+const height = hero.height ?? 400;
+
+function buildMapSrc(hero: Props['hero']): string {
+  const params = new URLSearchParams();
+  params.set('data', hero.src);
+  if (hero.center) params.set('center', hero.center);
+  if (hero.zoom !== undefined) params.set('zoom', String(hero.zoom));
+  if (hero.height !== undefined) params.set('height', String(hero.height));
+  return `/embed/deckgl-arc-map?${params.toString()}`;
+}
+
+const mapSrc = hero.type === 'map' ? buildMapSrc(hero) : '';
+---
+
+<div class="blog-hero mx-auto max-w-3xl my-6">
+  {hero.type === 'map' && (
+    <iframe
+      src={mapSrc}
+      height={height}
+      style="width:100%;border:0;overflow:hidden;background:transparent;border-radius:8px;"
+      loading="lazy"
+      title="Map"
+    ></iframe>
+  )}
+
+  {hero.type === 'image' && (
+    <img
+      src={hero.src}
+      alt={hero.alt ?? ''}
+      style={`width:100%;height:${height}px;object-fit:cover;border-radius:8px;`}
+      loading="lazy"
+    />
+  )}
+
+  {hero.type === 'iframe' && (
+    <iframe
+      src={hero.src}
+      height={height}
+      style="width:100%;border:0;overflow:hidden;background:transparent;border-radius:8px;"
+      loading="lazy"
+      title={hero.alt ?? 'Embedded content'}
+      allow="autoplay *; encrypted-media *;"
+      sandbox="allow-forms allow-popups allow-same-origin allow-scripts allow-storage-access-by-user-activation allow-top-navigation-by-user-activation"
+    ></iframe>
+  )}
+</div>
+

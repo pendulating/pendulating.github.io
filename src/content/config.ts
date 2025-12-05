@@ -19,6 +19,14 @@ const blog = defineCollection({
         .optional(),
       description: z.string(),
       canonicalURL: z.string().optional(),
+      hero: z.object({
+        type: z.enum(['map', 'image', 'iframe']),
+        src: z.string(),
+        alt: z.string().optional(),
+        height: z.number().default(400),
+        center: z.string().optional(),
+        zoom: z.number().optional(),
+      }).optional(),
     }),
 });
 

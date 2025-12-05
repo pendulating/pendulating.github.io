@@ -4,6 +4,7 @@ import Header from "@components/Header.astro";
 import Footer from "@components/Footer.astro";
 import Tag from "@components/Tag.astro";
 import Datetime from "@components/Datetime";
+import BlogHero from "@components/BlogHero.astro";
 import type { CollectionEntry } from "astro:content";
 import { slugifyStr } from "@utils/slugify";
 import ShareLinks from "@components/ShareLinks.astro";
@@ -25,6 +26,7 @@ const {
   pubDatetime,
   modDatetime,
   tags,
+  hero,
 } = post.data;
 
 const { Content } = await post.render();
@@ -77,6 +79,7 @@ const layoutProps = {
       size="lg"
       className="my-2 flex justify-center"
     />
+    {hero && <BlogHero hero={hero} />}
     <article id="article" class="prose mx-auto mt-8 max-w-3xl">
       <Content />
     </article>
