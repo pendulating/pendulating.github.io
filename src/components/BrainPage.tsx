@@ -64,26 +64,20 @@ const BrainPage: React.FC<WhiteboardProps> = (props) => {
 
   // Optimize props based on actual device type
   const optimizedProps = useMemo(() => {
-    const { albums, snips, playlists } = props;
-    
     if (isMobile) {
-      // Limit items for actual mobile devices
-      const maxItems = 20;
-      
+      // On mobile, we still pass all items to ensure searchability and filtering work,
+      // but we signal WhiteboardLayout to use optimized rendering.
       return {
         ...props,
-        albums: albums.slice(0, Math.min(albums.length, Math.floor(maxItems * 0.4))),
-        snips: snips.slice(0, Math.min(snips.length, Math.floor(maxItems * 0.3))),
-        playlists: playlists.slice(0, Math.min(playlists.length, Math.floor(maxItems * 0.3))),
         useOptimizedRendering: true,
-        performanceMode: 'mobile',
+        performanceMode: 'mobile' as const,
       };
     } else {
       // Use all items and full functionality for desktop
       return {
         ...props,
         useOptimizedRendering: false,
-        performanceMode: 'desktop',
+        performanceMode: 'desktop' as const,
       };
     }
   }, [props, isMobile]);

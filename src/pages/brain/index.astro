@@ -21,10 +21,18 @@ const [albums, photos, snips, playlists, backgroundPhoto] = await Promise.all([
 console.timeEnd('brain-page-data-fetch');
 console.time('brain-page-data-processing');
 
-// Filter out draft items efficiently
-const publishedAlbums = albums.filter(album => !album.data.draft);
-const publishedSnips = snips.filter(snip => !snip.data.draft);
-const publishedPlaylists = playlists.filter(playlist => !playlist.data.draft);
+// Filter out draft items efficiently and sort by date descending
+const publishedAlbums = albums
+  .filter(album => !album.data.draft)
+  .sort((a, b) => new Date(b.data.pubDatetime).getTime() - new Date(a.data.pubDatetime).getTime());
+
+const publishedSnips = snips
+  .filter(snip => !snip.data.draft)
+  .sort((a, b) => new Date(b.data.pubDatetime).getTime() - new Date(a.data.pubDatetime).getTime());
+
+const publishedPlaylists = playlists
+  .filter(playlist => !playlist.data.draft)
+  .sort((a, b) => new Date(b.data.pubDatetime).getTime() - new Date(a.data.pubDatetime).getTime());
 // Photos don't have draft property, so use all photos
 const publishedPhotos = photos;
 

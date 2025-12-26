@@ -84,6 +84,8 @@ export type WhiteboardProps = {
   snips: CollectionEntry<'snips'>[];
   playlists: CollectionEntry<'playlists'>[];
   backgroundImage?: string;
+  useOptimizedRendering?: boolean;
+  performanceMode?: 'mobile' | 'desktop';
 };
 
 export interface CardDimensions {
