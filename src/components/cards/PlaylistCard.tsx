@@ -35,9 +35,11 @@ export function PlaylistCard({
     const parts = url.split('/').filter(Boolean);
     return parts.length > 0 ? parts[parts.length - 1] : '';
   }, [playlist.data.playlistUrl]);
+  const hasDescription = Boolean(playlist.data.description && playlist.data.description.trim());
+  const bodyText = playlist.body?.trim() || '';
+  const showBody = Boolean(bodyText && bodyText !== playlist.data.description?.trim());
   const [embedCode, setEmbedCode] = useState<JSX.Element | null>(null);
   const shouldLoad = isFocused || !!item.position.expanded;
-  const hasDescription = Boolean(playlist.data.description && playlist.data.description.trim());
 
   useEffect(() => {
     if (!shouldLoad) {
@@ -55,8 +57,8 @@ export function PlaylistCard({
           width="100%"
           height={availableHeight}
           style={{ maxHeight: '380px' }}
-          allowTransparency={true}
-          allow="encrypted-media"
+          allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+          loading="lazy"
         />
       );
     } else if (playlist.data.platform === 'apple' && playlistId) {
@@ -67,8 +69,8 @@ export function PlaylistCard({
           width="100%"
           height={availableHeight}
           style={{ maxHeight: '380px' }}
-          allowTransparency={true}
-          allow="encrypted-media"
+          allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+          loading="lazy"
         />
       );
     }
@@ -104,11 +106,11 @@ export function PlaylistCard({
           </span>
         </div>
         
-        {/* Add playlist body content if available */}
-        {playlist.body && playlist.body.trim() && (
+        {/* Add playlist body content if available and different from description */}
+        {showBody && (
           <div className="mb-4 p-3 bg-gray-800/50 rounded border border-cyan-500/20">
             <div className="text-sm text-cyan-300/90 whitespace-pre-wrap break-words">
-              {playlist.body}
+              {bodyText}
             </div>
           </div>
         )}

@@ -34,7 +34,10 @@ export function AlbumCard({
   // Strip .md extension from album.id when comparing
   const albumIdWithoutExt = album.id.replace('.md', '');
   const albumPhotos = photos.filter(photo => photo.data.albumId === albumIdWithoutExt);
-  const hasDescription = Boolean(album.data.description && album.data.description.trim());
+  const descriptionText = album.data.description?.trim() || '';
+  const hasDescription = Boolean(descriptionText);
+  const bodyText = album.body?.trim() || '';
+  const showBody = Boolean(bodyText && bodyText !== descriptionText && bodyText !== album.data.title?.trim());
   const [enlargedPhoto, setEnlargedPhoto] = useState<PhotoData | null>(null);
   const contentRootRef = useRef<HTMLDivElement | null>(null);
 
@@ -145,11 +148,11 @@ export function AlbumCard({
             </p>
           )}
           
-          {/* Add album body content if available */}
-          {album.body && album.body.trim() && (
+          {/* Add album body content if available and different from description/title */}
+          {showBody && (
             <div className="mt-3 p-3 bg-gray-800/50 rounded border border-cyan-500/20">
               <div className="text-sm text-cyan-300/90 whitespace-pre-wrap break-words">
-                {album.body}
+                {bodyText}
               </div>
             </div>
           )}

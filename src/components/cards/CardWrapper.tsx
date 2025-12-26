@@ -175,26 +175,26 @@ const CardWrapper: React.FC<CardWrapperProps> = ({
   const stickyNoteStyle: CSSProperties = {
     backgroundColor: animationProperties.color,
     transformOrigin: animationProperties.transformOrigin,
-    // Remove the grid pattern background
     // Only apply animation styles conditionally for performance
     ...(!isInteracting && isVisible ? {
-      animation: `$${''}` as any
+      // Use individual properties instead of shorthand to avoid React warnings
+      animationName: 'none',
     } : {
       // When interacting or not visible, use a simplified state
-      animation: 'none'
+      animationName: 'none'
     }),
   };
 
   // Start animation as soon as the card is visible (even during transitions)
-  if (isVisible) {
+  if (isVisible && !isInteracting) {
     // Focused cards sway; non-focused flutter. Avoid mixing shorthand/non-shorthand warnings.
     const animName = isFocused ? 'var(--focused-wind-animation-name, focused-wind-sway)' : animationProperties.animationType;
-    (stickyNoteStyle as any).animationName = animName as any;
+    (stickyNoteStyle as any).animationName = animName;
     (stickyNoteStyle as any).animationDuration = isFocused ? '6s' : `var(--flutter-duration)`;
     (stickyNoteStyle as any).animationTimingFunction = 'ease-in-out';
     (stickyNoteStyle as any).animationIterationCount = 'infinite';
     (stickyNoteStyle as any).animationDelay = isFocused ? '0s' : `${animationProperties.delay}s`;
-    (stickyNoteStyle as any).animationDirection = animationProperties.direction as any;
+    (stickyNoteStyle as any).animationDirection = animationProperties.direction;
   }
 
   return (

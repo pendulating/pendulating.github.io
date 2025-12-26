@@ -22,15 +22,16 @@ export function SnipCard({
   onDragStart,
   onExpand,
   onDragEnd,
-
+  onResizeToContent,
   isFocused,
   ...rest
-}: SnipCardProps) {
+}: SnipCardProps & { onResizeToContent?: (id: string, cardElement?: HTMLElement | null) => void }) {
   const snip = item.data as CollectionEntry<"snips">;
-  const titleText = snip.data.title?.trim() || '';
   const descriptionText = snip.data.description?.trim() || '';
+  const titleText = snip.data.title?.trim() || '';
   const showDescription = Boolean(descriptionText && descriptionText.toLowerCase() !== titleText.toLowerCase());
   const bodyText = (snip.body as unknown as string)?.trim?.() ? String(snip.body).trim() : '';
+  const showBody = Boolean(bodyText && bodyText !== descriptionText && bodyText !== titleText);
   const hasTags = Array.isArray(snip.data.tags) && snip.data.tags.length > 0;
   const hasMeaningfulSource = Boolean(snip.data.source && !/^_?no response_?$/i.test(String(snip.data.source).trim()));
   const hasSourceUrl = Boolean(snip.data.sourceUrl);
@@ -58,8 +59,8 @@ export function SnipCard({
             </p>
           )}
           
-          {/* Add the snip body content */}
-          {bodyText && (
+          {/* Add the snip body content if different from title/description */}
+          {showBody && (
             <div className="mt-4 p-3 bg-gray-800/50 rounded border border-cyan-500/20">
               <pre className="text-sm font-mono text-cyan-300/90 whitespace-pre-wrap break-words">
                 {bodyText}
