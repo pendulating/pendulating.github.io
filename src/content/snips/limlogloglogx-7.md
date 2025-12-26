@@ -9,6 +9,4 @@ sourceUrl: "https://github.com/pendulating/pendulating.github.io/issues/11"
 tags: ["math digging in religion's purse"]
 ---
 
-### Content
-
 lim(log(log(log(x))) ~ 7

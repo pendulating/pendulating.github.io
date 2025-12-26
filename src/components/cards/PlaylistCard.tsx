@@ -35,9 +35,18 @@ export function PlaylistCard({
     const parts = url.split('/').filter(Boolean);
     return parts.length > 0 ? parts[parts.length - 1] : '';
   }, [playlist.data.playlistUrl]);
-  const hasDescription = Boolean(playlist.data.description && playlist.data.description.trim());
-  const bodyText = playlist.body?.trim() || '';
-  const showBody = Boolean(bodyText && bodyText !== playlist.data.description?.trim());
+  const descriptionText = playlist.data.description?.trim() || '';
+  const hasDescription = Boolean(descriptionText);
+  
+  // Clean body text by removing common template artifacts
+  const rawBody = playlist.body?.trim() || '';
+  const bodyText = rawBody
+    .replace(/^###\s*(?:Description|Playlist URL|Mood\/Tags)\s*\n+/i, '')
+    .trim();
+
+  const showBody = Boolean(bodyText && 
+    bodyText.toLowerCase() !== descriptionText.toLowerCase() &&
+    bodyText.toLowerCase() !== playlist.data.title?.trim().toLowerCase());
   const [embedCode, setEmbedCode] = useState<JSX.Element | null>(null);
   const shouldLoad = isFocused || !!item.position.expanded;
 

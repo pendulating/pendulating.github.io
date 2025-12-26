@@ -30,8 +30,17 @@ export function SnipCard({
   const descriptionText = snip.data.description?.trim() || '';
   const titleText = snip.data.title?.trim() || '';
   const showDescription = Boolean(descriptionText && descriptionText.toLowerCase() !== titleText.toLowerCase());
-  const bodyText = (snip.body as unknown as string)?.trim?.() ? String(snip.body).trim() : '';
-  const showBody = Boolean(bodyText && bodyText !== descriptionText && bodyText !== titleText);
+  
+  // Clean body text by removing common template artifacts
+  const rawBody = (snip.body as unknown as string)?.trim?.() ? String(snip.body).trim() : '';
+  const bodyText = rawBody
+    .replace(/^###\s*Content\s*\n+/i, '')
+    .replace(/^💡\s*The issue title above becomes your snip title\s*\n+/i, '')
+    .trim();
+    
+  const showBody = Boolean(bodyText && 
+    bodyText.toLowerCase() !== descriptionText.toLowerCase() && 
+    bodyText.toLowerCase() !== titleText.toLowerCase());
   const hasTags = Array.isArray(snip.data.tags) && snip.data.tags.length > 0;
   const hasMeaningfulSource = Boolean(snip.data.source && !/^_?no response_?$/i.test(String(snip.data.source).trim()));
   const hasSourceUrl = Boolean(snip.data.sourceUrl);

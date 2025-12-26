@@ -36,8 +36,16 @@ export function AlbumCard({
   const albumPhotos = photos.filter(photo => photo.data.albumId === albumIdWithoutExt);
   const descriptionText = album.data.description?.trim() || '';
   const hasDescription = Boolean(descriptionText);
-  const bodyText = album.body?.trim() || '';
-  const showBody = Boolean(bodyText && bodyText !== descriptionText && bodyText !== album.data.title?.trim());
+  
+  // Clean body text by removing common template artifacts
+  const rawBody = album.body?.trim() || '';
+  const bodyText = rawBody
+    .replace(/^###\s*(?:Description|Description & Photos|Photos|Images)\s*\n+/i, '')
+    .trim();
+
+  const showBody = Boolean(bodyText && 
+    bodyText.toLowerCase() !== descriptionText.toLowerCase() && 
+    bodyText.toLowerCase() !== album.data.title?.trim().toLowerCase());
   const [enlargedPhoto, setEnlargedPhoto] = useState<PhotoData | null>(null);
   const contentRootRef = useRef<HTMLDivElement | null>(null);
 
