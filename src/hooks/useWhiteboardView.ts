@@ -30,7 +30,7 @@ export function useWhiteboardView() {
         }
         transitionTimeoutRef.current = setTimeout(() => {
           setIsTransitioning(false);
-        }, 1300); // Long enough to handle smooth card navigation (1200ms) + buffer
+        }, 1600); // Long enough to handle smooth card navigation (fly-to) + buffer
       }
       
       setTransform(prevTransform => {

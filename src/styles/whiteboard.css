@@ -38,20 +38,41 @@
 
 /* Smooth camera transitions now apply to the world element */
 .transform-container.is-transitioning .world {
-  transition: transform 1s cubic-bezier(0.25, 0.8, 0.25, 1);
+  transition: transform var(--transition-duration, 1s) cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
-/* World: receives camera transform; container above stays full-viewport for events */
+/* World: receives camera translation; container above stays full-viewport for events */
 .world {
   position: absolute;
   top: 50%;
   left: 50%;
   width: 100vw;
   height: 100vh;
-  transform: translate(-50%, -50%) translate(var(--translateX, 0), var(--translateY, 0)) scale(var(--scale, 1));
+  /* Split transform: translation here, scale on child layer */
+  transform: translate(-50%, -50%) translate(var(--translateX, 0), var(--translateY, 0));
   transform-origin: center center;
   z-index: 1;
   overflow: visible;
+  will-change: transform; /* Optimize world-space transforms */
+}
+
+/* New: Scaling layer for more fluid "fly-to" transitions */
+.world-scaler {
+  position: absolute;
+  inset: 0;
+  transform: scale(var(--scale, 1));
+  transform-origin: center center;
+  overflow: visible;
+  will-change: transform;
+}
+
+/* Smooth camera transitions now apply independently to translate and scale */
+.transform-container.is-transitioning .world {
+  transition: transform var(--translate-duration, 1s) var(--translate-timing, cubic-bezier(0.25, 0.8, 0.25, 1));
+}
+
+.transform-container.is-transitioning .world-scaler {
+  transition: transform var(--scale-duration, 1s) var(--scale-timing, cubic-bezier(0.25, 0.8, 0.25, 1));
 }
 
 .whiteboard-content {
@@ -61,6 +82,7 @@
   /* Remove size containment that can clip expanded content */
   overflow: visible;
   z-index: 3;
+  will-change: transform;
 }
 
 /* Fixed-position debug HUD independent of world transforms */
@@ -86,15 +108,143 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  /* Make the painting large so it covers during pans/zooms */
+  /* Reduced to 300vw for performance; SCALES.MIN adjusted to match */
   min-width: 300vw;
   min-height: 300vh;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  will-change: transform;
+  contain: layout style;
+}
+
+/* Outside view layer - the "vista" */
+.outside-view {
+  position: absolute;
+  inset: 0;
   background-size: cover;
   background-position: center center;
   background-repeat: no-repeat;
-  z-index: -1; /* always behind any card content */
-  pointer-events: none; /* do not block dragging/gestures */
-  opacity: 0.9; /* subtle so cards remain legible */
+  z-index: 1;
+  /* Use hardware-accelerated filter blur instead of backdrop-filter */
+  filter: saturate(1.1) brightness(1.05) blur(10px);
+  will-change: filter;
+  transform: translateZ(0); /* Force GPU layer */
+}
+
+/* Frosted glass layer */
+.frosted-glass {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  /* Simplified: remove expensive backdrop-filter */
+  background-color: rgba(255, 255, 255, 0.45);
+}
+
+/* Dark mode glass tint */
+html[data-theme="dark"] .frosted-glass {
+  background-color: rgba(15, 23, 42, 0.55);
+}
+
+/* Glass grain/noise texture overlay - switched to static base64 PNG for performance */
+.glass-grain {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  opacity: 0.08;
+  pointer-events: none;
+  background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyBAMAAADsEZWCAAAAElBMVEUAAAD8/Pz9/f3+/v7////09PT7L+XkAAAABXRSTlMAf0CAgG79uB0AAAAJcEhZcwAADsMAAA7DAcdvqGQAAAA6SURBVDjLY2AYBaNgOIAhDMDQxMDA8IDBgUEAg6GRgYHhAYMDgwCGoZGBgeEBgwODAIZGBgaGBwwOAwkAADLMB80VpA6vAAAAAElFTkSuQmCC");
+  background-repeat: repeat;
+  mix-blend-mode: overlay;
+  transform: translateZ(0);
+}
+
+/* Window frame/muntins */
+.window-frame {
+  position: absolute;
+  inset: 0;
+  z-index: 4;
+  pointer-events: none;
+  /* Sharp timber edges for the old-timey look - shifted to richer brown tones */
+  background: 
+    /* Vertical muntin - thick timber with sharp edges */
+    linear-gradient(to right, 
+      transparent calc(50% - 61px), 
+      rgba(45, 30, 20, 1) calc(50% - 60px), 
+      rgba(75, 55, 40, 1) 50%, 
+      rgba(45, 30, 20, 1) calc(50% + 60px), 
+      transparent calc(50% + 61px)),
+    /* Horizontal muntin - thick timber with sharp edges */
+    linear-gradient(to bottom, 
+      transparent calc(50% - 61px), 
+      rgba(45, 30, 20, 1) calc(50% - 60px), 
+      rgba(75, 55, 40, 1) 50%, 
+      rgba(45, 30, 20, 1) calc(50% + 60px), 
+      transparent calc(50% + 61px));
+  box-shadow: inset 0 0 200px 100px rgba(0, 0, 0, 0.5); /* Stronger inner frame depth */
+  transform: translateZ(0);
+}
+
+/* Dark mode adjustments for the frame - richer mahogany/walnut tones */
+html[data-theme="dark"] .window-frame {
+  background: 
+    linear-gradient(to right, 
+      transparent calc(50% - 61px), 
+      rgba(30, 20, 15, 1) calc(50% - 60px), 
+      rgba(50, 35, 25, 1) 50%, 
+      rgba(30, 20, 15, 1) calc(50% + 60px), 
+      transparent calc(50% + 61px)),
+    linear-gradient(to bottom, 
+      transparent calc(50% - 61px), 
+      rgba(30, 20, 15, 1) calc(50% - 60px), 
+      rgba(50, 35, 25, 1) 50%, 
+      rgba(30, 20, 15, 1) calc(50% + 60px), 
+      transparent calc(50% + 61px));
+}
+
+/* Aged/Vignette effect */
+.window-vignette {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  pointer-events: none;
+  background: radial-gradient(circle at center, transparent 30%, rgba(0, 0, 0, 0.1) 70%, rgba(0, 0, 0, 0.3) 100%);
+  mix-blend-mode: multiply;
+  transform: translateZ(0);
+}
+
+/* Mobile optimizations for glass effects */
+.mobile-optimized .outside-view {
+  filter: saturate(1.1) brightness(1.05) blur(5px); /* Reduced blur for performance */
+}
+
+.mobile-optimized .frosted-glass {
+  background-color: rgba(255, 255, 255, 0.65); /* More opaque fallback for less blur */
+}
+
+html[data-theme="dark"].mobile-optimized .frosted-glass {
+  background-color: rgba(15, 23, 42, 0.65);
+}
+
+.mobile-optimized .glass-grain {
+  opacity: 0.05;
+}
+
+.mobile-optimized .window-frame {
+  box-shadow: inset 0 0 100px 50px rgba(0, 0, 0, 0.4);
+  /* Simplified gradients for mobile - warmer timber tones */
+  background: 
+    linear-gradient(to right, 
+      transparent calc(50% - 40px), 
+      rgba(60, 45, 30, 0.9) 50%, 
+      transparent calc(50% + 40px)),
+    linear-gradient(to bottom, 
+      transparent calc(50% - 40px), 
+      rgba(60, 45, 30, 0.9) 50%, 
+      transparent calc(50% + 40px));
 }
 
 /* Sticky note positioning - mobile optimized */
@@ -139,12 +289,24 @@
   justify-content: center;
   align-items: center;
   border-radius: 4px;
-  /* Simple flat shadow for all devices */
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  /* More realistic contact shadow for glass surface */
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2), 0 1px 4px rgba(0, 0, 0, 0.1);
   /* Default sticky note color will be overridden by component */
   background-color: #fff68f; 
   /* Remove complex 3D properties */
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Glass imperfections layer (dirt/smudges) - switched to static base64 for performance */
+.glass-imperfections {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  opacity: 0.03;
+  pointer-events: none;
+  background-image: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyBAMAAADsEZWCAAAAElBMVEUAAAD8/Pz9/f3+/v7////09PT7L+XkAAAABXRSTlMAf0CAgG79uB0AAAAJcEhZcwAADsMAAA7DAcdvqGQAAAA6SURBVDjLY2AYBaNgOIAhDMDQxMDA8IDBgUEAg6GRgYHhAYMDgwCGoZGBgeEBgwODAIZGBgaGBwwOAwkAADLMB80VpA6vAAAAAElFTkSuQmCC");
+  mix-blend-mode: soft-light;
+  transform: translateZ(0);
 }
 
 /* Desktop-only subtle animations */
@@ -354,11 +516,18 @@ html[data-theme="dark"] .focused-card {
   animation-play-state: running !important;
 }
 
-/* Enhanced etched content styling - simplified for mobile */
+/* Enhanced etched content styling - simplified for performance */
 .sticky-note.etched-content {
   /* Simple border instead of complex shadows */
   border: 1px solid rgba(0, 0, 0, 0.1);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Disable expensive backdrop-blur on cards for mobile performance */
+.mobile-optimized .sticky-note [class*="backdrop-blur"],
+.perf-low .sticky-note [class*="backdrop-blur"] {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
 /* Force most container backgrounds to be transparent but preserve buttons */

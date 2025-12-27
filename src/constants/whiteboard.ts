@@ -1,6 +1,6 @@
 export const SCALES = {
-  MIN: 0.1,     // Can zoom out to see everything
-  INITIAL: 0.3, // Initial zoom for good overview
+  MIN: 0.334,   // Set to 0.334 to ensure the 300vw window scene always covers the viewport
+  INITIAL: 0.4, // Initial zoom for good overview
   MAX: 2        // Can zoom in to read notes
 } as const;
 

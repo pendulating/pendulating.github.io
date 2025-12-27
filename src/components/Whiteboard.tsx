@@ -4,6 +4,7 @@ import type { WhiteboardProps, WhiteboardItem, PhotoData, Transform } from '../t
 import { WhiteboardContent } from './whiteboard/WhiteboardContent';
 import { WhiteboardToolbar } from './whiteboard/WhiteboardToolbar';
 import { WhiteboardGrid } from './whiteboard/WhiteboardGrid';
+import { WindowBackground } from './whiteboard/WindowBackground';
 import { useWhiteboardItems } from '../hooks/useWhiteboardItems';
 import { useWhiteboardView } from '../hooks/useWhiteboardView';
 import { useWhiteboardGestures } from '../hooks/useWhiteboardGestures';
@@ -446,7 +447,7 @@ export default function WhiteboardLayout({
     } else {
       // On desktop, use the default centered view
       requestAnimationFrame(() => {
-        updateTransform({ x: 0, y: 0, scale: 0.3 }, false);
+        updateTransform({ x: 0, y: 0, scale: SCALES.INITIAL }, false);
       });
     }
   }, [updateTransform, isMobile]);
@@ -572,27 +573,25 @@ export default function WhiteboardLayout({
           })}
         >
           <div className="world">
-          {/* World-space painting background that follows camera */}
-          <div
-            className="whiteboard-background"
-            aria-hidden
-            style={{
-              backgroundImage: `url(${vistaUrl})`,
-              // Subtle theme-aware tint to keep notes readable
-              filter: brainTheme === 'dark' ? 'brightness(0.7) saturate(1.05)' : 'brightness(0.95) saturate(1.05)'
-            } as React.CSSProperties}
-          />
+            <div className="world-scaler">
+              {/* Layered window background that follows camera (memoized for performance) */}
+              <WindowBackground 
+                vistaUrl={vistaUrl} 
+                brainTheme={brainTheme} 
+                isMobile={isMobile} 
+              />
 
-          <WhiteboardContent
-            items={laidOutItems}
-            focusedCardId={focusedCardId}
-            draggingId={dragging}
-            onDragStart={onDragStart}
-            onDragEnd={handleDragEnd}
-            onExpand={handleExpand}
-            onResizeToContent={handleResizeToContent}
-            photosByAlbum={photosByAlbum}
-          />
+              <WhiteboardContent
+                items={laidOutItems}
+                focusedCardId={focusedCardId}
+                draggingId={dragging}
+                onDragStart={onDragStart}
+                onDragEnd={handleDragEnd}
+                onExpand={handleExpand}
+                onResizeToContent={handleResizeToContent}
+                photosByAlbum={photosByAlbum}
+              />
+            </div>
           </div>
         </div>
         

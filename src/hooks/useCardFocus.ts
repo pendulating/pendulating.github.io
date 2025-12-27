@@ -83,8 +83,58 @@ export function useCardFocus(
 
     const newTransform: Transform = { x: targetX, y: targetY, scale: zoomLevel };
 
-    // Apply the transform with smooth animation
-    updateTransform(newTransform, true);
+    // Calculate current world center
+    const currentWorldX = -currentTransform.x / currentTransform.scale;
+    const currentWorldY = -currentTransform.y / currentTransform.scale;
+
+    // Calculate distance between current and target
+    const dx = cardCenterX - currentWorldX;
+    const dy = cardCenterY - currentWorldY;
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    // Get the container to set dynamic transition properties
+    const container = document.querySelector('.transform-container') as HTMLElement;
+
+    // Only do "fly-to" if distance is significant
+    if (distance > 500) {
+      // Fluid "Fly-to" implementation using split transform transitions
+      // Translation is a single continuous smooth path
+      // Scale "hops" to a peak and dives back in
+      
+      const peakScale = Math.max(0.35, Math.min(currentTransform.scale, zoomLevel) * 0.65);
+      
+      if (container) {
+        // Continuous translation over 1.2s
+        container.style.setProperty('--translate-duration', '1.2s');
+        container.style.setProperty('--translate-timing', 'cubic-bezier(0.45, 0, 0.55, 1)');
+        
+        // Scale stage 1: takeoff to peak
+        container.style.setProperty('--scale-duration', '0.6s');
+        container.style.setProperty('--scale-timing', 'cubic-bezier(0.4, 0, 0.6, 1)');
+      }
+
+      // Start the translation immediately to final destination
+      // And start scale to peak
+      updateTransform({ ...newTransform, scale: peakScale }, true);
+
+      // Stage 2: scale "dive" to target
+      setTimeout(() => {
+        if (container) {
+          container.style.setProperty('--scale-duration', '0.6s');
+          container.style.setProperty('--scale-timing', 'cubic-bezier(0.4, 0, 0.6, 1)');
+        }
+        updateTransform(newTransform, true);
+      }, 600);
+    } else {
+      // Standard linear focus for short distances
+      if (container) {
+        container.style.setProperty('--translate-duration', '0.8s');
+        container.style.setProperty('--translate-timing', 'cubic-bezier(0.25, 0.8, 0.25, 1)');
+        container.style.setProperty('--scale-duration', '0.8s');
+        container.style.setProperty('--scale-timing', 'cubic-bezier(0.25, 0.8, 0.25, 1)');
+      }
+      updateTransform(newTransform, true);
+    }
 
     // After the transition completes, measure and apply one-shot correction
     if (correctionTimerRef.current) {
@@ -107,7 +157,7 @@ export function useCardFocus(
       if (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) {
         updateTransform({ x: newTransform.x - dx, y: newTransform.y - dy, scale: newTransform.scale }, false);
       }
-    }, 1150); // slightly longer than CSS transition (1s)
+    }, 1650); // slightly longer than fly-to combined transition (~1.4s)
   }, [items, updateTransform, currentTransform]);
 
   const onFocusPrev = useCallback(() => {
