@@ -51,7 +51,14 @@ export const PlaylistCard = React.memo(({
   const [isExpanding, setIsExpanding] = useState(false);
   const expansionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const shouldLoad = isFocused || (!!item.position.expanded && !isExpanding);
+  // Use more restrictive loading on mobile to prevent crashes
+  const isMobile = typeof window !== 'undefined' && (
+    /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+    window.innerWidth <= 768
+  );
+
+  // On mobile, only load if FOCUSED. Expansion alone isn't enough to risk a crash.
+  const shouldLoad = isFocused || (!isMobile && !!item.position.expanded && !isExpanding);
 
   // Monitor expansion state to defer loading
   useEffect(() => {

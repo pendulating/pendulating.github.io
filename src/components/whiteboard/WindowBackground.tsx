@@ -15,9 +15,9 @@ export const WindowBackground = React.memo(({ vistaUrl, brainTheme, isMobile, is
         className="outside-view"
         style={{
           backgroundImage: `url(${vistaUrl})`,
-          filter: isTransitioning ? 'none' : (brainTheme === 'dark' 
+          filter: brainTheme === 'dark' 
             ? `brightness(0.6) saturate(1.1) blur(10px)` 
-            : `brightness(1.05) saturate(1.1) blur(10px)`)
+            : `brightness(1.05) saturate(1.1) blur(10px)`
         } as React.CSSProperties}
       />
       {/* Frosted glass effect */}

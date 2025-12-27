@@ -272,9 +272,9 @@ html[data-theme="dark"].mobile-optimized .frosted-glass {
   display: none;
 }
 
-/* Optimize transitions: simplify during movement */
+/* Optimize transitions: reduce blur during movement to save GPU cycles without a total "pop" */
 .transform-container.is-transitioning .outside-view {
-  filter: none !important;
+  filter: saturate(1.1) brightness(1.0) blur(2px) !important;
 }
 
 .transform-container.is-transitioning .frosted-glass {
@@ -286,39 +286,39 @@ html[data-theme="dark"].mobile-optimized .frosted-glass {
 }
 
 .mobile-optimized .window-frame {
-  /* Reduced shadow size for mobile to prevent paint-time crashes */
-  box-shadow: inset 0 0 80px 40px rgba(0, 0, 0, 0.4);
-  /* Extra thick and ultra-sharp timber edges for mobile to ensure presence */
+  /* Restore stronger shadow for depth - critical for the "window" illusion */
+  box-shadow: inset 0 0 200px 100px rgba(0, 0, 0, 0.5);
+  /* Significantly thicker muntins for mobile - using larger pixel values to ensure presence */
   background: 
     linear-gradient(to right, 
-      transparent calc(50% - 121px), 
-      rgba(45, 30, 20, 1) calc(50% - 120px), 
+      transparent calc(50% - 181px), 
+      rgba(45, 30, 20, 1) calc(50% - 180px), 
       rgba(75, 55, 40, 1) 50%, 
-      rgba(45, 30, 20, 1) calc(50% + 120px), 
-      transparent calc(50% + 121px)),
+      rgba(45, 30, 20, 1) calc(50% + 180px), 
+      transparent calc(50% + 181px)),
     linear-gradient(to bottom, 
-      transparent calc(50% - 121px), 
-      rgba(45, 30, 20, 1) calc(50% - 120px), 
+      transparent calc(50% - 181px), 
+      rgba(45, 30, 20, 1) calc(50% - 180px), 
       rgba(75, 55, 40, 1) 50%, 
-      rgba(45, 30, 20, 1) calc(50% + 120px), 
-      transparent calc(50% + 121px));
+      rgba(45, 30, 20, 1) calc(50% + 180px), 
+      transparent calc(50% + 181px));
 }
 
-/* Mobile dark mode sharp edges - extra thick */
+/* Mobile dark mode extra thick muntins */
 html[data-theme="dark"].mobile-optimized .window-frame {
   background: 
     linear-gradient(to right, 
-      transparent calc(50% - 121px), 
-      rgba(30, 20, 15, 1) calc(50% - 120px), 
+      transparent calc(50% - 181px), 
+      rgba(30, 20, 15, 1) calc(50% - 180px), 
       rgba(50, 35, 25, 1) 50%, 
-      rgba(30, 20, 15, 1) calc(50% + 120px), 
-      transparent calc(50% + 121px)),
+      rgba(30, 20, 15, 1) calc(50% + 180px), 
+      transparent calc(50% + 181px)),
     linear-gradient(to bottom, 
-      transparent calc(50% - 121px), 
-      rgba(30, 20, 15, 1) calc(50% - 120px), 
+      transparent calc(50% - 181px), 
+      rgba(30, 20, 15, 1) calc(50% - 180px), 
       rgba(50, 35, 25, 1) 50%, 
-      rgba(30, 20, 15, 1) calc(50% + 120px), 
-      transparent calc(50% + 121px));
+      rgba(30, 20, 15, 1) calc(50% + 180px), 
+      transparent calc(50% + 181px));
 }
 
 /* Sticky note positioning - mobile optimized */
@@ -625,6 +625,12 @@ html[data-theme="dark"] .focused-card {
 .etched-text {
   color: rgba(0, 0, 0, 0.8);
   text-shadow: none; /* Remove text shadows for better mobile performance */
+}
+
+.invisible-placeholder {
+  width: 100%;
+  height: 100%;
+  background: transparent;
 }
 
 .etched-text .text-white,
