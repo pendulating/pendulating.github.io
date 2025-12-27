@@ -6,6 +6,7 @@ interface UseCardFocusResult {
   onFocusPrev: () => void;
   onFocusNext: () => void;
   focusOnCard: (index: number) => void;
+  cancelCorrection: () => void;
 }
 
 export function useCardFocus(
@@ -15,6 +16,13 @@ export function useCardFocus(
 ): UseCardFocusResult {
   const [currentIndex, setCurrentIndex] = useState(0);
   const correctionTimerRef = useRef<number | undefined>(undefined);
+
+  const cancelCorrection = useCallback(() => {
+    if (correctionTimerRef.current) {
+      window.clearTimeout(correctionTimerRef.current);
+      correctionTimerRef.current = undefined;
+    }
+  }, []);
   
   // Use different zoom levels for mobile vs desktop
   const getZoomLevel = () => {
@@ -188,5 +196,5 @@ export function useCardFocus(
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, [onFocusPrev, onFocusNext]);
 
-  return { currentIndex, onFocusPrev, onFocusNext, focusOnCard };
+  return { currentIndex, onFocusPrev, onFocusNext, focusOnCard, cancelCorrection };
 }

@@ -17,7 +17,7 @@ interface AlbumCardProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onR
   isFocused: boolean;
 }
 
-export function AlbumCard({
+export const AlbumCard = React.memo(({
   item,
   id,
   isDragging,
@@ -29,7 +29,7 @@ export function AlbumCard({
   photos = [],
   isFocused,
   ...rest
-}: AlbumCardProps) {
+}: AlbumCardProps) => {
   const album = item.data as CollectionEntry<"albums">;
   // Strip .md extension from album.id when comparing
   const albumIdWithoutExt = album.id.replace('.md', '');
@@ -181,4 +181,4 @@ export function AlbumCard({
       </div>
     </CardWrapper>
   );
-}
+});

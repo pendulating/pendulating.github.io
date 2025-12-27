@@ -53,7 +53,6 @@
   transform-origin: center center;
   z-index: 1;
   overflow: visible;
-  will-change: transform;
 }
 
 /* Scaling layer for "fly-to" transitions */
@@ -63,7 +62,6 @@
   transform: scale(var(--scale, 1));
   transform-origin: center center;
   overflow: visible;
-  will-change: transform;
 }
 
 /* Translation layer - handles world-space panning */
@@ -74,6 +72,12 @@
   transform: translate(var(--translateX, 0), var(--translateY, 0));
   transform-origin: center center;
   overflow: visible;
+}
+
+/* Only apply will-change during active camera transitions to save GPU memory on mobile */
+.transform-container.is-transitioning .world,
+.transform-container.is-transitioning .world-scaler,
+.transform-container.is-transitioning .world-translator {
   will-change: transform;
 }
 
@@ -93,6 +97,9 @@
   /* Remove size containment that can clip expanded content */
   overflow: visible;
   z-index: 3;
+}
+
+.transform-container.is-transitioning .whiteboard-content {
   will-change: transform;
 }
 
@@ -129,8 +136,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  will-change: transform;
   contain: layout style;
+}
+
+.transform-container.is-transitioning .whiteboard-background {
+  will-change: transform;
 }
 
 /* Outside view layer - the "vista" */
@@ -233,12 +243,42 @@ html[data-theme="dark"] .window-frame {
   /* No longer overriding blur here, handled in component to match desktop */
 }
 
+/* Performance-based glass and frame overrides */
+.perf-low .frosted-glass,
+.perf-minimal .frosted-glass,
 .mobile-optimized .frosted-glass {
-  background-color: rgba(255, 255, 255, 0.65); /* More opaque fallback for less blur */
+  background-color: rgba(255, 255, 255, 0.65);
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
 }
 
+html[data-theme="dark"].perf-low .frosted-glass,
+html[data-theme="dark"].perf-minimal .frosted-glass,
 html[data-theme="dark"].mobile-optimized .frosted-glass {
   background-color: rgba(15, 23, 42, 0.65);
+}
+
+.perf-low .window-frame,
+.perf-minimal .window-frame {
+  box-shadow: none !important;
+  background: 
+    linear-gradient(to right, transparent calc(50% - 2px), rgba(45, 30, 20, 0.5) 50%, transparent calc(50% + 2px)),
+    linear-gradient(to bottom, transparent calc(50% - 2px), rgba(45, 30, 20, 0.5) 50%, transparent calc(50% + 2px)) !important;
+}
+
+/* Disable glass imperfections and grain on very low perf devices */
+.perf-minimal .glass-grain,
+.perf-minimal .glass-imperfections {
+  display: none;
+}
+
+/* Optimize transitions: simplify during movement */
+.transform-container.is-transitioning .outside-view {
+  filter: none !important;
+}
+
+.transform-container.is-transitioning .frosted-glass {
+  opacity: 0.5;
 }
 
 .mobile-optimized .glass-grain {
@@ -246,7 +286,8 @@ html[data-theme="dark"].mobile-optimized .frosted-glass {
 }
 
 .mobile-optimized .window-frame {
-  box-shadow: inset 0 0 200px 100px rgba(0, 0, 0, 0.5);
+  /* Reduced shadow size for mobile to prevent paint-time crashes */
+  box-shadow: inset 0 0 80px 40px rgba(0, 0, 0, 0.4);
   /* Extra thick and ultra-sharp timber edges for mobile to ensure presence */
   background: 
     linear-gradient(to right, 

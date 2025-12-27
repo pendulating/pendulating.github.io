@@ -56,6 +56,9 @@ export default function WhiteboardLayout({
   const handleZoomToFit = useCallback((cardElement: HTMLElement, expanded: boolean) => {
     if (!expanded) return; // Only zoom when expanding
     
+    // Cancel any pending focus corrections
+    cancelFocusCorrection();
+    
     // Get the draggable-area element that contains the card position info
     const draggableArea = cardElement.closest('.draggable-area') as HTMLElement;
     if (!draggableArea) return;
@@ -242,6 +245,7 @@ export default function WhiteboardLayout({
   onFocusPrev = focusHook.onFocusPrev;
   onFocusNext = focusHook.onFocusNext;
   focusOnCard = focusHook.focusOnCard;
+  const cancelFocusCorrection = focusHook.cancelCorrection;
   focusedCardId = focusableItems.length ? focusableItems[currentIndex]?.id : undefined;
 
   // Track last focused world position to choose nearest card after filter changes
@@ -340,8 +344,9 @@ export default function WhiteboardLayout({
   // Wrap gesture start to mark manual interaction
   const onGestureStart = useCallback((e: React.MouseEvent<HTMLDivElement> | React.TouchEvent<HTMLDivElement>) => {
     markManualInteraction();
+    cancelFocusCorrection();
     handleGestureStart(e);
-  }, [handleGestureStart, markManualInteraction]);
+  }, [handleGestureStart, markManualInteraction, cancelFocusCorrection]);
 
   // Capture-phase start to allow panning even when clicking on cards when Shift is held
   const onGestureStartCapture = useCallback((e: React.MouseEvent<HTMLDivElement>) => {
@@ -352,18 +357,23 @@ export default function WhiteboardLayout({
       return; // let card drag handle this
     }
     markManualInteraction();
+    cancelFocusCorrection();
     handleGestureStart(e);
     // prevent card drag from starting when we intend to pan
     if (onCard) {
       e.stopPropagation();
       e.preventDefault();
     }
-  }, [handleGestureStart, markManualInteraction]);
+  }, [handleGestureStart, markManualInteraction, cancelFocusCorrection]);
 
   // Wrap toolbar and focus controls to record manual interaction
   const onZoomInMarked = useCallback((animate?: boolean) => { markManualInteraction(); handleZoomIn(animate); }, [handleZoomIn, markManualInteraction]);
   const onZoomOutMarked = useCallback((animate?: boolean) => { markManualInteraction(); handleZoomOut(animate); }, [handleZoomOut, markManualInteraction]);
-  const onCenterMarked = useCallback(() => { markManualInteraction(); centerView(); }, [centerView, markManualInteraction]);
+  const onCenterMarked = useCallback(() => { 
+    markManualInteraction(); 
+    cancelFocusCorrection();
+    centerView(); 
+  }, [centerView, markManualInteraction, cancelFocusCorrection]);
   const onFocusPrevMarked = useCallback(() => { markManualInteraction(); onFocusPrev(); }, [onFocusPrev, markManualInteraction]);
   const onFocusNextMarked = useCallback(() => { markManualInteraction(); onFocusNext(); }, [onFocusNext, markManualInteraction]);
 
@@ -428,6 +438,7 @@ export default function WhiteboardLayout({
   const onDragStart = useCallback(
     (id: string, event: React.MouseEvent) => {
       markManualInteraction();
+      cancelFocusCorrection();
       // If panning is active (or user is starting a modifier-pan), skip card drag
       const isModifierPan = (event.shiftKey || event.metaKey || event.altKey || event.button === 1);
       if (isPanning || isModifierPan) return;
@@ -580,6 +591,7 @@ export default function WhiteboardLayout({
                   vistaUrl={vistaUrl} 
                   brainTheme={brainTheme} 
                   isMobile={isMobile} 
+                  isTransitioning={isTransitioning}
                 />
 
                 <WhiteboardContent

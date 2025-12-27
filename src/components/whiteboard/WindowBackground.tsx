@@ -4,9 +4,10 @@ interface WindowBackgroundProps {
   vistaUrl: string;
   brainTheme: 'dark' | 'light';
   isMobile: boolean;
+  isTransitioning: boolean;
 }
 
-export const WindowBackground = React.memo(({ vistaUrl, brainTheme, isMobile }: WindowBackgroundProps) => {
+export const WindowBackground = React.memo(({ vistaUrl, brainTheme, isMobile, isTransitioning }: WindowBackgroundProps) => {
   return (
     <div className="whiteboard-background" aria-hidden>
       {/* Outside view: the vista */}
@@ -14,9 +15,9 @@ export const WindowBackground = React.memo(({ vistaUrl, brainTheme, isMobile }: 
         className="outside-view"
         style={{
           backgroundImage: `url(${vistaUrl})`,
-          filter: brainTheme === 'dark' 
+          filter: isTransitioning ? 'none' : (brainTheme === 'dark' 
             ? `brightness(0.6) saturate(1.1) blur(10px)` 
-            : `brightness(1.05) saturate(1.1) blur(10px)`
+            : `brightness(1.05) saturate(1.1) blur(10px)`)
         } as React.CSSProperties}
       />
       {/* Frosted glass effect */}

@@ -162,30 +162,37 @@ export const useWhiteboardItems = (options: WhiteboardItemsOptions = {}) => {
       /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
       window.innerWidth <= 768
     );
+
+    // Get current state from items to determine if we are expanding or collapsing
+    const targetItem = items.find(it => it.id === id);
+    if (!targetItem) return;
     
+    const wasExpanded = targetItem.position.expanded;
+    
+    // Perform measurement OUTSIDE of setItems
+    let newDimensions = {
+      width: wasExpanded ? STICKY_NOTE.WIDTH : STICKY_NOTE.WIDTH * 1.5,
+      height: wasExpanded ? STICKY_NOTE.HEIGHT : STICKY_NOTE.HEIGHT * 1.5
+    };
+    
+    // Use content-aware sizing if we have access to the card element
+    if (cardElement) {
+      try {
+        newDimensions = calculateOptimalSize(cardElement, wasExpanded);
+        console.log('Content-aware sizing:', newDimensions);
+      } catch (error) {
+        console.warn('Failed to measure content, using fallback sizing:', error);
+      }
+    }
+    
+    // Now update state with pre-calculated dimensions
     setItems(prevItems =>
       prevItems.map(item => {
         if (item.id === id) {
-          const isExpanded = item.position.expanded;
-          console.log('Toggling expand for', id, 'from', isExpanded, 'to', !isExpanded);
-          
-          let newDimensions = {
-            width: isExpanded ? STICKY_NOTE.WIDTH : STICKY_NOTE.WIDTH * 1.5,
-            height: isExpanded ? STICKY_NOTE.HEIGHT : STICKY_NOTE.HEIGHT * 1.5
-          };
-          
-          // Use content-aware sizing if we have access to the card element
-          if (cardElement) {
-            try {
-              newDimensions = calculateOptimalSize(cardElement, isExpanded);
-              console.log('Content-aware sizing:', newDimensions);
-            } catch (error) {
-              console.warn('Failed to measure content, using fallback sizing:', error);
-            }
-          }
+          console.log('Toggling expand for', id, 'from', wasExpanded, 'to', !wasExpanded);
           
           // If expanding and we have zoom function, auto-zoom to fit (mobile devices)
-          if (isMobile && !isExpanded && options.onZoomToFit && cardElement) {
+          if (isMobile && !wasExpanded && options.onZoomToFit && cardElement) {
             // Delay the zoom to allow the card to finish expanding first
             setTimeout(() => {
               options.onZoomToFit!(cardElement, true);
@@ -198,14 +205,14 @@ export const useWhiteboardItems = (options: WhiteboardItemsOptions = {}) => {
               ...item.position,
               width: newDimensions.width,
               height: newDimensions.height,
-              expanded: !isExpanded
+              expanded: !wasExpanded
             }
           };
         }
         return item;
       })
     );
-  }, [options]);
+  }, [items, options]);
 
   // Resize a card to fit its current content (e.g., after inner image enlargement)
   const handleResizeToContent = useCallback((id: string, cardElement?: HTMLElement | null) => {

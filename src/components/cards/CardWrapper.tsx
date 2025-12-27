@@ -219,7 +219,8 @@ const CardWrapper: React.FC<CardWrapperProps> = ({
         style={stickyNoteStyle}
       >
         <div className="sticky-note-content etched-text">
-          {children}
+          {/* Defer rendering children if not visible to save memory/CPU on mobile */}
+          {isVisible ? children : <div className="invisible-placeholder" />}
         </div>
         
         {/* Auto-resize button - always visible and properly synced */}
@@ -253,4 +254,4 @@ const CardWrapper: React.FC<CardWrapperProps> = ({
   );
 };
 
-export default CardWrapper;
+export default React.memo(CardWrapper);

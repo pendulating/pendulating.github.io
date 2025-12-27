@@ -15,7 +15,7 @@ interface PlaylistCardProps extends Omit<React.HTMLAttributes<HTMLDivElement>, '
   isFocused: boolean;
 }
 
-export function PlaylistCard({
+export const PlaylistCard = React.memo(({
   item,
   id,
   isDragging,
@@ -27,7 +27,7 @@ export function PlaylistCard({
 
   isFocused,
   ...rest
-}: PlaylistCardProps) {
+}: PlaylistCardProps) => {
   const playlist = item.data as CollectionEntry<"playlists">;
   const contentRef = useRef<HTMLDivElement>(null);
   const playlistId = useMemo(() => {
@@ -48,7 +48,29 @@ export function PlaylistCard({
     bodyText.toLowerCase() !== descriptionText.toLowerCase() &&
     bodyText.toLowerCase() !== playlist.data.title?.trim().toLowerCase());
   const [embedCode, setEmbedCode] = useState<JSX.Element | null>(null);
-  const shouldLoad = isFocused || !!item.position.expanded;
+  const [isExpanding, setIsExpanding] = useState(false);
+  const expansionTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const shouldLoad = isFocused || (!!item.position.expanded && !isExpanding);
+
+  // Monitor expansion state to defer loading
+  useEffect(() => {
+    if (item.position.expanded) {
+      setIsExpanding(true);
+      if (expansionTimeoutRef.current) clearTimeout(expansionTimeoutRef.current);
+      
+      // Delay loading until expansion animation is likely finished
+      expansionTimeoutRef.current = setTimeout(() => {
+        setIsExpanding(false);
+      }, 500); // Slightly more than the CSS transition
+    } else {
+      setIsExpanding(false);
+    }
+    
+    return () => {
+      if (expansionTimeoutRef.current) clearTimeout(expansionTimeoutRef.current);
+    };
+  }, [item.position.expanded]);
 
   useEffect(() => {
     if (!shouldLoad) {
@@ -132,4 +154,4 @@ export function PlaylistCard({
       </div>
     </CardWrapper>
   );
-}
+});

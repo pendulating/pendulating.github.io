@@ -14,7 +14,7 @@ interface SnipCardProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onRe
   isFocused: boolean;
 }
 
-export function SnipCard({
+export const SnipCard = React.memo(({
   item,
   id,
   isDragging,
@@ -25,7 +25,7 @@ export function SnipCard({
   onResizeToContent,
   isFocused,
   ...rest
-}: SnipCardProps & { onResizeToContent?: (id: string, cardElement?: HTMLElement | null) => void }) {
+}: SnipCardProps & { onResizeToContent?: (id: string, cardElement?: HTMLElement | null) => void }) => {
   const snip = item.data as CollectionEntry<"snips">;
   const descriptionText = snip.data.description?.trim() || '';
   const titleText = snip.data.title?.trim() || '';
@@ -112,4 +112,4 @@ export function SnipCard({
       </div>
     </CardWrapper>
   );
-}
+});
