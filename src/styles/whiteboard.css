@@ -48,15 +48,15 @@
   left: 50%;
   width: 100vw;
   height: 100vh;
-  /* Split transform: translation here, scale on child layer */
-  transform: translate(-50%, -50%) translate(var(--translateX, 0), var(--translateY, 0));
+  /* World layer only handles viewport centering */
+  transform: translate(-50%, -50%);
   transform-origin: center center;
   z-index: 1;
   overflow: visible;
-  will-change: transform; /* Optimize world-space transforms */
+  will-change: transform;
 }
 
-/* New: Scaling layer for more fluid "fly-to" transitions */
+/* Scaling layer for "fly-to" transitions */
 .world-scaler {
   position: absolute;
   inset: 0;
@@ -66,13 +66,24 @@
   will-change: transform;
 }
 
-/* Smooth camera transitions now apply independently to translate and scale */
-.transform-container.is-transitioning .world {
-  transition: transform var(--translate-duration, 1s) var(--translate-timing, cubic-bezier(0.25, 0.8, 0.25, 1));
+/* Translation layer - handles world-space panning */
+.world-translator {
+  position: absolute;
+  inset: 0;
+  /* translateX/Y are now in pure WORLD units (not scaled) */
+  transform: translate(var(--translateX, 0), var(--translateY, 0));
+  transform-origin: center center;
+  overflow: visible;
+  will-change: transform;
 }
 
+/* Smooth camera transitions now apply independently to translate and scale */
 .transform-container.is-transitioning .world-scaler {
   transition: transform var(--scale-duration, 1s) var(--scale-timing, cubic-bezier(0.25, 0.8, 0.25, 1));
+}
+
+.transform-container.is-transitioning .world-translator {
+  transition: transform var(--translate-duration, 1s) var(--translate-timing, cubic-bezier(0.25, 0.8, 0.25, 1));
 }
 
 .whiteboard-content {
@@ -108,9 +119,10 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  /* Reduced to 300vw for performance; SCALES.MIN adjusted to match */
-  min-width: 300vw;
-  min-height: 300vh;
+  /* Use vmax to ensure the window is always landscape and covers the viewport */
+  /* 400vmax wide by 300vmax tall creates a 4:3 landscape window regardless of device orientation */
+  width: 400vmax;
+  height: 300vmax;
   z-index: -1;
   pointer-events: none;
   overflow: hidden;
@@ -218,7 +230,7 @@ html[data-theme="dark"] .window-frame {
 
 /* Mobile optimizations for glass effects */
 .mobile-optimized .outside-view {
-  filter: saturate(1.1) brightness(1.05) blur(5px); /* Reduced blur for performance */
+  /* No longer overriding blur here, handled in component to match desktop */
 }
 
 .mobile-optimized .frosted-glass {
@@ -234,17 +246,38 @@ html[data-theme="dark"].mobile-optimized .frosted-glass {
 }
 
 .mobile-optimized .window-frame {
-  box-shadow: inset 0 0 100px 50px rgba(0, 0, 0, 0.4);
-  /* Simplified gradients for mobile - warmer timber tones */
+  box-shadow: inset 0 0 200px 100px rgba(0, 0, 0, 0.5);
+  /* Extra thick and ultra-sharp timber edges for mobile to ensure presence */
   background: 
     linear-gradient(to right, 
-      transparent calc(50% - 40px), 
-      rgba(60, 45, 30, 0.9) 50%, 
-      transparent calc(50% + 40px)),
+      transparent calc(50% - 121px), 
+      rgba(45, 30, 20, 1) calc(50% - 120px), 
+      rgba(75, 55, 40, 1) 50%, 
+      rgba(45, 30, 20, 1) calc(50% + 120px), 
+      transparent calc(50% + 121px)),
     linear-gradient(to bottom, 
-      transparent calc(50% - 40px), 
-      rgba(60, 45, 30, 0.9) 50%, 
-      transparent calc(50% + 40px));
+      transparent calc(50% - 121px), 
+      rgba(45, 30, 20, 1) calc(50% - 120px), 
+      rgba(75, 55, 40, 1) 50%, 
+      rgba(45, 30, 20, 1) calc(50% + 120px), 
+      transparent calc(50% + 121px));
+}
+
+/* Mobile dark mode sharp edges - extra thick */
+html[data-theme="dark"].mobile-optimized .window-frame {
+  background: 
+    linear-gradient(to right, 
+      transparent calc(50% - 121px), 
+      rgba(30, 20, 15, 1) calc(50% - 120px), 
+      rgba(50, 35, 25, 1) 50%, 
+      rgba(30, 20, 15, 1) calc(50% + 120px), 
+      transparent calc(50% + 121px)),
+    linear-gradient(to bottom, 
+      transparent calc(50% - 121px), 
+      rgba(30, 20, 15, 1) calc(50% - 120px), 
+      rgba(50, 35, 25, 1) 50%, 
+      rgba(30, 20, 15, 1) calc(50% + 120px), 
+      transparent calc(50% + 121px));
 }
 
 /* Sticky note positioning - mobile optimized */
@@ -457,23 +490,12 @@ html[data-theme="dark"] .focused-card {
   /* Don't override background - preserve component colors */
 }
 
-.mobile-optimized .world {
-  transform: translate(-50%, -50%) translate(var(--translateX, 0), var(--translateY, 0)) scale(var(--scale, 1));
-  overflow: visible;
-  will-change: none;
-}
-
-.mobile-optimized .whiteboard-content {
-  /* Remove aggressive containment that clips content in production */
-  overflow: visible;
-  will-change: none;
-}
-
+/* Simplified mobile states - no longer overriding core transforms */
+.mobile-optimized .world,
+.mobile-optimized .whiteboard-content,
 .mobile-optimized .draggable-area {
-  /* Remove strict containment that clips expanded cards in production */
   overflow: visible;
   will-change: none;
-  transform: translate(-50%, -50%) translate(var(--item-x, 0px), var(--item-y, 0px)) rotate(var(--item-rotation, 0deg)) !important;
 }
 
 /* Performance mode classes */

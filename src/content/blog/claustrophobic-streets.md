@@ -4,7 +4,7 @@ pubDatetime: 2024-07-26T03:30:08.994Z
 modDatetime: 
 title: Estimating the Perceived 'Claustrophobia' of New York City's Streets
 slug: claustrophobic-streets
-featured: true
+featured: false
 draft: false
 tags:
   - research

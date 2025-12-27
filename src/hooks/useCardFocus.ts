@@ -54,6 +54,7 @@ export function useCardFocus(
       /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
       viewportWidth <= 768
     );
+    const isPortrait = viewportHeight > viewportWidth;
 
     // Card position from the layout - this IS the center point already
     // The layout calculation in itemLayoutUtils.ts positions cards at their visual centers
@@ -64,11 +65,8 @@ export function useCardFocus(
     // Use appropriate zoom level
     const zoomLevel = getZoomLevel();
 
-    // To align the card centroid with the viewport center under
-    // container transform: translate(-50%,-50%) translate(tx,ty) scale(s)
-    // (rightmost applied first), we need tx = -s * cx, ty = -s * cy
-    const targetX = Math.round((-cardCenterX * getZoomLevel()) * 100) / 100;
-    const targetY = Math.round((-cardCenterY * getZoomLevel()) * 100) / 100;
+    const targetX = -cardCenterX;
+    const targetY = -cardCenterY;
 
     console.log('Card focus debug:', {
       cardIndex: clampedIndex,
@@ -78,59 +76,66 @@ export function useCardFocus(
       targetTransform: { x: targetX, y: targetY, scale: zoomLevel },
       currentTransform: currentTransform,
       viewport: { width: viewportWidth, height: viewportHeight },
-      isMobile
+      isMobile,
+      isPortrait
     });
 
     const newTransform: Transform = { x: targetX, y: targetY, scale: zoomLevel };
 
-    // Calculate current world center
-    const currentWorldX = -currentTransform.x / currentTransform.scale;
-    const currentWorldY = -currentTransform.y / currentTransform.scale;
-
-    // Calculate distance between current and target
-    const dx = cardCenterX - currentWorldX;
-    const dy = cardCenterY - currentWorldY;
-    const distance = Math.sqrt(dx * dx + dy * dy);
+    // Continuous world-space path calculation
+    const dx = targetX - currentTransform.x;
+    const dy = targetY - currentTransform.y;
+    
+    // On portrait mobile, horizontal distance is more "expensive" visually
+    const visualDx = isPortrait ? dx * (viewportHeight / viewportWidth) : dx;
+    const distance = Math.sqrt(visualDx * visualDx + dy * dy);
 
     // Get the container to set dynamic transition properties
     const container = document.querySelector('.transform-container') as HTMLElement;
 
     // Only do "fly-to" if distance is significant
-    if (distance > 500) {
+    // Adjusted threshold for mobile/portrait to trigger more appropriately
+    const flyToThreshold = isMobile ? 300 : 500;
+
+    if (distance > flyToThreshold) {
       // Fluid "Fly-to" implementation using split transform transitions
-      // Translation is a single continuous smooth path
-      // Scale "hops" to a peak and dives back in
+      // Translation is now pure WORLD space and completely independent of scale
       
-      const peakScale = Math.max(0.35, Math.min(currentTransform.scale, zoomLevel) * 0.65);
+      const peakScaleMultiplier = isPortrait ? 0.5 : 0.65;
+      const peakScale = Math.max(0.35, Math.min(currentTransform.scale, zoomLevel) * peakScaleMultiplier);
       
       if (container) {
-        // Continuous translation over 1.2s
-        container.style.setProperty('--translate-duration', '1.2s');
+        // Continuous world translation - pure straight line
+        const duration = isMobile ? '1.4s' : '1.2s';
+        container.style.setProperty('--translate-duration', duration);
         container.style.setProperty('--translate-timing', 'cubic-bezier(0.45, 0, 0.55, 1)');
         
         // Scale stage 1: takeoff to peak
-        container.style.setProperty('--scale-duration', '0.6s');
+        const scaleStageDuration = isMobile ? '0.7s' : '0.6s';
+        container.style.setProperty('--scale-duration', scaleStageDuration);
         container.style.setProperty('--scale-timing', 'cubic-bezier(0.4, 0, 0.6, 1)');
       }
 
-      // Start the translation immediately to final destination
-      // And start scale to peak
+      // Start world translation immediately to final destination
+      // Scale hops while translation happens in a straight line
       updateTransform({ ...newTransform, scale: peakScale }, true);
 
       // Stage 2: scale "dive" to target
       setTimeout(() => {
         if (container) {
-          container.style.setProperty('--scale-duration', '0.6s');
+          const scaleStageDuration = isMobile ? '0.7s' : '0.6s';
+          container.style.setProperty('--scale-duration', scaleStageDuration);
           container.style.setProperty('--scale-timing', 'cubic-bezier(0.4, 0, 0.6, 1)');
         }
         updateTransform(newTransform, true);
-      }, 600);
+      }, isMobile ? 700 : 600);
     } else {
       // Standard linear focus for short distances
       if (container) {
-        container.style.setProperty('--translate-duration', '0.8s');
+        const duration = isMobile ? '1s' : '0.8s';
+        container.style.setProperty('--translate-duration', duration);
         container.style.setProperty('--translate-timing', 'cubic-bezier(0.25, 0.8, 0.25, 1)');
-        container.style.setProperty('--scale-duration', '0.8s');
+        container.style.setProperty('--scale-duration', duration);
         container.style.setProperty('--scale-timing', 'cubic-bezier(0.25, 0.8, 0.25, 1)');
       }
       updateTransform(newTransform, true);
@@ -148,16 +153,16 @@ export function useCardFocus(
       const cy = rect.top + rect.height / 2;
       const vx = window.innerWidth / 2;
       const vy = window.innerHeight / 2;
-      const dx = cx - vx;
-      const dy = cy - vy;
+      const sdx = cx - vx;
+      const sdy = cy - vy;
       if (typeof console !== 'undefined') {
-        console.log('[Focus Debug] world', { cx: cardCenterX, cy: cardCenterY }, 'transform', newTransform, 'screen', { cx, cy }, 'delta', { dx, dy });
+        console.log('[Focus Debug] world', { cx: cardCenterX, cy: cardCenterY }, 'transform', newTransform, 'screen', { cx, cy }, 'delta', { sdx, sdy });
       }
-      // Adjust translation directly in screen space
-      if (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) {
-        updateTransform({ x: newTransform.x - dx, y: newTransform.y - dy, scale: newTransform.scale }, false);
+      // Adjust translation directly in world space
+      if (Math.abs(sdx) > 0.5 || Math.abs(sdy) > 0.5) {
+        updateTransform({ x: newTransform.x - sdx / zoomLevel, y: newTransform.y - sdy / zoomLevel, scale: newTransform.scale }, false);
       }
-    }, 1650); // slightly longer than fly-to combined transition (~1.4s)
+    }, isMobile ? 1850 : 1650); // slightly longer than fly-to combined transition
   }, [items, updateTransform, currentTransform]);
 
   const onFocusPrev = useCallback(() => {

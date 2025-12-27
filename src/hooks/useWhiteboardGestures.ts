@@ -82,9 +82,12 @@ export function useWhiteboardGestures(
           const centerY = viewportHeight / 2;
           const offsetX = focal.x - centerX;
           const offsetY = focal.y - centerY;
-          const sf = newScale / prev.scale;
-          const newX = prev.x - (offsetX / prev.scale) * (1 - 1 / sf);
-          const newY = prev.y - (offsetY / prev.scale) * (1 - 1 / sf);
+          
+          // In world-space x,y:
+          // x_new = x_old + offsetX * (1/scale_new - 1/scale_old)
+          const newX = prev.x + offsetX * (1 / newScale - 1 / prev.scale);
+          const newY = prev.y + offsetY * (1 / newScale - 1 / prev.scale);
+          
           return { x: newX, y: newY, scale: newScale } as Transform;
         });
 
@@ -108,6 +111,7 @@ export function useWhiteboardGestures(
         parseFloat(getComputedStyle(container).getPropertyValue('--scale') || '1') : 
         1;
 
+      // In world-space panning: camera target moves with drag
       onTransformUpdate(prevTransform => ({
         ...prevTransform,
         x: prevTransform.x + deltaX / scale,

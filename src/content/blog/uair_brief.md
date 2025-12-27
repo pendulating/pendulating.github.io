@@ -4,7 +4,7 @@ pubDatetime: 2025-11-10T12:00:00.000Z
 modDatetime:
 title: Sensing AI Incidents & Risks from Global News
 slug: uair-brief
-featured: false
+featured: true
 draft: false
 tags:
   - artificial intelligence

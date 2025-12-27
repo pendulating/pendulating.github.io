@@ -574,23 +574,25 @@ export default function WhiteboardLayout({
         >
           <div className="world">
             <div className="world-scaler">
-              {/* Layered window background that follows camera (memoized for performance) */}
-              <WindowBackground 
-                vistaUrl={vistaUrl} 
-                brainTheme={brainTheme} 
-                isMobile={isMobile} 
-              />
+              <div className="world-translator">
+                {/* Layered window background that follows camera (memoized for performance) */}
+                <WindowBackground 
+                  vistaUrl={vistaUrl} 
+                  brainTheme={brainTheme} 
+                  isMobile={isMobile} 
+                />
 
-              <WhiteboardContent
-                items={laidOutItems}
-                focusedCardId={focusedCardId}
-                draggingId={dragging}
-                onDragStart={onDragStart}
-                onDragEnd={handleDragEnd}
-                onExpand={handleExpand}
-                onResizeToContent={handleResizeToContent}
-                photosByAlbum={photosByAlbum}
-              />
+                <WhiteboardContent
+                  items={laidOutItems}
+                  focusedCardId={focusedCardId}
+                  draggingId={dragging}
+                  onDragStart={onDragStart}
+                  onDragEnd={handleDragEnd}
+                  onExpand={handleExpand}
+                  onResizeToContent={handleResizeToContent}
+                  photosByAlbum={photosByAlbum}
+                />
+              </div>
             </div>
           </div>
         </div>

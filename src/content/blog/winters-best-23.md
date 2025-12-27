@@ -4,7 +4,7 @@ pubDatetime: 2024-04-26T03:30:08.994Z
 modDatetime:
 title: Winter's Best, '23
 slug: winters-best-23
-featured: true
+featured: false
 draft: false
 tags:
   - music

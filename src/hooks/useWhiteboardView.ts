@@ -38,14 +38,9 @@ export function useWhiteboardView() {
           ? (transformUpdate as (prev: Transform) => Transform)(prevTransform)
           : transformUpdate;
           
-        // Simplified bounds checking based on viewport
-        const viewportWidth = window.innerWidth;
-        const viewportHeight = window.innerHeight;
-        
-        // Allow very generous panning so focus/centering on distant items isn't clamped
-        // This prevents misalignment when filtering changes the focused card
-        const maxPanX = viewportWidth * 100; // previously * 2
-        const maxPanY = viewportHeight * 100; // previously * 2
+        // Allowed world bounds - much simpler in world space
+        const maxPanX = 10000;
+        const maxPanY = 10000;
         
         return {
           x: Math.max(-maxPanX, Math.min(maxPanX, newTransform.x)),
@@ -79,13 +74,14 @@ export function useWhiteboardView() {
     const offsetX = focalX - centerX;
     const offsetY = focalY - centerY;
     
-    // Scale factor determines how much to adjust pan
-    const scaleFactor = newScale / transform.scale;
+    // In world-space x,y:
+    // ScreenPos = (WorldPoint + Translation) * Scale
+    // We want FocalWorldPoint to stay at the same ScreenPos when Scale changes.
+    // FocalWorldPoint = offsetX / scale - x
+    // x_new = x_old + offsetX * (1/newScale - 1/oldScale)
     
-    // Adjust position to keep focal point steady during zoom
-    // The formula needs to account for the center-based coordinate system
-    const newX = transform.x - (offsetX / transform.scale) * (1 - 1/scaleFactor);
-    const newY = transform.y - (offsetY / transform.scale) * (1 - 1/scaleFactor);
+    const newX = transform.x + offsetX * (1 / newScale - 1 / transform.scale);
+    const newY = transform.y + offsetY * (1 / newScale - 1 / transform.scale);
     
     effectiveUpdateTransform({ x: newX, y: newY, scale: newScale }, animate);
   }, [transform, effectiveUpdateTransform]);
@@ -105,12 +101,12 @@ export function useWhiteboardView() {
       // Zoom toward the mouse position
       handleZoom(newScale, e.clientX, e.clientY, false);
     } else {
-      // Pan with mouse wheel (without Ctrl key)
-      const panSpeed = 2.5 / transform.scale; // Adjust pan speed based on zoom level
+      // Pan with mouse wheel - constant speed in pixels
+      const panSpeed = 1.0; 
       
-      // Apply pan in the correct direction, accounting for centered coordinates
-      const newX = transform.x - e.deltaX * panSpeed;
-      const newY = transform.y - e.deltaY * panSpeed;
+      // Target world units: move camera opposite to wheel
+      const newX = transform.x - (e.deltaX * panSpeed) / transform.scale;
+      const newY = transform.y - (e.deltaY * panSpeed) / transform.scale;
       
       effectiveUpdateTransform((prev: Transform) => ({
         ...prev,

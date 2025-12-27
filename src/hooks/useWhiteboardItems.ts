@@ -57,9 +57,24 @@ export const useWhiteboardItems = (options: WhiteboardItemsOptions = {}) => {
     const relativeMouseX = (event.clientX - centerX) / scale;
     const relativeMouseY = (event.clientY - centerY) / scale;
     
-    // Calculate new position accounting for offset
-    const newX = relativeMouseX - offset.x;
-    const newY = relativeMouseY - offset.y;
+    // In world-space x,y: camera target is at (camX, camY)
+    // ScreenPos = (WorldPoint - camX) * Scale
+    // WorldPoint = ScreenPos / Scale + camX
+    
+    const containerTransform = document.querySelector('.transform-container');
+    const camX = containerTransform ? parseFloat(getComputedStyle(containerTransform).getPropertyValue('--translateX')) : 0;
+    const camY = containerTransform ? parseFloat(getComputedStyle(containerTransform).getPropertyValue('--translateY')) : 0;
+
+    // The current camera target in world units is actually -camX, -camY
+    const worldTargetX = -camX;
+    const worldTargetY = -camY;
+
+    const mouseWorldX = relativeMouseX + worldTargetX;
+    const mouseWorldY = relativeMouseY + worldTargetY;
+
+    // Calculate new position accounting for offset in world space
+    const newX = mouseWorldX - offset.x;
+    const newY = mouseWorldY - offset.y;
     
     setItems(prevItems =>
       prevItems.map(item => {
@@ -112,10 +127,18 @@ export const useWhiteboardItems = (options: WhiteboardItemsOptions = {}) => {
     const relativeMouseX = (event.clientX - centerX) / scale;
     const relativeMouseY = (event.clientY - centerY) / scale;
     
-    // Calculate offset from item's position
+    const camX = container ? parseFloat(getComputedStyle(container).getPropertyValue('--translateX')) : 0;
+    const camY = container ? parseFloat(getComputedStyle(container).getPropertyValue('--translateY')) : 0;
+    const worldTargetX = -camX;
+    const worldTargetY = -camY;
+
+    const mouseWorldX = relativeMouseX + worldTargetX;
+    const mouseWorldY = relativeMouseY + worldTargetY;
+
+    // Calculate offset from item's world position
     const offset = {
-      x: relativeMouseX - item.position.x,
-      y: relativeMouseY - item.position.y
+      x: mouseWorldX - item.position.x,
+      y: mouseWorldY - item.position.y
     };
     
     setDragging(id);
