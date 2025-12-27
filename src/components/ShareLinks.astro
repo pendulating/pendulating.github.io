@@ -1,10 +1,11 @@
 ---
 import LinkButton from "./LinkButton.astro";
 import socialIcons from "@assets/socialIcons";
+import { SITE } from "@config";
 
 const URL = Astro.url.href;
 const title = Astro.props.title || "Check out this post";
-const ogImageUrl = Astro.props.ogImageUrl || `${Astro.url.origin}/og.png`;
+const ogImageUrl = Astro.props.ogImageUrl || (SITE.dynamicOgImage ? `${Astro.url.origin}/og.png` : SITE.ogImage ?? "/og.png");
 const storyImageUrl = Astro.props.storyImageUrl || ogImageUrl;
 
 const shareLinks = [

@@ -28,6 +28,7 @@ export const SITE: Site = {
   postPerIndex: 4,
   postPerPage: 3,
   scheduledPostMargin: 15 * 60 * 1000, // 15 minutes
+  dynamicOgImage: false,
 };
 
 export const LOCALE = {

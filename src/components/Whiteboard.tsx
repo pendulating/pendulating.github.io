@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react';
-import { useParams, useLocation } from 'react-router-dom';
+import { useParams, useLocation, useNavigate } from 'react-router-dom';
 import type { WhiteboardProps, WhiteboardItem, PhotoData, Transform } from '../types/whiteboard';
 import { WhiteboardContent } from './whiteboard/WhiteboardContent';
 import { WhiteboardToolbar } from './whiteboard/WhiteboardToolbar';
@@ -107,6 +107,10 @@ export default function WhiteboardLayout({
   } = useWhiteboardItems({
     onZoomToFit: handleZoomToFit
   });
+
+  const params = useParams();
+  const location = useLocation();
+  const navigate = useNavigate();
 
   // Focus hook will be bound to focusableItems further below
   let currentIndex = 0 as number;
@@ -248,8 +252,18 @@ export default function WhiteboardLayout({
       || items.find(it => it.id === focusedCardId);
     if (current) {
       lastFocusedPositionRef.current = { x: current.position.x, y: current.position.y };
+      
+      // Sync URL with focused card slug
+      const slug = (current.data as any).slug;
+      const newPath = `/${current.type}/${slug}`;
+      // Only navigate if we're not already on a deep link or if the slug has changed
+      // and only if the current path isn't already correct
+      if (location.pathname !== newPath) {
+        // Use replace to avoid polluting history with every card switch
+        navigate(newPath, { replace: true });
+      }
     }
-  }, [focusedCardId, focusableItems, laidOutItems, items]);
+  }, [focusedCardId, focusableItems, laidOutItems, items, navigate, location.pathname]);
 
   // Autofocus on tag toggle: if the active focus would change due to filtering,
   // smoothly move the camera to the chosen target card. Runs ONLY when tag filter changes.
@@ -308,8 +322,6 @@ export default function WhiteboardLayout({
   }, [selectedTags, matchAll, focusableItems, focusedCardId, focusOnCard]);
 
   // Deep-link support (album/snip/playlist/:slug)
-  const params = useParams();
-  const location = useLocation();
   const pathParts = location.pathname.split('/').filter(Boolean);
   const routeType = (pathParts[0] === 'album' || pathParts[0] === 'snip' || pathParts[0] === 'playlist')
     ? (pathParts[0] as 'album' | 'snip' | 'playlist')
@@ -453,7 +465,19 @@ export default function WhiteboardLayout({
       );
       if (targetIndex >= 0) {
         hasAutoFocusedRef.current = true;
-        focusOnCard(targetIndex);
+        const targetItem = items[targetIndex];
+        
+        // Use requestAnimationFrame to ensure layout is ready
+        requestAnimationFrame(() => {
+          focusOnCard(targetIndex);
+          
+          // Optionally auto-expand deep-linked cards for "zoomed-in" state
+          if (!targetItem.position.expanded) {
+            // Find the element if possible for better sizing
+            const el = document.querySelector(`[data-item-id="${targetItem.id}"] .sticky-note`) as HTMLElement | null;
+            handleExpand(targetItem.id, el);
+          }
+        });
         return;
       }
     }

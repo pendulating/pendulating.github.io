@@ -11,6 +11,7 @@ export type Site = {
   postPerIndex: number;
   postPerPage: number;
   scheduledPostMargin: number;
+  dynamicOgImage?: boolean;
 };
 
 export type SocialObjects = {

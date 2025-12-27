@@ -33,11 +33,14 @@ const { Content } = await post.render();
 
 const ogImageUrl = typeof ogImage === "string" ? ogImage : ogImage?.src;
 const ogUrl = new URL(
-  ogImageUrl ?? `/og/${post.slug}.png`,
+  ogImageUrl ?? (SITE.dynamicOgImage ? `/og/${post.slug}.png` : SITE.ogImage ?? "/og.png"),
   Astro.url.origin
 ).href;
 // Prefer dedicated story endpoint to avoid caching confusion
-const storyUrl = new URL(`/og/story/${post.slug}.png`, Astro.url.origin).href;
+const storyUrl = new URL(
+  SITE.dynamicOgImage ? `/og/story/${post.slug}.png` : ogUrl,
+  Astro.url.origin
+).href;
 
 const layoutProps = {
   title: `${title} | ${SITE.title}`,

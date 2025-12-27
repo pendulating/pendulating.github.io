@@ -6,6 +6,23 @@ import BrainPage from '@components/BrainPage';
 import { SITE } from '@config';
 import type { PhotoData } from '../../types/whiteboard';
 
+export async function getStaticPaths() {
+  const [albums, snips, playlists] = await Promise.all([
+    getCollection("albums"),
+    getCollection("snips"),
+    getCollection("playlists"),
+  ]);
+
+  const paths = [
+    { params: { slug: undefined } },
+    ...albums.map(a => ({ params: { slug: `album/${a.slug}` } })),
+    ...snips.map(s => ({ params: { slug: `snip/${s.slug}` } })),
+    ...playlists.map(p => ({ params: { slug: `playlist/${p.slug}` } })),
+  ];
+
+  return paths;
+}
+
 // Start performance timing for data fetching
 console.time('brain-page-data-fetch');
 
