@@ -42,6 +42,7 @@ const photos = defineCollection({
       metadata: z.object({
         camera: z.string().optional(),
         lens: z.string().optional(),
+        location: z.string().optional(),
         settings: z.object({
           aperture: z.string().optional(),
           shutterSpeed: z.string().optional(),
