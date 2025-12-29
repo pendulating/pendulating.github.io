@@ -162,7 +162,7 @@ export const useWhiteboardItems = (options: WhiteboardItemsOptions = {}) => {
       /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
       window.innerWidth <= 768
     );
-
+    
     // Get current state from items to determine if we are expanding or collapsing
     const targetItem = items.find(it => it.id === id);
     if (!targetItem) return;
@@ -170,20 +170,20 @@ export const useWhiteboardItems = (options: WhiteboardItemsOptions = {}) => {
     const wasExpanded = targetItem.position.expanded;
     
     // Perform measurement OUTSIDE of setItems
-    let newDimensions = {
+          let newDimensions = {
       width: wasExpanded ? STICKY_NOTE.WIDTH : STICKY_NOTE.WIDTH * 1.5,
       height: wasExpanded ? STICKY_NOTE.HEIGHT : STICKY_NOTE.HEIGHT * 1.5
-    };
-    
-    // Use content-aware sizing if we have access to the card element
-    if (cardElement) {
-      try {
+          };
+          
+          // Use content-aware sizing if we have access to the card element
+          if (cardElement) {
+            try {
         newDimensions = calculateOptimalSize(cardElement, wasExpanded);
-        console.log('Content-aware sizing:', newDimensions);
-      } catch (error) {
-        console.warn('Failed to measure content, using fallback sizing:', error);
-      }
-    }
+              console.log('Content-aware sizing:', newDimensions);
+            } catch (error) {
+              console.warn('Failed to measure content, using fallback sizing:', error);
+            }
+          }
     
     // Now update state with pre-calculated dimensions
     setItems(prevItems =>

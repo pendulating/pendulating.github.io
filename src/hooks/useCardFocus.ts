@@ -146,7 +146,7 @@ export function useCardFocus(
         container.style.setProperty('--scale-duration', duration);
         container.style.setProperty('--scale-timing', 'cubic-bezier(0.25, 0.8, 0.25, 1)');
       }
-      updateTransform(newTransform, true);
+    updateTransform(newTransform, true);
     }
 
     // After the transition completes, measure and apply one-shot correction

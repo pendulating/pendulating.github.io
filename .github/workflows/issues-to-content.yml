@@ -52,7 +52,6 @@ jobs:
           script: |
             const fs = require('fs');
             const path = require('path');
-            const { execSync } = require('child_process');
 
             // Helpers
             const stripHtmlComments = (text) => String(text)
@@ -186,9 +185,9 @@ jobs:
                   const imageUrl = imageMatches[i][1];
                   
                   try {
-                    // Use curl to get the binary file. This is more robust in GitHub Actions than fetch.
-                    // -L follows redirects, -s is silent, -I gets headers.
-                    const headers = execSync(`curl -sLI "${imageUrl}"`).toString();
+                    // Use exec.getExecOutput to capture headers safely
+                    const headerResult = await exec.getExecOutput('curl', ['-sLI', imageUrl]);
+                    const headers = headerResult.stdout + headerResult.stderr;
                     const contentTypeMatch = headers.match(/content-type:\s*image\/(\w+)/i);
                     let imageExt = contentTypeMatch ? contentTypeMatch[1].toLowerCase() : 'jpg';
                     if (imageExt === 'jpeg') imageExt = 'jpg';
@@ -197,7 +196,7 @@ jobs:
                     const imagePath = `${albumDir}/${imageName}`;
                     
                     console.log(`Downloading: ${imageUrl} to ${imagePath}`);
-                    execSync(`curl -skL "${imageUrl}" -o "${imagePath}"`);
+                    await exec.exec('curl', ['-skL', imageUrl, '-o', imagePath]);
                     
                     let photoFrontmatter = `---\nalbumId: "${slug}"\ntitle: "${title.replace(/"/g, '\\"')} - Photo ${i + 1}"\nphoto: "./${imageName}"\ncaption: ""\norder: ${i + 1}\npubDatetime: "${now}"\n`;
                     
@@ -224,22 +223,22 @@ jobs:
             
             fs.writeFileSync(filePath, frontmatter);
             
-            execSync('git config user.name "GitHub Action"');
-            execSync('git config user.email "action@github.com"');
+            // Use the 'exec' global provided by github-script for safer argument handling
+            await exec.exec('git', ['config', 'user.name', 'GitHub Action']);
+            await exec.exec('git', ['config', 'user.email', 'action@github.com']);
             
-            // Prepare safe title for shell commands
-            const safeTitle = title.replace(/"/g, '\\"');
+            const itemTypeName = contentType === 'albums' ? 'album' : contentType.slice(0, -1);
+            const commitMessage = `Add ${itemTypeName}: ${title} (from issue #${issue.number})`;
             
             if (contentType === 'albums') {
-              execSync(`git add "src/content/albums/${slug}.md"`);
-              execSync(`git add "src/content/photos/${slug}/"`);
-              execSync(`git commit -m "Add album: ${safeTitle} (from issue #${issue.number})"`);
+              await exec.exec('git', ['add', `src/content/albums/${slug}.md`]);
+              await exec.exec('git', ['add', `src/content/photos/${slug}/`]);
             } else {
-              execSync(`git add "${filePath}"`);
-              execSync(`git commit -m "Add ${contentType.slice(0, -1)}: ${safeTitle} (from issue #${issue.number})"`);
+              await exec.exec('git', ['add', filePath]);
             }
             
-            execSync('git push');
+            await exec.exec('git', ['commit', '-m', commitMessage]);
+            await exec.exec('git', ['push']);
              
              console.log('Triggering site rebuild...');
              await github.rest.actions.createWorkflowDispatch({
