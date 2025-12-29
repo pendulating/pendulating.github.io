@@ -144,7 +144,7 @@ jobs:
             const slug = title.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').trim();
             const now = new Date().toISOString();
             
-            let frontmatter = `---\ntitle: "${title.replace(/"/g, '\\"')}"\npubDatetime: "${now}"\nfeatured: false\ndraft: false\n`;
+            let frontmatter = `---\ntitle: "${title.replace(/"/g, '\\"')}"\npubDatetime: ${now}\nfeatured: false\ndraft: false\n`;
 
             if (contentType === 'snips') {
               frontmatter += `description: "${extractedDescription.replace(/"/g, '\\"')}"\n`;
@@ -198,7 +198,7 @@ jobs:
                     console.log(`Downloading: ${imageUrl} to ${imagePath}`);
                     await exec.exec('curl', ['-skL', imageUrl, '-o', imagePath]);
                     
-                    let photoFrontmatter = `---\nalbumId: "${slug}"\ntitle: "${title.replace(/"/g, '\\"')} - Photo ${i + 1}"\nphoto: "./${imageName}"\ncaption: ""\norder: ${i + 1}\npubDatetime: "${now}"\n`;
+                    let photoFrontmatter = `---\nalbumId: "${slug}"\ntitle: "${title.replace(/"/g, '\\"')} - Photo ${i + 1}"\nphoto: "./${imageName}"\ncaption: ""\norder: ${i + 1}\npubDatetime: ${now}\n`;
                     
                     if (extractedCameraInfo || extractedLocation) {
                       photoFrontmatter += `metadata:\n`;
