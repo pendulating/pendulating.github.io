@@ -12,6 +12,7 @@ interface CardWrapperProps {
   children: React.ReactNode;
   item: { position: { x: number; y: number; width: number; height: number; z: number; expanded?: boolean; rotation?: number } };
   isFocused?: boolean;
+  isTransitioning?: boolean;
 }
 
 // Animation type definitions
@@ -36,11 +37,12 @@ const CardWrapper: React.FC<CardWrapperProps> = ({
   onExpand,
   children,
   item,
-  isFocused = false
+  isFocused = false,
+  isTransitioning: isCameraTransitioning = false
 }) => {
   const cardRef = useRef<HTMLDivElement>(null);
   const [isInteracting, setIsInteracting] = useState(false);
-  const [isTransitioning, setIsTransitioning] = useState(false);
+  const [isSizingTransition, setIsSizingTransition] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
 
   // Use the actual item's expanded state instead of local state
@@ -77,7 +79,7 @@ const CardWrapper: React.FC<CardWrapperProps> = ({
     const observer = new IntersectionObserver(
       (entries) => {
         const entry = entries[0];
-        const isInView = entry.isIntersecting && entry.intersectionRatio > 0.1;
+        const isInView = entry.isIntersecting && entry.intersectionRatio > 0.05;
         setIsVisible(isInView);
         
         // Pause animations when not visible
@@ -88,8 +90,8 @@ const CardWrapper: React.FC<CardWrapperProps> = ({
         }
       },
       {
-        threshold: [0, 0.1, 0.5, 1.0],
-        rootMargin: '100px'
+        threshold: [0, 0.05, 0.5, 1.0],
+        rootMargin: '200px' // Larger margin for smoother entry
       }
     );
     
@@ -125,14 +127,14 @@ const CardWrapper: React.FC<CardWrapperProps> = ({
     e.stopPropagation();
     
     // Set transitioning state to true
-    setIsTransitioning(true);
+    setIsSizingTransition(true);
     
     // Call the parent's onExpand handler with card element for content measurement
     onExpand(id, cardRef.current);
     
     // Remove transitioning state after animation completes
     setTimeout(() => {
-      setIsTransitioning(false);
+      setIsSizingTransition(false);
     }, 300); // Match the CSS transition duration (300ms)
   };
 
@@ -176,7 +178,7 @@ const CardWrapper: React.FC<CardWrapperProps> = ({
     backgroundColor: animationProperties.color,
     transformOrigin: animationProperties.transformOrigin,
     // Only apply animation styles conditionally for performance
-    ...(!isInteracting && isVisible ? {
+    ...(!isInteracting && isVisible && !isCameraTransitioning ? {
       // Use individual properties instead of shorthand to avoid React warnings
       animationName: 'none',
     } : {
@@ -186,7 +188,7 @@ const CardWrapper: React.FC<CardWrapperProps> = ({
   };
 
   // Start animation as soon as the card is visible (even during transitions)
-  if (isVisible && !isInteracting) {
+  if (isVisible && !isInteracting && !isCameraTransitioning) {
     // Focused cards sway; non-focused flutter. Avoid mixing shorthand/non-shorthand warnings.
     const animName = isFocused ? 'var(--focused-wind-animation-name, focused-wind-sway)' : animationProperties.animationType;
     (stickyNoteStyle as any).animationName = animName;
@@ -212,14 +214,14 @@ const CardWrapper: React.FC<CardWrapperProps> = ({
           sticky-note 
           ${isInteracting ? 'is-interacting' : ''} 
           ${isExpanded ? 'is-resized' : ''}
-          ${isTransitioning ? 'is-transitioning-size' : ''}
+          ${isSizingTransition ? 'is-transitioning-size' : ''}
           ${!isPrioritized && !isVisible ? 'simplified-animation' : ''}
           etched-content ${isFocused ? 'focused-card' : ''}
         `} 
         style={stickyNoteStyle}
       >
         <div className="sticky-note-content etched-text">
-          {/* Defer rendering children if not visible to save memory/CPU on mobile */}
+          {/* Defer rendering children if not visible or during rapid camera movement to save memory/CPU on mobile */}
           {isVisible ? children : <div className="invisible-placeholder" />}
         </div>
         

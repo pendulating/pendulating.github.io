@@ -15,6 +15,7 @@ interface AlbumCardProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onR
   onResizeToContent?: (id: string, cardElement?: HTMLElement | null) => void;
   photos: PhotoData[];
   isFocused: boolean;
+  isTransitioning?: boolean;
 }
 
 export const AlbumCard = React.memo(({
@@ -28,6 +29,7 @@ export const AlbumCard = React.memo(({
   onResizeToContent,
   photos = [],
   isFocused,
+  isTransitioning = false,
   ...rest
 }: AlbumCardProps) => {
   const album = item.data as CollectionEntry<"albums">;
@@ -81,6 +83,7 @@ export const AlbumCard = React.memo(({
 
       onExpand={(id, cardElement) => onExpand(id, cardElement)}
       isFocused={isFocused}
+      isTransitioning={isTransitioning}
     >
       <div
         {...rest}

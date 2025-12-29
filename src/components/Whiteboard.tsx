@@ -598,6 +598,7 @@ export default function WhiteboardLayout({
                   items={laidOutItems}
                   focusedCardId={focusedCardId}
                   draggingId={dragging}
+                  isTransitioning={isTransitioning}
                   onDragStart={onDragStart}
                   onDragEnd={handleDragEnd}
                   onExpand={handleExpand}

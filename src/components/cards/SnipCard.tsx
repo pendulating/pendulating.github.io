@@ -12,6 +12,7 @@ interface SnipCardProps extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onRe
   onExpand: (id: string, cardElement?: HTMLElement | null) => void;
   onDragEnd: () => void;
   isFocused: boolean;
+  isTransitioning?: boolean;
 }
 
 export const SnipCard = React.memo(({
@@ -24,6 +25,7 @@ export const SnipCard = React.memo(({
   onDragEnd,
   onResizeToContent,
   isFocused,
+  isTransitioning = false,
   ...rest
 }: SnipCardProps & { onResizeToContent?: (id: string, cardElement?: HTMLElement | null) => void }) => {
   const snip = item.data as CollectionEntry<"snips">;
@@ -54,6 +56,7 @@ export const SnipCard = React.memo(({
 
       onExpand={(id, cardElement) => onExpand(id, cardElement)}
       isFocused={isFocused}
+      isTransitioning={isTransitioning}
     >
       <div
         {...rest}

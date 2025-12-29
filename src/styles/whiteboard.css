@@ -593,6 +593,28 @@ html[data-theme="dark"] .focused-card {
   -webkit-backdrop-filter: none !important;
 }
 
+/* Disable pointer events on content during transitions to prevent accidental taps and reduce event overhead */
+.transform-container.is-transitioning .whiteboard-content {
+  pointer-events: none !important;
+}
+
+/* On mobile, aggressively simplify all cards during any camera transition */
+@media (max-width: 768px) {
+  .transform-container.is-transitioning .sticky-note {
+    /* Remove all shadows during transition */
+    box-shadow: none !important;
+    /* Force simple border instead of glow */
+    outline: 1px solid rgba(0, 0, 0, 0.1) !important;
+    /* Ensure no animations are running */
+    animation: none !important;
+  }
+  
+  .transform-container.is-transitioning .sticky-note-content {
+    /* Hide content partially during rapid movement to save on paint */
+    opacity: 0.8;
+  }
+}
+
 /* Force most container backgrounds to be transparent but preserve buttons */
 .sticky-note.etched-content .sticky-note-content * {
   background-color: transparent !important;

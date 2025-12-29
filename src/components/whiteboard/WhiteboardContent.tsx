@@ -8,6 +8,7 @@ export const WhiteboardContent = React.memo(function WhiteboardContent({
   items,
   focusedCardId,
   draggingId,
+  isTransitioning,
 
   onDragStart,
   onDragEnd,
@@ -43,6 +44,7 @@ export const WhiteboardContent = React.memo(function WhiteboardContent({
           onExpand: (id: string, cardElement?: HTMLElement | null) => onExpand(id, cardElement),
           onResizeToContent,
           isFocused,
+          isTransitioning,
           // Use the cleaned albumId to look up photos
           photos: item.type === 'album' && albumId ? 
             (photosByAlbum[albumId] || []) : []

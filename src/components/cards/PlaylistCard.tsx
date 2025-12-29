@@ -13,6 +13,7 @@ interface PlaylistCardProps extends Omit<React.HTMLAttributes<HTMLDivElement>, '
   onDragEnd: () => void;
   onResizeToContent?: (id: string, cardElement?: HTMLElement | null) => void;
   isFocused: boolean;
+  isTransitioning?: boolean;
 }
 
 export const PlaylistCard = React.memo(({
@@ -26,6 +27,7 @@ export const PlaylistCard = React.memo(({
   onResizeToContent,
 
   isFocused,
+  isTransitioning = false,
   ...rest
 }: PlaylistCardProps) => {
   const playlist = item.data as CollectionEntry<"playlists">;
@@ -57,8 +59,11 @@ export const PlaylistCard = React.memo(({
     window.innerWidth <= 768
   );
 
-  // On mobile, only load if FOCUSED. Expansion alone isn't enough to risk a crash.
-  const shouldLoad = isFocused || (!isMobile && !!item.position.expanded && !isExpanding);
+  // On mobile, only load if FOCUSED and NOT transitioning. 
+  // This prevents loading iframes while the camera is flying.
+  const shouldLoad = isFocused 
+    ? (isMobile ? !isTransitioning : true) 
+    : (!isMobile && !!item.position.expanded && !isExpanding);
 
   // Monitor expansion state to defer loading
   useEffect(() => {

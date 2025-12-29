@@ -59,6 +59,7 @@ export interface WhiteboardContentProps {
   items: WhiteboardItem[];
   focusedCardId?: string | null;
   draggingId: string | null;  // Allow null
+  isTransitioning?: boolean;
 
   onDragStart: (id: string, event: React.MouseEvent) => void;
   onDragEnd: (id: string) => void;
