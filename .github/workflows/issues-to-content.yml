@@ -223,13 +223,11 @@ jobs:
             
             fs.writeFileSync(filePath, frontmatter);
             
-            // Use the 'exec' global provided by github-script for safer argument handling
+            // CONFIGURE GIT
             await exec.exec('git', ['config', 'user.name', 'GitHub Action']);
             await exec.exec('git', ['config', 'user.email', 'action@github.com']);
             
-            const itemTypeName = contentType === 'albums' ? 'album' : contentType.slice(0, -1);
-            const commitMessage = `Add ${itemTypeName}: ${title} (from issue #${issue.number})`;
-            
+            // STAGE FILES
             if (contentType === 'albums') {
               await exec.exec('git', ['add', `src/content/albums/${slug}.md`]);
               await exec.exec('git', ['add', `src/content/photos/${slug}/`]);
@@ -237,27 +235,33 @@ jobs:
               await exec.exec('git', ['add', filePath]);
             }
             
-            await exec.exec('git', ['commit', '-m', commitMessage]);
+            // COMMIT WITH MESSAGE FILE (The most robust approach for complex characters)
+            const itemTypeName = contentType === 'albums' ? 'album' : contentType.slice(0, -1);
+            const commitMessage = `Add ${itemTypeName}: ${title} (from issue #${issue.number})`;
+            const msgPath = path.join(process.cwd(), 'commit_msg.txt');
+            fs.writeFileSync(msgPath, commitMessage);
+            
+            await exec.exec('git', ['commit', '-F', msgPath]);
             await exec.exec('git', ['push']);
              
-             console.log('Triggering site rebuild...');
-             await github.rest.actions.createWorkflowDispatch({
-               owner: context.repo.owner,
-               repo: context.repo.repo,
-               workflow_id: 'deploy.yml',
-               ref: 'main'
-             }).catch(async (error) => {
-               console.warn('Failed to trigger deploy.yml, trying pages-build-deployment...');
-               try {
-                 await github.rest.pages.requestPagesBuild({
-                   owner: context.repo.owner,
-                   repo: context.repo.repo
-                 });
-                 console.log('Triggered Pages rebuild successfully');
-               } catch (pagesError) {
-                 console.error('Failed to trigger Pages rebuild:', pagesError);
-               }
-             });
+            console.log('Triggering site rebuild...');
+            await github.rest.actions.createWorkflowDispatch({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              workflow_id: 'deploy.yml',
+              ref: 'main'
+            }).catch(async (error) => {
+              console.warn('Failed to trigger deploy.yml, trying pages-build-deployment...');
+              try {
+                await github.rest.pages.requestPagesBuild({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo
+                });
+                console.log('Triggered Pages rebuild successfully');
+              } catch (pagesError) {
+                console.error('Failed to trigger Pages rebuild:', pagesError);
+              }
+            });
              
             await github.rest.issues.update({
               owner: context.repo.owner,
