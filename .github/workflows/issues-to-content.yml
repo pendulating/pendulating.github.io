@@ -34,7 +34,7 @@ jobs:
             echo "content_type=playlists" >> $GITHUB_OUTPUT
           elif echo "$labels" | grep -q '"album"'; then
             echo "is_content=true" >> $GITHUB_OUTPUT
-            echo "content_type=photos" >> $GITHUB_OUTPUT
+            echo "content_type=albums" >> $GITHUB_OUTPUT
           else
             echo "is_content=false" >> $GITHUB_OUTPUT
           fi
@@ -52,6 +52,8 @@ jobs:
           script: |
             const fs = require('fs');
             const path = require('path');
+            const { execSync } = require('child_process');
+
             // Helpers
             const stripHtmlComments = (text) => String(text)
               .replace(/^<!--[\s\S]*?-->\s*/,'')
@@ -59,7 +61,9 @@ jobs:
             const isPlaceholder = (value) => {
               if (value === null || value === undefined) return true;
               const trimmed = String(value).trim();
-              return trimmed.length === 0 || /^_?no response_?$/i.test(trimmed);
+              if (trimmed.length === 0 || /^_?no response_?$/i.test(trimmed)) return true;
+              if (trimmed.includes('The issue title above becomes your')) return true;
+              return false;
             };
             const summarize = (text, maxLen = 160) => {
               if (!text) return '';
@@ -68,19 +72,17 @@ jobs:
               const joined = lines.join(' ');
               return joined.length > maxLen ? `${joined.slice(0, maxLen).trim()}…` : joined;
             };
-            const sanitizeBody = (raw) => {
-              let s = stripHtmlComments(raw || '');
-              // Remove Issue Form section headers and common field prefixes
-              // Headers like: ### Content, ### Source, ### Tags, etc. (case-insensitive, optional colon)
-              const headerPattern = /^###\s*(content|source|tags|description|platform|playlist url|mood|album art|photos|images|title)\s*:?[ \t]*$/gim;
-              s = s.replace(headerPattern, '').trim();
-              // Remove simple field prefix lines that sometimes get pasted into body
-              const fieldLinePattern = /^(source|tags|platform|playlist url|mood|album art|photos|images)\s*:\s*.*$/gim;
-              s = s.replace(fieldLinePattern, '').trim();
-              // Collapse excessive blank lines
-              s = s.replace(/\n{3,}/g, '\n\n').trim();
-              return s;
+
+            const getSection = (body, sectionName) => {
+              const regex = new RegExp(`^###\\s*${sectionName}(?:[^\\n]*)\\n+([\\s\\S]*?)(?:\\n+###\\s|$)`, 'im');
+              const match = body.match(regex);
+              if (match && match[1]) {
+                const content = match[1].trim();
+                return isPlaceholder(content) ? '' : content;
+              }
+              return '';
             };
+
             const parseTags = (text) => {
               if (!text) return [];
               const input = stripHtmlComments(String(text));
@@ -90,8 +92,8 @@ jobs:
               while ((m = re.exec(input)) !== null) {
                 const raw = (m[1] ?? m[2] ?? m[3] ?? '').trim();
                 if (!raw) continue;
-                let t = raw.replace(/^[*-]\s+/, '').trim(); // bullets
-                t = t.replace(/^#\s*/, '').trim(); // leading '#'
+                let t = raw.replace(/^[*-]\s+/, '').trim();
+                t = t.replace(/^#\s*/, '').trim();
                 if (!t || isPlaceholder(t)) continue;
                 tags.push(t);
               }
@@ -102,179 +104,151 @@ jobs:
             const issue = context.payload.issue;
             let title = issue.title;
             const body = issue.body || '';
-            const labels = issue.labels.map(label => label.name);
-            
-            // Debug: log the issue body
-            console.log('Raw issue body:', JSON.stringify(body));
-            console.log('Body length:', body.length);
-            
-            // Clean up title (remove prefixes like [SNIP], [PLAYLIST], [ALBUM])
             title = title.replace(/^\[.*?\]\s*/, '').trim();
-            
-            // Get content type from previous step
             const contentType = '${{ steps.check.outputs.content_type }}';
-            console.log(`Processing ${contentType} content`);
             
-            // Parse structured content from issue body
-            let actualContent = '';
-            let extractedSource = '';
+            let extractedContent = '';
             let extractedTags = [];
             let extractedDescription = '';
+            let extractedUrl = '';
+            let extractedPlatform = 'spotify';
+            let extractedMood = [];
+            let extractedLocation = '';
+            let extractedSource = '';
+            let extractedCameraInfo = '';
+            let extractedDateRange = '';
             
             if (contentType === 'snips') {
-              // Parse explicit Issue Form sections
-              const contentMatch = body.match(/###\s*Content[\s\S]*?\n\n([\s\S]*?)(?:\n\n###\s|$)/i);
-              const sourceMatch = body.match(/###\s*Source[\s\S]*?\n\n([\s\S]*?)(?:\n\n###\s|$)/i);
-              const tagsMatch = body.match(/###\s*Tags[\s\S]*?\n\n([\s\S]*?)(?:\n\n###\s|$)/i);
-
-              if (contentMatch && typeof contentMatch[1] === 'string') {
-                actualContent = sanitizeBody(contentMatch[1]).trim();
-              }
-              if (sourceMatch && typeof sourceMatch[1] === 'string') {
-                const rawSource = sourceMatch[1].trim();
-                if (!isPlaceholder(rawSource)) {
-                  extractedSource = rawSource;
-                }
-              }
-              if (tagsMatch && typeof tagsMatch[1] === 'string') {
-                extractedTags = parseTags(tagsMatch[1]);
-              }
-
-              // Derive description from content; avoid duplicating the title
-              const contentSummary = summarize(actualContent, 160);
-              if (contentSummary && contentSummary.toLowerCase() !== title.toLowerCase()) {
-                extractedDescription = contentSummary;
-              } else {
-                const contentLines = String(actualContent).split('\n').map(l => l.trim()).filter(Boolean);
-                if (contentLines.length > 1) {
-                  extractedDescription = summarize(contentLines.slice(1).join(' '), 160);
-                }
-              }
-              if (!extractedDescription) extractedDescription = title;
-            } else {
-              // For other content types, clean up body content with sanitizer
-              actualContent = sanitizeBody(body);
-            }
-            
-            // Clean up body content (remove form template artifacts)
-            actualContent = sanitizeBody(actualContent);
-            
-            console.log('Extracted content:', JSON.stringify(actualContent));
-            console.log('Extracted source:', extractedSource);
-            console.log('Extracted tags:', extractedTags);
-            
-            // Create slug from title
-            const slug = title.toLowerCase()
-              .replace(/[^\w\s-]/g, '')
-              .replace(/\s+/g, '-')
-              .replace(/-+/g, '-')
-              .trim();
-            
-            // Create frontmatter
-            const now = new Date().toISOString();
-            let frontmatter = `---\ntitle: "${title}"\npubDatetime: ${now}\nfeatured: false\ndraft: false\n`;
-
-            // Add content-specific fields
-            if (contentType === 'snips') {
-              const descToWrite = (extractedDescription && extractedDescription.trim()) ? extractedDescription : title;
-              frontmatter += `description: "${descToWrite.replace(/\"/g, '\\\"')}"\n`;
-              if (extractedSource && extractedSource.trim()) {
-                frontmatter += `source: "${String(extractedSource).replace(/\"/g, '\\\"')}"\n`;
-              }
-              // Always include the issue URL as provenance
-              frontmatter += `sourceUrl: "${issue.html_url}"\n`;
-              if (Array.isArray(extractedTags) && extractedTags.length > 0) {
-                frontmatter += `tags: [${extractedTags.map(tag => `"${String(tag).replace(/\"/g, '\\\"')}"`).join(', ')}]\n`;
-              }
+              extractedContent = getSection(body, 'Content');
+              extractedSource = getSection(body, 'Source (optional)');
+              extractedTags = parseTags(getSection(body, 'Tags (optional)'));
+              extractedDescription = summarize(extractedContent, 160) || title;
             } else if (contentType === 'playlists') {
-              frontmatter += `description: "${actualContent.split('\n')[0] || title}"\nplatform: "spotify"\nplaylistUrl: ""\nplaylistId: ""\nmood: []\ntags: []\n`;
-            } else if (contentType === 'photos') {
-              frontmatter += `description: "${actualContent.split('\n')[0] || title}"\nalbumArt: ""\ntags: []\n`;
+              extractedDescription = getSection(body, 'Description');
+              extractedPlatform = (getSection(body, 'Platform') || 'spotify').toLowerCase();
+              extractedUrl = getSection(body, 'Playlist URL');
+              extractedMood = parseTags(getSection(body, 'Mood (optional)'));
+              extractedTags = extractedMood;
+              extractedContent = (extractedDescription.length > 50) ? extractedDescription : '';
+            } else if (contentType === 'albums') {
+              extractedDescription = getSection(body, 'Description & Photos');
+              extractedLocation = getSection(body, 'Location (optional)');
+              extractedDateRange = getSection(body, 'Date/Period (optional)');
+              extractedCameraInfo = getSection(body, 'Camera/Equipment (optional)');
+              extractedTags = parseTags(getSection(body, 'Tags (optional)'));
+              
+              const cleanDescription = extractedDescription.replace(/!\[.*?\]\(.*?\)/g, '').trim();
+              extractedDescription = summarize(cleanDescription, 160) || title;
+              extractedContent = getSection(body, 'Description & Photos');
             }
             
-            // Close frontmatter and add body content
-            frontmatter += `---\n\n${actualContent}`;
+            const slug = title.toLowerCase().replace(/[^\w\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').trim();
+            const now = new Date().toISOString();
             
-             // Create file path
-             const fileName = `${slug}.md`;
-             let filePath;
-             
-             if (contentType === 'photos') {
-               // For albums, create a directory and handle image attachments
-               const albumDir = `src/content/photos/${slug}`;
-               filePath = `${albumDir}/${fileName}`;
-               
-               // Create album directory
-               await fs.promises.mkdir(albumDir, {recursive: true});
-               
-               // Process any image attachments from the issue
-               const imageRegex = /!\[.*?\]\((https:\/\/github\.com\/.*?\/assets\/.*?)\)/g;
-               const imageMatches = [...body.matchAll(imageRegex)];
-               
-               if (imageMatches.length > 0) {
-                 console.log(`Found ${imageMatches.length} image(s) in issue`);
-                 
-                 for (let i = 0; i < imageMatches.length; i++) {
-                   const imageUrl = imageMatches[i][1];
-                   const imageExt = imageUrl.split('.').pop() || 'jpg';
-                   const imageName = `${slug}-${i + 1}.${imageExt}`;
-                   const imagePath = `${albumDir}/${imageName}`;
-                   
-                   try {
-                     // Download the image
-                     const imageResponse = await fetch(imageUrl);
-                     if (imageResponse.ok) {
-                       const imageBuffer = await imageResponse.arrayBuffer();
-                       await fs.promises.writeFile(imagePath, Buffer.from(imageBuffer));
-                       
-                       // Create a markdown file for this photo
-                       const photoFrontmatter = `---\nalbumId: "${slug}"\ntitle: "${title} - Photo ${i + 1}"\nphoto: "./${imageName}"\ncaption: ""\norder: ${i + 1}\npubDatetime: ${now}\n---\n\n`;
-                       const photoMarkdownPath = `${albumDir}/${slug}-${i + 1}.md`;
-                       await fs.promises.writeFile(photoMarkdownPath, photoFrontmatter);
-                       
-                       console.log(`Downloaded and created photo: ${imageName}`);
-                     }
-                   } catch (error) {
-                     console.error(`Failed to download image ${imageUrl}:`, error);
-                   }
-                 }
-               }
-             } else {
-               // For other content types, use standard path
-               filePath = `src/content/${contentType}/${fileName}`;
-               await fs.promises.mkdir(path.dirname(filePath), {recursive: true});
-             }
+            let frontmatter = `---\ntitle: "${title.replace(/"/g, '\\"')}"\npubDatetime: "${now}"\nfeatured: false\ndraft: false\n`;
+
+            if (contentType === 'snips') {
+              frontmatter += `description: "${extractedDescription.replace(/"/g, '\\"')}"\n`;
+              if (extractedSource) frontmatter += `source: "${extractedSource.replace(/"/g, '\\"')}"\n`;
+              frontmatter += `sourceUrl: "${issue.html_url}"\n`;
+              frontmatter += `tags: [${extractedTags.map(t => `"${t.replace(/"/g, '\\"')}"`).join(', ')}]\n`;
+            } else if (contentType === 'playlists') {
+              frontmatter += `description: "${extractedDescription.replace(/"/g, '\\"')}"\n`;
+              frontmatter += `platform: "${extractedPlatform}"\n`;
+              frontmatter += `playlistUrl: "${extractedUrl}"\n`;
+              if (extractedMood.length > 0) frontmatter += `mood: [${extractedMood.map(m => `"${m.replace(/"/g, '\\"')}"`).join(', ')}]\n`;
+              frontmatter += `tags: [${extractedTags.map(t => `"${t.replace(/"/g, '\\"')}"`).join(', ')}]\n`;
+            } else if (contentType === 'albums') {
+              frontmatter += `description: "${extractedDescription.replace(/"/g, '\\"')}"\n`;
+              if (extractedLocation) frontmatter += `location: "${extractedLocation.replace(/"/g, '\\"')}"\n`;
+              frontmatter += `tags: [${extractedTags.map(t => `"${t.replace(/"/g, '\\"')}"`).join(', ')}]\n`;
+              frontmatter += `borderColor: "#ffffff"\n`;
+            }
             
-            // Write the main content file
-            await fs.promises.writeFile(filePath, frontmatter);
+            frontmatter += `---\n\n${extractedContent}`;
             
-                         // Commit files
-             const { execSync } = require('child_process');
-             execSync('git config user.name "GitHub Action"');
-             execSync('git config user.email "action@github.com"');
+            let filePath;
+            if (contentType === 'albums') {
+              const albumFileName = `${slug}.md`;
+              filePath = `src/content/albums/${albumFileName}`;
+              fs.mkdirSync('src/content/albums', {recursive: true});
+              
+              const albumDir = `src/content/photos/${slug}`;
+              fs.mkdirSync(albumDir, {recursive: true});
+              
+              const imageRegex = /!\[.*?\]\((https:\/\/github\.com\/.*?\/assets\/.*?|https:\/\/github\.com\/user-attachments\/assets\/.*?)\)/g;
+              const imageMatches = [...body.matchAll(imageRegex)];
+              
+              if (imageMatches.length > 0) {
+                console.log(`Found ${imageMatches.length} image(s) in issue`);
+                
+                for (let i = 0; i < imageMatches.length; i++) {
+                  const imageUrl = imageMatches[i][1];
+                  
+                  try {
+                    // Use curl to get the binary file. This is more robust in GitHub Actions than fetch.
+                    // -L follows redirects, -s is silent, -I gets headers.
+                    const headers = execSync(`curl -sLI "${imageUrl}"`).toString();
+                    const contentTypeMatch = headers.match(/content-type:\s*image\/(\w+)/i);
+                    let imageExt = contentTypeMatch ? contentTypeMatch[1].toLowerCase() : 'jpg';
+                    if (imageExt === 'jpeg') imageExt = 'jpg';
+                    
+                    const imageName = `${slug}-${i + 1}.${imageExt}`;
+                    const imagePath = `${albumDir}/${imageName}`;
+                    
+                    console.log(`Downloading: ${imageUrl} to ${imagePath}`);
+                    execSync(`curl -skL "${imageUrl}" -o "${imagePath}"`);
+                    
+                    let photoFrontmatter = `---\nalbumId: "${slug}"\ntitle: "${title.replace(/"/g, '\\"')} - Photo ${i + 1}"\nphoto: "./${imageName}"\ncaption: ""\norder: ${i + 1}\npubDatetime: "${now}"\n`;
+                    
+                    if (extractedCameraInfo || extractedLocation) {
+                      photoFrontmatter += `metadata:\n`;
+                      if (extractedCameraInfo) photoFrontmatter += `  camera: "${extractedCameraInfo.replace(/"/g, '\\"')}"\n`;
+                      if (extractedLocation) photoFrontmatter += `  location: "${extractedLocation.replace(/"/g, '\\"')}"\n`;
+                    }
+                    
+                    const finalPhotoMarkdown = photoFrontmatter + `---\n\n`;
+                    const photoMarkdownPath = `${albumDir}/${slug}-${i + 1}.md`;
+                    fs.writeFileSync(photoMarkdownPath, finalPhotoMarkdown);
+                    
+                    console.log(`Saved: ${imageName} and metadata`);
+                  } catch (error) {
+                    console.error(`Failed to process image ${imageUrl}:`, error);
+                  }
+                }
+              }
+            } else {
+              filePath = `src/content/${contentType}/${slug}.md`;
+              fs.mkdirSync(path.dirname(filePath), {recursive: true});
+            }
+            
+            fs.writeFileSync(filePath, frontmatter);
+            
+            execSync('git config user.name "GitHub Action"');
+            execSync('git config user.email "action@github.com"');
+            
+            // Prepare safe title for shell commands
+            const safeTitle = title.replace(/"/g, '\\"');
+            
+            if (contentType === 'albums') {
+              execSync(`git add "src/content/albums/${slug}.md"`);
+              execSync(`git add "src/content/photos/${slug}/"`);
+              execSync(`git commit -m "Add album: ${safeTitle} (from issue #${issue.number})"`);
+            } else {
+              execSync(`git add "${filePath}"`);
+              execSync(`git commit -m "Add ${contentType.slice(0, -1)}: ${safeTitle} (from issue #${issue.number})"`);
+            }
+            
+            execSync('git push');
              
-             if (contentType === 'photos') {
-               // For albums, add the entire directory
-               execSync(`git add "src/content/photos/${slug}/"`);
-               execSync(`git commit -m "Add album: ${title} with photos (from issue #${issue.number})"`);
-             } else {
-               // For other content, add the single file
-               execSync(`git add "${filePath}"`);
-               execSync(`git commit -m "Add ${contentType.slice(0, -1)}: ${title} (from issue #${issue.number})"`);
-             }
-             
-                          execSync('git push');
-             
-             // Trigger site rebuild
              console.log('Triggering site rebuild...');
              await github.rest.actions.createWorkflowDispatch({
                owner: context.repo.owner,
                repo: context.repo.repo,
-               workflow_id: 'deploy.yml', // or 'astro.yml' or whatever your build workflow is called
+               workflow_id: 'deploy.yml',
                ref: 'main'
              }).catch(async (error) => {
                console.warn('Failed to trigger deploy.yml, trying pages-build-deployment...');
-               // Fallback: trigger Pages rebuild via API
                try {
                  await github.rest.pages.requestPagesBuild({
                    owner: context.repo.owner,
@@ -286,7 +260,6 @@ jobs:
                }
              });
              
-             // Close the issue
             await github.rest.issues.update({
               owner: context.repo.owner,
               repo: context.repo.repo,
@@ -294,11 +267,10 @@ jobs:
               state: 'closed'
             });
             
-                         // Add comment
-             const itemType = contentType === 'photos' ? 'album' : contentType.slice(0, -1);
-             await github.rest.issues.createComment({
-               owner: context.repo.owner,
-               repo: context.repo.repo,
-               issue_number: issue.number,
-               body: `✅ Created ${itemType}: \`${filePath}\``
-             }); 
+            const itemType = contentType === 'albums' ? 'album' : contentType.slice(0, -1);
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: issue.number,
+              body: `✅ Created ${itemType}: \`${filePath}\``
+            }); 

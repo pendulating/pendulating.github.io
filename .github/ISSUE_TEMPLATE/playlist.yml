@@ -16,23 +16,28 @@ body:
     validations:
       required: true
 
-  - type: input
+  - type: dropdown
     id: platform
     attributes:
       label: "Platform"
-      description: "Where can people find this playlist?"
-      placeholder: "Spotify, Apple Music, YouTube, etc."
+      options:
+        - spotify
+        - apple
+    validations:
+      required: true
 
   - type: input
     id: playlist_url
     attributes:
-      label: "Playlist URL (optional)"
-      description: "Link to the playlist"
+      label: "Playlist URL"
+      description: "Link to the playlist (must be a valid URL)"
       placeholder: "https://open.spotify.com/playlist/..."
+    validations:
+      required: true
 
   - type: input
     id: mood
     attributes:
-      label: "Mood/Tags (optional)"
+      label: "Mood (optional)"
       description: "Comma-separated moods or genres"
-      placeholder: "chill, indie, study, road-trip" 
+      placeholder: "chill, indie, study, road-trip"
