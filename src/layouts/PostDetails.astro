@@ -5,17 +5,19 @@ import Footer from "@components/Footer.astro";
 import Tag from "@components/Tag.astro";
 import Datetime from "@components/Datetime";
 import BlogHero from "@components/BlogHero.astro";
-import type { CollectionEntry } from "astro:content";
+import type { PostEntry } from "../types/content";
 import { slugifyStr } from "@utils/slugify";
 import ShareLinks from "@components/ShareLinks.astro";
 import InstagramStoryShare from "@components/InstagramStoryShare.astro";
 import { SITE } from "@config";
+import { toFlairPath } from "@flair/config";
 
 export interface Props {
-  post: CollectionEntry<"blog">;
+  post: PostEntry;
+  basePath?: "/" | "/me";
 }
 
-const { post } = Astro.props;
+const { post, basePath = "/" } = Astro.props;
 
 const {
   title,
@@ -59,12 +61,12 @@ const layoutProps = {
 ---
 
 <Layout {...layoutProps}>
-  <Header />
+  <Header basePath={basePath} />
 
   <div class="mx-auto flex w-full max-w-3xl justify-center px-6 pt-32">
     <button
       class="focus-outline mb-2 flex hover:opacity-75"
-      onclick="(() => (history.length === 1) ? window.location = '/' : history.back())()"
+      onclick={`(() => (history.length === 1) ? window.location = '${toFlairPath(basePath, "/")}' : history.back())()`}
     >
       <svg xmlns="http://www.w3.org/2000/svg"
         ><path
@@ -88,7 +90,7 @@ const layoutProps = {
     </article>
 
     <ul class="my-8 flex flex-wrap justify-center gap-2">
-      {tags.map((tag: string) => <Tag tag={slugifyStr(tag)} />)}
+      {tags.map((tag: string) => <Tag tag={slugifyStr(tag)} basePath={basePath} />)}
     </ul>
 
     <div class="post-actions-container">

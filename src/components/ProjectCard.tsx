@@ -1,5 +1,6 @@
 import { slugifyStr } from "@utils/slugify";
 import type { CollectionEntry } from "astro:content";
+import type { FocusEvent, KeyboardEvent, MouseEvent } from "react";
 import { useState, useRef, useEffect } from "react";
 
 export interface Props {
@@ -10,17 +11,20 @@ export interface Props {
 export default function ProjectCard({ project, secHeading = true }: Props) {
   const { data, slug } = project;
   const { venue, title, tag, description, youtubeId, href, pdf, site, code, bib } = data;
-  
-  // State for description visibility
+
   const [showDescription, setShowDescription] = useState(false);
-  // State for BibTeX visibility
   const [showBib, setShowBib] = useState(false);
-  // State for animation progress
   const [animatedText, setAnimatedText] = useState("");
-  // Ref for the description container
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [isHoverCapable, setIsHoverCapable] = useState(false);
+
+  const cardRef = useRef<HTMLElement>(null);
+  const metadataRef = useRef<HTMLDivElement>(null);
+  const actionsRef = useRef<HTMLDivElement>(null);
   const descriptionRef = useRef<HTMLDivElement>(null);
-  
-  // Function to get YouTube embed URL from ID or full URL
+  const collapseTimeoutRef = useRef<number | null>(null);
+  const pointerRef = useRef({ x: -1, y: -1 });
+
   const getYoutubeEmbedUrl = (id: string) => {
     if (id.includes('youtube.com') || id.includes('youtu.be')) {
       const urlObj = new URL(id);
@@ -35,20 +39,20 @@ export default function ProjectCard({ project, secHeading = true }: Props) {
 
   const headerProps = {
     style: { viewTransitionName: slugifyStr(title) },
-    className: "text-base font-medium line-clamp-2",
+    className: "project-title",
   };
+  const imageSrc = typeof data.image === "string" ? data.image : data.image?.src;
+  const imageWidth = typeof data.image === "string" ? undefined : data.image?.width;
+  const imageHeight = typeof data.image === "string" ? undefined : data.image?.height;
 
-  // Animation effect when description is shown
   useEffect(() => {
     if (showDescription && description) {
-      console.log("Starting animation for description");
       setAnimatedText("");
       let currentIndex = 0;
-      const typingSpeed = 8; // Changed from 20ms to 5ms per character for faster typing
+      const typingSpeed = 8;
       
       const typingInterval = setInterval(() => {
         if (currentIndex < description.length) {
-          // Fix for the missing first character - append to current text instead of replacing
           setAnimatedText(description.substring(0, currentIndex + 1));
           currentIndex++;
         } else {
@@ -60,118 +64,268 @@ export default function ProjectCard({ project, secHeading = true }: Props) {
     }
   }, [showDescription, description]);
 
+  useEffect(() => {
+    if (typeof window === "undefined" || typeof window.matchMedia !== "function") return;
+    const mediaQuery = window.matchMedia("(hover: hover) and (pointer: fine)");
+    const updateInteractionMode = () => setIsHoverCapable(mediaQuery.matches);
+
+    updateInteractionMode();
+    mediaQuery.addEventListener("change", updateInteractionMode);
+    return () => mediaQuery.removeEventListener("change", updateInteractionMode);
+  }, []);
+
+  useEffect(() => {
+    if (!isHoverCapable) return;
+
+    const trackPointer = (event: PointerEvent) => {
+      pointerRef.current = { x: event.clientX, y: event.clientY };
+    };
+
+    window.addEventListener("pointermove", trackPointer, { passive: true });
+    return () => window.removeEventListener("pointermove", trackPointer);
+  }, [isHoverCapable]);
+
+  const clearCollapseTimer = () => {
+    if (collapseTimeoutRef.current !== null) {
+      window.clearTimeout(collapseTimeoutRef.current);
+      collapseTimeoutRef.current = null;
+    }
+  };
+
+  const isPointerWithinIntentZone = () => {
+    if (!cardRef.current) return false;
+
+    const { x, y } = pointerRef.current;
+    if (x < 0 || y < 0) return false;
+
+    const cardRect = cardRef.current.getBoundingClientRect();
+    const metadataRect = metadataRef.current?.getBoundingClientRect();
+    const actionsRect = actionsRef.current?.getBoundingClientRect();
+
+    const baseZone = {
+      left: cardRect.left - 16,
+      right: cardRect.right + 120,
+      top: cardRect.top - 12,
+      bottom: cardRect.bottom + 12,
+    };
+
+    let intentZone = baseZone;
+
+    if (metadataRect) {
+      intentZone = {
+        left: Math.min(intentZone.left, metadataRect.left - 24),
+        right: Math.max(intentZone.right, metadataRect.right + 120),
+        top: Math.min(intentZone.top, metadataRect.top - 16),
+        bottom: Math.max(intentZone.bottom, metadataRect.bottom + 18),
+      };
+    }
+
+    if (actionsRect) {
+      intentZone = {
+        left: Math.min(intentZone.left, actionsRect.left - 32),
+        right: Math.max(intentZone.right, actionsRect.right + 140),
+        top: Math.min(intentZone.top, actionsRect.top - 18),
+        bottom: Math.max(intentZone.bottom, actionsRect.bottom + 24),
+      };
+    }
+
+    return (
+      x >= intentZone.left &&
+      x <= intentZone.right &&
+      y >= intentZone.top &&
+      y <= intentZone.bottom
+    );
+  };
+
+  const scheduleCollapse = (delay = 200) => {
+    if (!isHoverCapable) return;
+    clearCollapseTimer();
+    collapseTimeoutRef.current = window.setTimeout(() => {
+      if (isPointerWithinIntentZone()) {
+        scheduleCollapse(140);
+        return;
+      }
+      setIsExpanded(false);
+      setShowDescription(false);
+      setShowBib(false);
+    }, delay);
+  };
+
+  useEffect(() => {
+    return () => {
+      clearCollapseTimer();
+    };
+  }, []);
+
   const toggleDescription = () => {
-    console.log("Toggle description clicked, current state:", showDescription);
+    setIsExpanded(true);
     setShowDescription(!showDescription);
     if (showBib) setShowBib(false);
   };
 
   const toggleBib = () => {
+    setIsExpanded(true);
     setShowBib(!showBib);
     if (showDescription) setShowDescription(false);
   };
 
+  const handleCardMouseEnter = () => {
+    if (!isHoverCapable) return;
+    clearCollapseTimer();
+    setIsExpanded(true);
+  };
+
+  const handleCardMouseLeave = () => {
+    if (!isHoverCapable) return;
+    scheduleCollapse();
+  };
+
+  const handleCardFocus = () => {
+    clearCollapseTimer();
+    setIsExpanded(true);
+  };
+
+  const handleCardBlur = (event: FocusEvent<HTMLElement>) => {
+    const nextFocused = event.relatedTarget as Node | null;
+    if (nextFocused && cardRef.current?.contains(nextFocused)) return;
+
+    if (isHoverCapable) {
+      scheduleCollapse(125);
+      return;
+    }
+
+    setIsExpanded(false);
+    setShowDescription(false);
+    setShowBib(false);
+  };
+
+  const handleCardClick = (event: MouseEvent<HTMLElement>) => {
+    if (isHoverCapable) return;
+    const target = event.target as HTMLElement;
+    if (target.closest("a, button")) return;
+    setIsExpanded(prev => !prev);
+  };
+
+  const handleCardKeyDown = (event: KeyboardEvent<HTMLElement>) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      setIsExpanded(prev => !prev);
+    }
+    if (event.key === "Escape") {
+      setIsExpanded(false);
+      setShowDescription(false);
+      setShowBib(false);
+    }
+  };
+
   return (
-    <li className="project-card">
-      {/* Project header with venue and tag - now clearly at the top */}
-      <div className="project-header">
-        <span className="project-venue line-clamp-1">{venue}</span>{" "}
-        {tag && <span className="project-tag">{tag}</span>}
-      </div>
-      
-      {/* Title link */}
-      <a
-        href={href}
-        className="project-title-link"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        {secHeading ? (
-          <h2 {...headerProps}>{title}</h2>
-        ) : (
-          <h3 {...headerProps}>{title}</h3>
-        )}
-      </a>
-
-      {/* Square media container */}
-      <div className="project-media-container">
-        {data.image ? (
-          <img 
-            src={data.image.src} 
-            alt={title} 
-            className="project-image"
-            width={data.image.width}
-            height={data.image.height}
-            loading="lazy"
-          />
-        ) : youtubeId ? (
-          <div className="project-video-container">
-            <iframe
-              className="project-video"
-              src={getYoutubeEmbedUrl(youtubeId)}
-              title={title}
-              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-              allowFullScreen
+    <article
+      ref={cardRef}
+      className={`project-card ${isExpanded ? "is-expanded" : "is-minimized"}`}
+      data-expanded={isExpanded}
+      tabIndex={0}
+      aria-expanded={isExpanded}
+      onMouseEnter={handleCardMouseEnter}
+      onMouseLeave={handleCardMouseLeave}
+      onFocus={handleCardFocus}
+      onBlur={handleCardBlur}
+      onClick={handleCardClick}
+      onKeyDown={handleCardKeyDown}
+    >
+      <div className="project-layout">
+        <div className="project-media-container">
+          {imageSrc ? (
+            <img
+              src={imageSrc}
+              alt={title}
+              className="project-image"
+              width={imageWidth}
+              height={imageHeight}
               loading="lazy"
-            ></iframe>
-          </div>
-        ) : (
-          <div className="project-empty-media"></div>
-        )}
-      </div>
+            />
+          ) : youtubeId ? (
+            <div className="project-video-container">
+              <iframe
+                className="project-video"
+                src={getYoutubeEmbedUrl(youtubeId)}
+                title={title}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                loading="lazy"
+              ></iframe>
+            </div>
+          ) : (
+            <div className="project-empty-media"></div>
+          )}
+        </div>
 
-      {/* Action buttons */}
-      <div className="project-links">
-        {pdf && (
-          <a href={pdf} target="_blank" rel="noopener noreferrer" className="project-button pdf-button">
-            paper
-          </a>
-        )}
-        {site && (
-          <a href={site} target="_blank" rel="noopener noreferrer" className="project-button site-button">
-            news-highlight
-          </a>
-        )}
-        {code && (
-          <a href={code} target="_blank" rel="noopener noreferrer" className="project-button code-button">
-            code
-          </a>
-        )}
-        {bib && (
-          <button onClick={toggleBib} className="project-button bib-button">
-            cite
-          </button>
-        )}
-        {description && (
-          <button 
-            onClick={toggleDescription} 
-            className={`project-button desc-button ${showDescription ? 'active' : ''}`}
-            aria-expanded={showDescription}
-          >
-            {showDescription ? "×" : "abs"}
-          </button>
-        )}
-      </div>
-      
-      {/* Inline description */}
-      {showDescription && description && (
-        <div 
-          className="project-description-inline"
-          ref={descriptionRef}
-        >
-          <div className="typing-text">
-            {animatedText}
-            <span className="typing-cursor">|</span>
+        <div ref={metadataRef} className="project-meta">
+          <div className="project-header">
+            <span className="project-venue line-clamp-1">{venue}</span>
+            {tag && <span className="project-tag">{tag}</span>}
           </div>
+
+          <a
+            href={href}
+            className="project-title-link"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {secHeading ? <h2 {...headerProps}>{title}</h2> : <h3 {...headerProps}>{title}</h3>}
+          </a>
+
+          <div
+            ref={actionsRef}
+            className="project-links"
+            aria-hidden={!isExpanded}
+          >
+            {pdf && (
+              <a href={pdf} target="_blank" rel="noopener noreferrer" className="project-button pdf-button">
+                paper
+              </a>
+            )}
+            {site && (
+              <a href={site} target="_blank" rel="noopener noreferrer" className="project-button site-button">
+                news-highlight
+              </a>
+            )}
+            {code && (
+              <a href={code} target="_blank" rel="noopener noreferrer" className="project-button code-button">
+                code
+              </a>
+            )}
+            {bib && (
+              <button onClick={toggleBib} className="project-button bib-button">
+                cite
+              </button>
+            )}
+            {description && (
+              <button
+                onClick={toggleDescription}
+                className={`project-button desc-button ${showDescription ? "active" : ""}`}
+                aria-expanded={showDescription}
+              >
+                {showDescription ? "×" : "abs"}
+              </button>
+            )}
+          </div>
+
+          {showDescription && description && (
+            <div className="project-description-inline" ref={descriptionRef}>
+              <div className="typing-text">
+                {animatedText}
+                <span className="typing-cursor">|</span>
+              </div>
+            </div>
+          )}
+
+          {bib && showBib && (
+            <div className="project-bib mt-2">
+              <pre className="bib-content">{bib}</pre>
+            </div>
+          )}
         </div>
-      )}
-      
-      {/* BibTeX content */}
-      {bib && showBib && (
-        <div className="project-bib mt-2">
-          <pre className="bib-content">{bib}</pre>
-        </div>
-      )}
-    </li>
+      </div>
+    </article>
   );
 }

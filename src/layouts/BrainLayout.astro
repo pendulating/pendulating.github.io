@@ -30,7 +30,7 @@ const layoutRenderStart = Date.now();
 ---
 
 <!DOCTYPE html>
-<html lang={LOCALE.lang ?? "en"}>
+<html lang={LOCALE.lang ?? "en"} class="brain-layout">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
@@ -145,6 +145,11 @@ const layoutRenderStart = Date.now();
   :global(.disable-animations) .sticky-note {
     animation: none !important;
     transform: none !important;
+  }
+
+  html.brain-layout body,
+  html.brain-layout body * {
+    font-family: "GTAmerica-Light", sans-serif !important;
   }
 </style>
 

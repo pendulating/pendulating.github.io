@@ -1,5 +1,5 @@
 ---
-import type { CollectionEntry } from "astro:content";
+import type { PostEntry } from "../types/content";
 import Layout from "@layouts/Layout.astro";
 import Main from "@layouts/Main.astro";
 import Header from "@components/Header.astro";
@@ -7,23 +7,25 @@ import Footer from "@components/Footer.astro";
 import Pagination from "@components/Pagination.astro";
 import Card from "@components/Card";
 import { SITE } from "@config";
+import { toFlairPath } from "@flair/config";
 
 export interface Props {
   currentPage: number;
   totalPages: number;
-  paginatedPosts: CollectionEntry<"blog">[];
+  paginatedPosts: PostEntry[];
+  basePath?: "/" | "/me";
 }
 
-const { currentPage, totalPages, paginatedPosts } = Astro.props;
+const { currentPage, totalPages, paginatedPosts, basePath = "/" } = Astro.props;
 ---
 
 <Layout title={`Posts | ${SITE.title}`}>
-  <Header activeNav="posts" />
+  <Header activeNav="posts" basePath={basePath} />
   <Main pageTitle="Posts" pageDesc="All the articles I've posted.">
     <ul class="post-list">
       {
         paginatedPosts.map(({ data, slug }) => (
-          <Card href={`/posts/${slug}/`} frontmatter={data} />
+          <Card href={toFlairPath(basePath, `/posts/${slug}/`)} frontmatter={data} />
         ))
       }
     </ul>
@@ -32,8 +34,8 @@ const { currentPage, totalPages, paginatedPosts } = Astro.props;
   <Pagination
     {currentPage}
     {totalPages}
-    prevUrl={`/posts${currentPage - 1 !== 1 ? "/" + (currentPage - 1) : ""}/`}
-    nextUrl={`/posts/${currentPage + 1}/`}
+    prevUrl={toFlairPath(basePath, `/posts${currentPage - 1 !== 1 ? "/" + (currentPage - 1) : ""}/`)}
+    nextUrl={toFlairPath(basePath, `/posts/${currentPage + 1}/`)}
   />
 
   <Footer noMarginTop={totalPages > 1} />

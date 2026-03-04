@@ -5,16 +5,19 @@ import getUniqueTags from "@utils/getUniqueTags";
 import getPostsByTag from "@utils/getPostsByTag";
 import getPageNumbers from "@utils/getPageNumbers";
 import getPagination from "@utils/getPagination";
-import { isAcademicPost } from "@utils/flairPostSplit";
+import { isMusicRelatedPost, mergePostsBySlug } from "@utils/flairPostSplit";
 
 export interface Props {
-  post: CollectionEntry<"blog">;
+  post: CollectionEntry<"meBlog">;
   tag: string;
   tagName: string;
 }
 
 export async function getStaticPaths() {
-  const posts = (await getCollection("blog")).filter(isAcademicPost);
+  const posts = mergePostsBySlug(
+    await getCollection("meBlog"),
+    (await getCollection("blog")).filter(isMusicRelatedPost)
+  );
 
   const tags = getUniqueTags(posts);
 
@@ -32,7 +35,10 @@ export async function getStaticPaths() {
 const { page } = Astro.params;
 const { tag, tagName } = Astro.props;
 
-const posts = (await getCollection("blog", ({ data }) => !data.draft)).filter(isAcademicPost);
+const posts = mergePostsBySlug(
+  await getCollection("meBlog", ({ data }) => !data.draft),
+  (await getCollection("blog", ({ data }) => !data.draft)).filter(isMusicRelatedPost)
+);
 
 const postsByTag = getPostsByTag(posts, tag);
 
@@ -42,6 +48,6 @@ const pagination = getPagination({
 });
 ---
 
-  <div class="pt-32">
-  <TagPosts {...pagination} {tag} {tagName} />
+<div class="pt-32">
+  <TagPosts {...pagination} {tag} {tagName} basePath="/me" />
 </div>

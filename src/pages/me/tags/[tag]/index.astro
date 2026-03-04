@@ -4,10 +4,13 @@ import TagPosts from "@layouts/TagPosts.astro";
 import getPostsByTag from "@utils/getPostsByTag";
 import getPagination from "@utils/getPagination";
 import getUniqueTags from "@utils/getUniqueTags";
-import { isAcademicPost } from "@utils/flairPostSplit";
+import { isMusicRelatedPost, mergePostsBySlug } from "@utils/flairPostSplit";
 
 export async function getStaticPaths() {
-  const posts = (await getCollection("blog")).filter(isAcademicPost);
+  const posts = mergePostsBySlug(
+    await getCollection("meBlog"),
+    (await getCollection("blog")).filter(isMusicRelatedPost)
+  );
 
   const tags = getUniqueTags(posts);
 
@@ -29,6 +32,6 @@ const pagination = getPagination({
   isIndex: true,
 });
 ---
-  <div class="pt-32">
-  <TagPosts {...pagination} {tag} {tagName} />
+<div class="pt-32">
+  <TagPosts {...pagination} {tag} {tagName} basePath="/me" />
 </div>

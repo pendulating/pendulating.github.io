@@ -3,11 +3,14 @@ import { getCollection } from "astro:content";
 import Posts from "@layouts/Posts.astro";
 import getSortedPosts from "@utils/getSortedPosts";
 import getPagination from "@utils/getPagination";
-import { isAcademicPost } from "@utils/flairPostSplit";
+import { isMusicRelatedPost, mergePostsBySlug } from "@utils/flairPostSplit";
 
-const posts = await getCollection("blog");
+const posts = mergePostsBySlug(
+  await getCollection("meBlog"),
+  (await getCollection("blog")).filter(isMusicRelatedPost)
+);
 
-const sortedPosts = getSortedPosts(posts.filter(isAcademicPost));
+const sortedPosts = getSortedPosts(posts);
 
 const pagination = getPagination({
   posts: sortedPosts,
@@ -15,4 +18,4 @@ const pagination = getPagination({
   isIndex: true,
 });
 ---
-<Posts {...pagination} />
+<Posts {...pagination} basePath="/me" />

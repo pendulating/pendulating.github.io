@@ -1,13 +1,14 @@
 import Fuse from "fuse.js";
 import { useEffect, useRef, useState, useMemo, type FormEvent } from "react";
 import Card from "@components/Card";
-import type { CollectionEntry } from "astro:content";
+import type { PostData } from "../types/content";
 
 export type SearchItem = {
   title: string;
   description: string;
-  data: CollectionEntry<"blog">["data"];
+  data: PostData;
   slug: string;
+  basePath?: "/" | "/me";
 };
 
 interface Props {
@@ -107,13 +108,16 @@ export default function SearchBar({ searchList }: Props) {
 
       <ul>
         {searchResults &&
-          searchResults.map(({ item, refIndex }) => (
-            <Card
-              href={`/posts/${item.slug}/`}
-              frontmatter={item.data}
-              key={`${refIndex}-${item.slug}`}
-            />
-          ))}
+          searchResults.map(({ item, refIndex }) => {
+            const basePrefix = item.basePath === "/me" ? "/me" : "";
+            return (
+              <Card
+                href={`${basePrefix}/posts/${item.slug}/`}
+                frontmatter={item.data}
+                key={`${refIndex}-${item.slug}`}
+              />
+            );
+          })}
       </ul>
     </>
   );

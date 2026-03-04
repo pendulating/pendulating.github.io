@@ -5,14 +5,17 @@ import PostDetails from "@layouts/PostDetails.astro";
 import getSortedPosts from "@utils/getSortedPosts";
 import getPageNumbers from "@utils/getPageNumbers";
 import getPagination from "@utils/getPagination";
-import { isAcademicPost } from "@utils/flairPostSplit";
+import { isMusicRelatedPost, mergePostsBySlug } from "@utils/flairPostSplit";
 
 export interface Props {
-  post: CollectionEntry<"blog">;
+  post: CollectionEntry<"meBlog">;
 }
 
 export async function getStaticPaths() {
-  const posts = (await getCollection("blog", ({ data }) => !data.draft)).filter(isAcademicPost);
+  const posts = mergePostsBySlug(
+    await getCollection("meBlog", ({ data }) => !data.draft),
+    (await getCollection("blog", ({ data }) => !data.draft)).filter(isMusicRelatedPost)
+  );
 
   const postResult = posts.map(post => ({
     params: { slug: post.slug },
@@ -29,7 +32,10 @@ export async function getStaticPaths() {
 const { slug } = Astro.params;
 const { post } = Astro.props;
 
-const posts = (await getCollection("blog")).filter(isAcademicPost);
+const posts = mergePostsBySlug(
+  await getCollection("meBlog"),
+  (await getCollection("blog")).filter(isMusicRelatedPost)
+);
 
 const sortedPosts = getSortedPosts(posts);
 
@@ -38,4 +44,4 @@ const pagination = getPagination({
   page: slug,
 });
 ---
-{post ? <PostDetails post={post} /> : <Posts {...pagination} />}
+{post ? <PostDetails post={post} basePath="/me" /> : <Posts {...pagination} basePath="/me" />}

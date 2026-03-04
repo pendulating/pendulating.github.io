@@ -1,15 +1,12 @@
 ---
-title: "NYC's Scaffolding Problem"
+title: "Fingerprinting NYC Scaffolding with Dashcam Data"
 category: "computational-social-science"
-venue: "The Economist"
+venue: "Computational Urban Planning and Urban Management (CUPUM) '25"
 pdf: "https://arxiv.org/abs/2402.06801"
-site: "https://economist.com/science-and-technology/2024/03/13/new-york-city-is-covered-in-illegal-scaffolding"
+site: "https://link.springer.com/chapter/10.1007/978-3-031-98300-9_10"
 image: "../../assets/selected-work/scaffolding.png"
-pubDatetime: 2024-03-13
+pubDatetime: 2025-12-25
 featured: true
 tags: ["media", "urban data science"]
-order: 4
-coordinates:
-  latitude: 40.7549
-  longitude: -73.9840
+order: 1
 ---

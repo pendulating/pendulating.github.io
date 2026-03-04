@@ -6,22 +6,25 @@ import Layout from "@layouts/Layout.astro";
 import Main from "@layouts/Main.astro";
 import Tag from "@components/Tag.astro";
 import getUniqueTags from "@utils/getUniqueTags";
-import { isAcademicPost } from "@utils/flairPostSplit";
+import { isMusicRelatedPost, mergePostsBySlug } from "@utils/flairPostSplit";
 import { SITE } from "@config";
 
-const posts = (await getCollection("blog")).filter(isAcademicPost);
+const posts = mergePostsBySlug(
+  await getCollection("meBlog"),
+  (await getCollection("blog")).filter(isMusicRelatedPost)
+);
 
 let tags = getUniqueTags(posts);
 ---
 
 <Layout title={`Tags | ${SITE.title}`}>
-  <Header activeNav="tags" />
+  <Header activeNav="tags" basePath="/me" />
   <div class="pt-32">
-  <Main pageTitle="Tags" pageDesc="All the tags used in posts.">
-    <ul>
-      {tags.map(({ tag }) => <Tag {tag} size="lg" />)}
-    </ul>
-  </Main>
+    <Main pageTitle="Tags" pageDesc="All the tags used in posts.">
+      <ul>
+        {tags.map(({ tag }) => <Tag {tag} size="lg" basePath="/me" />)}
+      </ul>
+    </Main>
   </div>
   <Footer />
 </Layout>

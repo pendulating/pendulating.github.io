@@ -59,9 +59,9 @@ module.exports = {
         transparent: "transparent",
       },
       fontFamily: {
-        sans: ["GTAmerica-Light"],
-        serif: ["GTAmerica-Light"],
-        mono: ["GTAmerica-Light"],
+        sans: ["parabolica-text", "sans-serif"],
+        serif: ["parabolica-text", "sans-serif"],
+        mono: ["parabolica-text", "sans-serif"],
       },
 
       typography: {

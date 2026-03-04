@@ -5,14 +5,19 @@ import socialIcons from "@assets/socialIcons";
 
 export interface Props {
   centered?: boolean;
+  compact?: boolean;
+  names?: string[];
 }
 
-const { centered = false } = Astro.props;
+const { centered = false, compact = false, names } = Astro.props;
+const filteredSocials = SOCIALS.filter(
+  social => social.active && (!names || names.includes(social.name))
+);
 ---
 
-<div class={`social-icons ${centered ? "flex" : ""}`}>
+<div class={`social-icons ${centered ? "flex" : ""} ${compact ? "compact" : ""}`}>
   {
-    SOCIALS.filter(social => social.active).map(social => (
+    filteredSocials.map(social => (
       <LinkButton
         href={social.href}
         className="link-button-social"
@@ -32,6 +37,20 @@ const { centered = false } = Astro.props;
   .link-button-social {
     @apply p-4 sm:p-4 hover:scale-110;
     transition: transform 0.2s ease, var(--theme-transition);
+  }
+
+  .social-icons.compact {
+    @apply gap-2 justify-start;
+  }
+
+  .social-icons.compact .link-button-social {
+    @apply p-1.5;
+  }
+
+  .social-icons.compact .link-button-social svg {
+    width: 26px !important;
+    height: 26px !important;
+    stroke-width: 0.65 !important;
   }
   /* All SVG normalization lives in base.css to avoid duplication */
 </style>

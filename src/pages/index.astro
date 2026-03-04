@@ -1,6 +1,5 @@
 ---
 import { getCollection } from "astro:content";
-import type { CollectionEntry } from "astro:content";
 import Layout from "@layouts/Layout.astro";
 import Header from "@components/Header.astro";
 import Footer from "@components/Footer.astro";
@@ -10,26 +9,37 @@ import Card from "@components/Card";
 import ProjectCard from "@components/ProjectCard";
 import Socials from "@components/Socials.astro";
 import getSortedPosts from "@utils/getSortedPosts";
+import { isAcademicPost } from "@utils/flairPostSplit";
 import { SITE, SOCIALS } from "@config";
+import { FLAIRS } from "@flair/config";
 
-const posts = await getCollection("blog");
-const projects = await getCollection("projects");
+const flair = FLAIRS.academic;
 
-const sortedPosts = getSortedPosts(posts);
+const posts = await getCollection(flair.blogCollection);
+const projects = await getCollection(flair.projectsCollection);
+const newsEntries = await getCollection("news");
+
+const sortedPosts = getSortedPosts(posts.filter(isAcademicPost));
 const featuredPosts = sortedPosts.filter(({ data }) => data.featured);
 const recentPosts = sortedPosts.filter(({ data }) => !data.featured);
 
 // Sort projects by order field
-const sortedProjects = projects.sort((a: CollectionEntry<"projects">, b: CollectionEntry<"projects">) => 
+const sortedProjects = projects.sort((a, b) => 
   (a.data.order || Infinity) - (b.data.order || Infinity)
 );
+const sortedNews = [...newsEntries].sort(
+  (a, b) => new Date(b.data.date).getTime() - new Date(a.data.date).getTime()
+);
+
+const formatNewsDate = (date: Date) =>
+  date.toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" });
 
 const socialCount = SOCIALS.filter(social => social.active).length;
 ---
 
 <Layout pageType="home">
   <Header />
-  <main id="main-content" class="home-content pt-32 px-0"> 
+  <main id="main-content" class="home-content pt-0 px-0"> 
     <div class="left-col">
       <section id="hero">
         {false && (<h1 id="hero-logo" class="site-logo text-3xl font-bold mb-4">matt franchi</h1>)}
@@ -43,43 +53,55 @@ const socialCount = SOCIALS.filter(social => social.active).length;
           )
         }
         <p>
-          I am a Computer Science PhD Candidate at Cornell University, based at the New York City campus, <a href="https://tech.cornell.edu" class="font-cornell-tech">Cornell Tech</a>. Before that, I completed a Bachelor's Degree in Computer Science and General & Departmental Honors curricula at Clemson University (during the pandemic, unfortunately). This summer, I was a research fellow at the <a href="https://www.designtrust.org/projects/untaped" class="font-design-trust">Design Trust for Public Space</a>. In 2024, I was a research fellow at <a href="https://hayden.ai" class="font-hayden-ai">Hayden AI Technologies</a>.  My research is supported by the <a href="https://tech.cornell.edu/urban-tech-hub" class="font-urban-tech-hub">Cornell Tech Urban Tech Hub</a>, the Cornell Dean's Excellence Fellowship, the Siegel PiTech PhD Impact Fellowship, and the <a href="https://dli.tech.cornell.edu" class="font-digital-life-initiative">Digital Life Initiative</a> Doctoral Fellowship. 
+          I am a Computer Science PhD Candidate at Cornell University, based at the New York City campus, Cornell Tech, and advised by Wendy Ju and Helen Nissenbaum.  My research is supported by the Cornell Tech Urban Tech Hub, the Cornell Dean's Excellence Fellowship, the Siegel PiTech PhD Impact Fellowship, and the Digital Life Initiative Doctoral Fellowship. I have held summer fellowships at Hayden AI and the Design Trust for Public Space. I have written about and received coverage of my work in the New York Times, New York Post, The Economist, Gothamist, and other local NYC news outlets.
           <br><br>
 
-          I co-organize the <a href="https://bridges.eaamo.org/working_groups/urban-ds-equitable-cities/" class="font-eaamo">EAAMO Urban Data Science Working Group</a>, which meets biweekly during the academic year (if interested in joining, please sign up for our <a href="https://mfranchi.net/EAAMO-Bridges-UDS-S25/subscribe" class="font-mailing-list">mailing list</a>!)
+          I co-organize the EAAMO Urban Data Working Group.
           <br><br>
 
-          My dissertation will span the emerging data stream of <a target='_blank' href='https://arxiv.org/abs/2505.07085' class='font-dense-street-imagery'>dense street imagery</a> (DSI), presenting technical applications and approaches for insight extraction, modeling, and reconciliation; analyzing information flows and nascent norms in the DSI landscape with ethical frameworks like <a href="https://digitalcommons.law.uw.edu/wlr/vol79/iss1/10/" target="_blank" class="font-contextual-integrity">contextual integrity</a>; and demonstrating DSI's potential for urban science and design, which includes juxtaposition and situation against existing urban sensing methods, human-centered design methods, design across scales, and urban planning. My research interests extend to vision language models, mapping, computational social science (particularly in issues of societal inequality, climate, or public health), statistical modeling, computer vision, and fashion & design. My research has been covered in the New York Times, The Economist, Gothamist, and other local NYC news outlets.
+          Currently, I care most about upholding agency in public spaces, expectation-aligned and automated appropriateness in artificial-intelligence powered inferential systems, and large-scale & creative urban visual analytics.  
           <br><br>
-          I play, compose, and <a href="https://open.spotify.com/artist/2RIA9v5X55UGXGFqk4VIsZ" target="_blank" class="font-record">record</a> classical and neoclassical piano music, pendulate between fiction and non-fiction books, hike while on vacation, write (immediately below), and model once or twice per year.
+          I play, compose, and record neoclassical piano music, pendulate between fiction and non-fiction books, hike whilst on vacation, write (immediately below), and model once or twice per year.
         </p>
       </section>
-      <section id="featured">
-        <h3 class="subsection-heading">Writing</h3>
-        <ul>
-          {featuredPosts.map(({ data, slug }) => (
-            <Card
-              href={`/posts/${slug}/`}
-              frontmatter={data}
-              secHeading={false}
-            />
-          ))}
-        </ul>
-        <div class="all-posts-btn-wrapper">
-          <LinkButton href="/posts/">
-            All Posts
-            <svg xmlns="http://www.w3.org/2000/svg"
-              ><path
-                d="m11.293 17.293 1.414 1.414L19.414 12l-6.707-6.707-1.414 1.414L15.586 11H6v2h9.586z"
-              ></path>
-            </svg>
-          </LinkButton>
-        </div>
+      <section id="news" class="mt-8">
+        <h2 class="main-section-heading">News</h2>
+        {
+          sortedNews.length > 0 ? (
+            <ul class="mt-4 space-y-3">
+              {sortedNews.map(({ data }) => (
+                <li class="text-sm text-skin-base">
+                  <time datetime={data.date.toISOString()} class="mr-3 opacity-70">
+                    {formatNewsDate(data.date)}
+                  </time>
+                  <span>{data.news}</span>
+                  {
+                    data.link && (
+                      <>
+                        {" "}
+                        <a
+                          href={data.link}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          class="italic underline decoration-dashed underline-offset-2 hover:text-skin-base/80"
+                        >
+                          (Link)
+                        </a>
+                      </>
+                    )
+                  }
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p class="mt-4 text-sm text-skin-base/70">No news yet.</p>
+          )
+        }
       </section>
     </div>
     <div class="right-col">
       <section id='selected-work'>
-        <h2 class="main-section-heading">Research</h2>
+        <h2 class="main-section-heading">Research Projects</h2>
         <div class="project-grid">
           {sortedProjects.map((project) => (
             <ProjectCard project={project} client:load />

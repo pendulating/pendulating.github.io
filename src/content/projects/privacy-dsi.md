@@ -8,8 +8,5 @@ category: "dense-street-imagery"
 pubDatetime: 2025-06-26
 featured: true
 tags: ["publication", "privacy", "audits"]
-order: 1
-coordinates:
-  latitude: 40.7552
-  longitude: -73.9549
+order: 2
 ---
