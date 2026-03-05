@@ -1,7 +1,8 @@
 import { slugifyStr } from "@utils/slugify";
 import type { CollectionEntry } from "astro:content";
 import type { FocusEvent, KeyboardEvent, MouseEvent } from "react";
-import { useState, useRef, useEffect } from "react";
+import { useContext, useState, useRef, useEffect } from "react";
+import { ProjectCardGridContext } from "./ProjectCardGridContext";
 
 export interface Props {
   project: CollectionEntry<"projects">;
@@ -12,11 +13,16 @@ export default function ProjectCard({ project, secHeading = true }: Props) {
   const { data, slug } = project;
   const { venue, title, tag, description, youtubeId, href, pdf, site, code, bib } = data;
 
+  const gridContext = useContext(ProjectCardGridContext);
+  const isControlled = gridContext !== null;
+
   const [showDescription, setShowDescription] = useState(false);
   const [showBib, setShowBib] = useState(false);
   const [animatedText, setAnimatedText] = useState("");
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [internalExpanded, setInternalExpanded] = useState(false);
   const [isHoverCapable, setIsHoverCapable] = useState(false);
+
+  const isExpanded = isControlled ? gridContext!.expandedCardId === slug : internalExpanded;
 
   const cardRef = useRef<HTMLElement>(null);
   const metadataRef = useRef<HTMLDivElement>(null);
@@ -139,13 +145,14 @@ export default function ProjectCard({ project, secHeading = true }: Props) {
 
   const scheduleCollapse = (delay = 200) => {
     if (!isHoverCapable) return;
+    if (isControlled) return; // Grid handles collapse when leaving
     clearCollapseTimer();
     collapseTimeoutRef.current = window.setTimeout(() => {
       if (isPointerWithinIntentZone()) {
         scheduleCollapse(140);
         return;
       }
-      setIsExpanded(false);
+      setInternalExpanded(false);
       setShowDescription(false);
       setShowBib(false);
     }, delay);
@@ -158,63 +165,86 @@ export default function ProjectCard({ project, secHeading = true }: Props) {
   }, []);
 
   const toggleDescription = () => {
-    setIsExpanded(true);
+    if (isControlled) gridContext!.setExpandedCardId(slug);
+    else setInternalExpanded(true);
     setShowDescription(!showDescription);
     if (showBib) setShowBib(false);
   };
 
   const toggleBib = () => {
-    setIsExpanded(true);
+    if (isControlled) gridContext!.setExpandedCardId(slug);
+    else setInternalExpanded(true);
     setShowBib(!showBib);
     if (showDescription) setShowDescription(false);
   };
 
   const handleCardMouseEnter = () => {
     if (!isHoverCapable) return;
-    clearCollapseTimer();
-    setIsExpanded(true);
+    if (isControlled) {
+      gridContext!.setExpandedCardId(slug);
+    } else {
+      clearCollapseTimer();
+      setInternalExpanded(true);
+    }
   };
 
   const handleCardMouseLeave = () => {
     if (!isHoverCapable) return;
-    scheduleCollapse();
+    if (!isControlled) scheduleCollapse();
   };
 
   const handleCardFocus = () => {
-    clearCollapseTimer();
-    setIsExpanded(true);
+    if (isControlled) gridContext!.setExpandedCardId(slug);
+    else {
+      clearCollapseTimer();
+      setInternalExpanded(true);
+    }
   };
 
   const handleCardBlur = (event: FocusEvent<HTMLElement>) => {
     const nextFocused = event.relatedTarget as Node | null;
     if (nextFocused && cardRef.current?.contains(nextFocused)) return;
+    // Don't collapse when focus moves to another project card
+    if (nextFocused && (nextFocused as HTMLElement).closest?.(".project-card")) return;
 
-    if (isHoverCapable) {
+    if (isControlled) {
+      gridContext!.setExpandedCardId(null);
+    } else if (isHoverCapable) {
       scheduleCollapse(125);
-      return;
+    } else {
+      setInternalExpanded(false);
+      setShowDescription(false);
+      setShowBib(false);
     }
-
-    setIsExpanded(false);
-    setShowDescription(false);
-    setShowBib(false);
   };
 
   const handleCardClick = (event: MouseEvent<HTMLElement>) => {
     if (isHoverCapable) return;
     const target = event.target as HTMLElement;
     if (target.closest("a, button")) return;
-    setIsExpanded(prev => !prev);
+    if (isControlled) {
+      gridContext!.setExpandedCardId(isExpanded ? null : slug);
+    } else {
+      setInternalExpanded((prev) => !prev);
+    }
   };
 
   const handleCardKeyDown = (event: KeyboardEvent<HTMLElement>) => {
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
-      setIsExpanded(prev => !prev);
+      if (isControlled) {
+        gridContext!.setExpandedCardId(isExpanded ? null : slug);
+      } else {
+        setInternalExpanded((prev) => !prev);
+      }
     }
     if (event.key === "Escape") {
-      setIsExpanded(false);
-      setShowDescription(false);
-      setShowBib(false);
+      if (isControlled) gridContext!.setExpandedCardId(null);
+      else {
+        setInternalExpanded(false);
+        setShowDescription(false);
+        setShowBib(false);
+      }
     }
   };
 

@@ -514,11 +514,15 @@ html:not(.brain-layout) {
     max-width: 100%;
     margin: 0;
   }
+
+  .copyright-wrapper {
+    font-size: 0.9rem;
+    opacity: 0.75;
+  }
   
   /* Hero Section */
   #hero {
     position: relative;
-
     padding-bottom: 2rem; /* Added padding to the bottom of the hero section */
     min-height: 150px;
     width: 100%;
@@ -1076,6 +1080,10 @@ html:not(.brain-layout) {
 
   .top-nav-wrap {
     padding: 3rem 5vw;
+  }
+
+  #hero {
+    padding-top: 2.25rem; /* Align hero paragraphs with top of first project card image */
   }
 
   #hero p {

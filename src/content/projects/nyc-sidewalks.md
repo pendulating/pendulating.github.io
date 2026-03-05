@@ -9,7 +9,7 @@ category: "tools-for-public-space"
 pubDatetime: 2024-07-29
 featured: true
 tags: ["media", "urban data science"]
-order: 2
+order: 3
 coordinates:
   latitude: 40.7580
   longitude: -73.9855

@@ -6,7 +6,7 @@ import Footer from "@components/Footer.astro";
 import LinkButton from "@components/LinkButton.astro";
 import Hr from "@components/Hr.astro";
 import Card from "@components/Card";
-import ProjectCard from "@components/ProjectCard";
+import ProjectCardGrid from "@components/ProjectCardGrid";
 import Socials from "@components/Socials.astro";
 import getSortedPosts from "@utils/getSortedPosts";
 import { isAcademicPost } from "@utils/flairPostSplit";
@@ -53,10 +53,10 @@ const socialCount = SOCIALS.filter(social => social.active).length;
           )
         }
         <p>
-          I am a Computer Science PhD Candidate at Cornell University, based at the New York City campus, Cornell Tech, and advised by Wendy Ju and Helen Nissenbaum.  My research is supported by the Cornell Tech Urban Tech Hub, the Cornell Dean's Excellence Fellowship, the Siegel PiTech PhD Impact Fellowship, and the Digital Life Initiative Doctoral Fellowship. I have held summer fellowships at Hayden AI and the Design Trust for Public Space. I have written about and received coverage of my work in the New York Times, New York Post, The Economist, Gothamist, and other local NYC news outlets.
+          I am a Computer Science PhD Candidate at Cornell University, based at the New York City campus, Cornell Tech, and advised by Wendy Ju and Helen Nissenbaum.  My research is supported by the Cornell Tech Urban Tech Hub, the Cornell Dean's Excellence Fellowship, the Siegel PiTech PhD Impact Fellowship, and the Digital Life Initiative Doctoral Fellowship. I have held summer fellowships at Hayden AI and the Design Trust for Public Space. I have written about and received coverage of my work in the New York Times, Gothamist, New York Post, The Economist, and other local NYC news outlets.
           <br><br>
 
-          I co-organize the EAAMO Urban Data Working Group.
+          Since 2024, I co-organize the EAAMO Urban Data Working Group.
           <br><br>
 
           I care most about upholding agency in public spaces, expectation-aligned and automated appropriateness in inferential AI systems, and large-scale & creative urban visual analytics.  
@@ -102,11 +102,7 @@ const socialCount = SOCIALS.filter(social => social.active).length;
     <div class="right-col">
       <section id='selected-work'>
         <h2 class="main-section-heading">Research Projects</h2>
-        <div class="project-grid">
-          {sortedProjects.map((project) => (
-            <ProjectCard project={project} client:load />
-          ))}
-        </div>
+        <ProjectCardGrid projects={sortedProjects} client:load />
       </section>
     </div>
   </main>

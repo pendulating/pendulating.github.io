@@ -5,7 +5,7 @@ import Header from "@components/Header.astro";
 import Footer from "@components/Footer.astro";
 import LinkButton from "@components/LinkButton.astro";
 import Card from "@components/Card";
-import ProjectCard from "@components/ProjectCard";
+import ProjectCardGrid from "@components/ProjectCardGrid";
 import getSortedPosts from "@utils/getSortedPosts";
 import { isMusicRelatedPost, mergePostsBySlug } from "@utils/flairPostSplit";
 import { SITE } from "@config";
@@ -54,9 +54,7 @@ const sortedProjects = projects.sort((a, b) => (a.data.order || Infinity) - (b.d
     <div class="right-col">
       <section id="selected-work">
         <h2 class="main-section-heading">Projects</h2>
-        <div class="project-grid">
-          {sortedProjects.map(project => <ProjectCard project={project} client:load />)}
-        </div>
+        <ProjectCardGrid projects={sortedProjects} client:load />
       </section>
     </div>
   </main>
