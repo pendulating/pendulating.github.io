@@ -699,7 +699,7 @@ html:not(.brain-layout) {
     max-height: 0;
     opacity: 0;
     overflow: hidden;
-    transform: translateY(-5px);
+    transform: translateY(5px);
     pointer-events: none;
     transition: max-height 0.34s var(--project-ease-out), opacity 0.26s var(--project-ease-in-out), transform 0.3s var(--project-ease-out), margin-top 0.3s var(--project-ease-out);
   }
