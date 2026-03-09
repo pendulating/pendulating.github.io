@@ -64,16 +64,16 @@ const layoutProps = {
   <Header basePath={basePath} />
 
   <div class="mx-auto flex w-full max-w-3xl justify-center px-6 pt-32">
-    <button
+    <a
+      href={toFlairPath(basePath, "/posts/")}
       class="focus-outline mb-2 flex hover:opacity-75"
-      onclick={`(() => (history.length === 1) ? window.location = '${toFlairPath(basePath, "/")}' : history.back())()`}
     >
       <svg xmlns="http://www.w3.org/2000/svg"
         ><path
           d="M13.293 6.293 7.586 12l5.707 5.707 1.414-1.414L10.414 12l4.293-4.293z"
         ></path>
       </svg><span>Go back</span>
-    </button>
+    </a>
   </div>
   
   <main id="main-content" class="post-content pt-4 px-6">

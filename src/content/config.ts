@@ -195,6 +195,7 @@ const projects = defineCollection({
       tag: z.string().optional(),
       pdf: z.string().url().optional(), // PDF link
       site: z.string().url().optional(), // Website link
+      siteLabel: z.string().optional(), // Custom label for the site button (defaults to "news-highlight")
       code: z.string().url().optional(), // Code repository link
       bib: z.string().optional(), // BibTeX citation text
       category: z
@@ -232,6 +233,7 @@ const meProjects = defineCollection({
       tag: z.string().optional(),
       pdf: z.string().url().optional(),
       site: z.string().url().optional(),
+      siteLabel: z.string().optional(),
       code: z.string().url().optional(),
       bib: z.string().optional(),
       category: z

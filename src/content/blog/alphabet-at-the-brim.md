@@ -38,19 +38,19 @@ This obviously lacks have a high degree of precision, but thankfully we don't ne
 ### Generating all possible n-length sequences
 I first wrote a simple bash script to generate all possible *n*-length sequences of the English alphabet. This script takes in a length *n* and an output file, and writes all possible sequences to the output file. 
 
-<script src="https://emgithub.com/embed-v2.js?target=https%3A%2F%2Fgithub.com%2Fmattwfranchi%2Falphabet-at-the-brim%2Fblob%2Fmain%2Fscripts%2Fall_n_letter_sequences.sh&style=default&type=code&showBorder=on&showLineNumbers=on&showFileMeta=on&showFullPath=on&showCopy=on"></script>
+<script src="https://emgithub.com/embed-v2.js?target=https%3A%2F%2Fgithub.com%2Fmattwfranchi%2Falphabet-at-the-brim%2Fblob%2Fmain%2Fscripts%2Fall_n_letter_sequences.sh&style=github-dark&type=code&showBorder=on&showLineNumbers=on&showFileMeta=on&showFullPath=on&showCopy=on"></script>
 
 
 ### Fetching the number of search results for a sequence
 Then, I wrote a script to fetch the number of search results for an arbitrary sequence. An important note here is that I wrap each sequence in double quotes, so that the search engine only returns results for the exact sequence. This script takes in a sequence, runs a curl request to the search engine on that sequence, and then parses the resultant HTML with *htmlq*, a command line tool for parsing html. I identified which class to isolate via a simple inspection of the HTML with the Google Chrome inspector offered in the developer tools.
 
-<script src="https://emgithub.com/embed-v2.js?target=https%3A%2F%2Fgithub.com%2Fmattwfranchi%2Falphabet-at-the-brim%2Fblob%2Fmain%2Fscripts%2Ffetch_num_results.sh&style=default&type=code&showBorder=on&showLineNumbers=on&showFileMeta=on&showFullPath=on&showCopy=on"></script>
+<script src="https://emgithub.com/embed-v2.js?target=https%3A%2F%2Fgithub.com%2Fmattwfranchi%2Falphabet-at-the-brim%2Fblob%2Fmain%2Fscripts%2Ffetch_num_results.sh&style=github-dark&type=code&showBorder=on&showLineNumbers=on&showFileMeta=on&showFullPath=on&showCopy=on"></script>
 
 
 ### Fetching the number of search results for all sequences in a file
 And, finally, I wrote a script to fetch the number of results in batch for all sequences present in a file. Each sequence gets it's own line in the file, and the script iterates through each line, calling the previous script to fetch the number of results for that sequence.
 
-<script src="https://emgithub.com/embed-v2.js?target=https%3A%2F%2Fgithub.com%2Fmattwfranchi%2Falphabet-at-the-brim%2Fblob%2Fmain%2Fscripts%2Fbatch_fetch_num_results.sh&style=default&type=code&showBorder=on&showLineNumbers=on&showFileMeta=on&showFullPath=on&showCopy=on"></script>
+<script src="https://emgithub.com/embed-v2.js?target=https%3A%2F%2Fgithub.com%2Fmattwfranchi%2Falphabet-at-the-brim%2Fblob%2Fmain%2Fscripts%2Fbatch_fetch_num_results.sh&style=github-dark&type=code&showBorder=on&showLineNumbers=on&showFileMeta=on&showFullPath=on&showCopy=on"></script>
 
 
 ## Hiccups 
@@ -63,7 +63,7 @@ So, I immediately thought to use Google due to their 83% market share [Statista]
 ### User Agents (UAs). 
 Without reason, some of the cURL requests wouldn't return parsable HTML. Once again, not an expert in web scraping. However, I did some research and found that realistically spoofing the user agent (UA) of the request can sometimes help. I did this with the help of a python library called *fake_useragent*, which generates a random UA for each request. 
 
-<script src="https://emgithub.com/embed-v2.js?target=https%3A%2F%2Fgithub.com%2Fmattwfranchi%2Falphabet-at-the-brim%2Fblob%2Fmain%2Fscripts%2Ffake-user-agent.py&style=default&type=code&showBorder=on&showLineNumbers=on&showFileMeta=on&showFullPath=on&showCopy=on"></script>
+<script src="https://emgithub.com/embed-v2.js?target=https%3A%2F%2Fgithub.com%2Fmattwfranchi%2Falphabet-at-the-brim%2Fblob%2Fmain%2Fscripts%2Ffake-user-agent.py&style=github-dark&type=code&showBorder=on&showLineNumbers=on&showFileMeta=on&showFullPath=on&showCopy=on"></script>
 
 In the above script, we restrict UAs to only those originating on a windows machine, on a guess that maybe Microsoft might like users from their own ecosystem better than others. Have yet to actually test this, though! Additionally, we leverage the functionality of the *fake_useragent* library analyze real-time prevalence patterns for different UAs, and only utilize UAs in the top 90% of prevalence.
 

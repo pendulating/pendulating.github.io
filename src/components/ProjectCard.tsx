@@ -11,7 +11,7 @@ export interface Props {
 
 export default function ProjectCard({ project, secHeading = true }: Props) {
   const { data, slug } = project;
-  const { venue, title, tag, description, youtubeId, href, pdf, site, code, bib } = data;
+  const { venue, title, tag, description, youtubeId, href, pdf, site, siteLabel, code, bib } = data;
 
   const gridContext = useContext(ProjectCardGridContext);
   const isControlled = gridContext !== null;
@@ -316,7 +316,7 @@ export default function ProjectCard({ project, secHeading = true }: Props) {
             )}
             {site && (
               <a href={site} target="_blank" rel="noopener noreferrer" className="project-button site-button">
-                news-highlight
+                {siteLabel || "news-highlight"}
               </a>
             )}
             {code && (
