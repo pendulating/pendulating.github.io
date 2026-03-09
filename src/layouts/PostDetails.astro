@@ -63,7 +63,7 @@ const layoutProps = {
 <Layout {...layoutProps}>
   <Header basePath={basePath} />
 
-  <div class="mx-auto flex w-full max-w-3xl justify-center px-6 pt-32">
+  <div class="mx-auto flex w-full max-w-3xl justify-center px-6" style="padding-top: calc(var(--header-height) + 0.75rem)">
     <a
       href={toFlairPath(basePath, "/posts/")}
       class="focus-outline mb-2 flex hover:opacity-75"
