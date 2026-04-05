@@ -30,6 +30,9 @@ export default function ProjectCard({ project, secHeading = true }: Props) {
   const descriptionRef = useRef<HTMLDivElement>(null);
   const collapseTimeoutRef = useRef<number | null>(null);
   const pointerRef = useRef({ x: -1, y: -1 });
+  // True for a single tick after a pointerdown on the card — lets us
+  // distinguish pointer-originated focus (tap/click) from keyboard focus.
+  const focusFromPointerRef = useRef(false);
 
   const getYoutubeEmbedUrl = (id: string) => {
     if (id.includes('youtube.com') || id.includes('youtu.be')) {
@@ -196,7 +199,19 @@ export default function ProjectCard({ project, secHeading = true }: Props) {
     if (!isControlled) scheduleCollapse();
   };
 
+  const handleCardPointerDown = () => {
+    focusFromPointerRef.current = true;
+    // Reset after the focus + click events for this tap have fired.
+    window.setTimeout(() => {
+      focusFromPointerRef.current = false;
+    }, 0);
+  };
+
   const handleCardFocus = () => {
+    // If focus came from a tap/click, skip auto-expanding here —
+    // handleCardClick will handle expansion based on current state,
+    // avoiding the focus-then-click toggle-back that required 2 taps.
+    if (focusFromPointerRef.current) return;
     if (isControlled) gridContext!.setExpandedCardId(slug);
     else {
       clearCollapseTimer();
@@ -260,6 +275,7 @@ export default function ProjectCard({ project, secHeading = true }: Props) {
       aria-expanded={isExpanded}
       onMouseEnter={handleCardMouseEnter}
       onMouseLeave={handleCardMouseLeave}
+      onPointerDown={handleCardPointerDown}
       onFocus={handleCardFocus}
       onBlur={handleCardBlur}
       onClick={handleCardClick}

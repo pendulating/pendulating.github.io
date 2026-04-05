@@ -121,3 +121,42 @@ const linkProps = href
 
 <span class:list={["hover-reveal", `hover-reveal--${placement}`, `hover-reveal--${shape}`]} style={inlineStyle} data-hover-reveal={id}
 ><span class="hover-reveal__word" tabindex="0" aria-describedby={id ? `${id}-card` : undefined}><slot /></span><svg class="hover-reveal__tether" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path d={tetherPath} vector-effect="non-scaling-stroke" pathLength="100" /></svg><CardTag class:list={["hover-reveal__card", `hover-reveal__card--${variant}`]} id={id ? `${id}-card` : undefined} role={href ? undefined : "img"} aria-label={label} {...linkProps}>{variant === "image" && src && <img src={src} alt={alt} loading="lazy" draggable="false" />}{variant === "logo" && src && <img src={src} alt={alt} loading="lazy" draggable="false" class="is-logo" />}{variant === "text" && text && <span class="hover-reveal__text">{text}</span>}</CardTag></span>
+
+<script>
+  // Touch / tap handling. On coarse pointer devices (phones, tablets),
+  // a tap toggles an `.is-tapped` class on the wrapper — which mirrors
+  // the hover/focus-within open state. This is more reliable than
+  // relying on :focus-within alone (iOS Safari occasionally drops focus
+  // when tapping non-interactive text nodes).
+  (() => {
+    if (typeof window === "undefined") return;
+    const mq = window.matchMedia("(hover: none) and (pointer: coarse)");
+    if (!mq.matches) return;
+
+    const wrappers = document.querySelectorAll<HTMLElement>(".hover-reveal");
+    if (!wrappers.length) return;
+
+    const closeAll = () => {
+      wrappers.forEach((w) => w.classList.remove("is-tapped"));
+    };
+
+    wrappers.forEach((wrapper) => {
+      const word = wrapper.querySelector<HTMLElement>(".hover-reveal__word");
+      if (!word) return;
+
+      word.addEventListener("click", (event) => {
+        event.stopPropagation();
+        const wasOpen = wrapper.classList.contains("is-tapped");
+        closeAll();
+        if (!wasOpen) wrapper.classList.add("is-tapped");
+      });
+    });
+
+    // Tap anywhere outside an open satellite to dismiss.
+    document.addEventListener("click", (event) => {
+      const target = event.target as HTMLElement | null;
+      if (target && target.closest(".hover-reveal")) return;
+      closeAll();
+    });
+  })();
+</script>

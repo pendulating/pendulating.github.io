@@ -793,7 +793,8 @@ html:not(.brain-layout) {
   }
 
   .hover-reveal__word:hover,
-  .hover-reveal:focus-within .hover-reveal__word {
+  .hover-reveal:focus-within .hover-reveal__word,
+  .hover-reveal.is-tapped .hover-reveal__word {
     color: rgb(var(--color-accent));
     background-image: linear-gradient(
       to right,
@@ -966,19 +967,23 @@ html:not(.brain-layout) {
     transform: translateY(8px) scale(0.78) rotate(2deg);
   }
 
-  /* Open state — triggered by hovering word, card, tether, or keyboard focus */
+  /* Open state — triggered by hovering word, card, tether, keyboard focus,
+     or (on touch) an `.is-tapped` class added by the component's script. */
   .hover-reveal:hover .hover-reveal__tether,
-  .hover-reveal:focus-within .hover-reveal__tether {
+  .hover-reveal:focus-within .hover-reveal__tether,
+  .hover-reveal.is-tapped .hover-reveal__tether {
     opacity: 1;
   }
 
   .hover-reveal:hover .hover-reveal__tether path,
-  .hover-reveal:focus-within .hover-reveal__tether path {
+  .hover-reveal:focus-within .hover-reveal__tether path,
+  .hover-reveal.is-tapped .hover-reveal__tether path {
     stroke-dashoffset: 0;
   }
 
   .hover-reveal:hover .hover-reveal__card,
-  .hover-reveal:focus-within .hover-reveal__card {
+  .hover-reveal:focus-within .hover-reveal__card,
+  .hover-reveal.is-tapped .hover-reveal__card {
     opacity: 1;
     transform: translateY(0) scale(1) rotate(var(--reveal-rotate));
     box-shadow:
@@ -999,38 +1004,48 @@ html:not(.brain-layout) {
   /* The bridge becomes active when card is open, so hover doesn't drop.
      inset order: top right bottom left. Bridge extends from card toward word. */
   .hover-reveal:hover .hover-reveal__card::before,
-  .hover-reveal:focus-within .hover-reveal__card::before {
+  .hover-reveal:focus-within .hover-reveal__card::before,
+  .hover-reveal.is-tapped .hover-reveal__card::before {
     pointer-events: auto;
   }
   /* top-right: word is below-left of card → extend down-left */
   .hover-reveal--top-right:hover .hover-reveal__card::before,
-  .hover-reveal--top-right:focus-within .hover-reveal__card::before {
+  .hover-reveal--top-right:focus-within .hover-reveal__card::before,
+  .hover-reveal--top-right.is-tapped .hover-reveal__card::before {
     inset: -20px -20px calc(var(--reveal-dy) * -1 - 20px) calc(var(--reveal-dx) * -1 - 20px);
   }
   /* top-left: word is below-right of card → extend down-right */
   .hover-reveal--top-left:hover .hover-reveal__card::before,
-  .hover-reveal--top-left:focus-within .hover-reveal__card::before {
+  .hover-reveal--top-left:focus-within .hover-reveal__card::before,
+  .hover-reveal--top-left.is-tapped .hover-reveal__card::before {
     inset: -20px calc(var(--reveal-dx) * -1 - 20px) calc(var(--reveal-dy) * -1 - 20px) -20px;
   }
   /* bottom-right: word is above-left of card → extend up-left */
   .hover-reveal--bottom-right:hover .hover-reveal__card::before,
-  .hover-reveal--bottom-right:focus-within .hover-reveal__card::before {
+  .hover-reveal--bottom-right:focus-within .hover-reveal__card::before,
+  .hover-reveal--bottom-right.is-tapped .hover-reveal__card::before {
     inset: calc(var(--reveal-dy) * -1 - 20px) -20px -20px calc(var(--reveal-dx) * -1 - 20px);
   }
   /* bottom-left: word is above-right of card → extend up-right */
   .hover-reveal--bottom-left:hover .hover-reveal__card::before,
-  .hover-reveal--bottom-left:focus-within .hover-reveal__card::before {
+  .hover-reveal--bottom-left:focus-within .hover-reveal__card::before,
+  .hover-reveal--bottom-left.is-tapped .hover-reveal__card::before {
     inset: calc(var(--reveal-dy) * -1 - 20px) calc(var(--reveal-dx) * -1 - 20px) -20px -20px;
   }
 
-  /* On small screens, disable — too tight for floating cards */
+  /* On small screens, shrink the satellites to fit the viewport and
+     rely on tap-to-focus for triggering (the word is already focusable
+     via tabindex="0", and :focus-within opens the card). */
   @media (max-width: 640px) {
-    .hover-reveal__tether,
-    .hover-reveal__card {
-      display: none;
+    .hover-reveal {
+      /* Override inline-style sizes with mobile-friendly values. */
+      --reveal-size: 72px !important;
+      --reveal-dx-base: 44px !important;
+      --reveal-dy-base: 56px !important;
+      --reveal-dist: 1 !important;
     }
     .hover-reveal__word {
-      cursor: default;
+      -webkit-tap-highlight-color: rgba(var(--color-accent), 0.18);
     }
   }
 
