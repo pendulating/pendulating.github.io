@@ -1033,19 +1033,32 @@ html:not(.brain-layout) {
     inset: calc(var(--reveal-dy) * -1 - 20px) calc(var(--reveal-dx) * -1 - 20px) -20px -20px;
   }
 
-  /* On small screens, shrink the satellites to fit the viewport and
-     rely on tap-to-focus for triggering (the word is already focusable
-     via tabindex="0", and :focus-within opens the card). */
+  /* On small screens, shrink the satellites to fit the viewport. */
   @media (max-width: 640px) {
     .hover-reveal {
-      /* Override inline-style sizes with mobile-friendly values. */
       --reveal-size: 72px !important;
       --reveal-dx-base: 44px !important;
       --reveal-dy-base: 56px !important;
       --reveal-dist: 1 !important;
     }
+  }
+
+  /* iOS Safari requires non-interactive elements to look clickable
+     (cursor: pointer) before it will fire `click` on the first tap.
+     Without this, tapping only focuses/simulates :hover, and a second
+     tap is needed to activate. */
+  @media (hover: none) and (pointer: coarse) {
     .hover-reveal__word {
+      cursor: pointer;
       -webkit-tap-highlight-color: rgba(var(--color-accent), 0.18);
+      touch-action: manipulation;
+    }
+    /* Same iOS workaround: make the card look clickable on first tap
+       so handleCardClick fires and expands on a single tap. */
+    .project-card {
+      cursor: pointer;
+      -webkit-tap-highlight-color: transparent;
+      touch-action: manipulation;
     }
   }
 
