@@ -1033,12 +1033,13 @@ html:not(.brain-layout) {
     inset: calc(var(--reveal-dy) * -1 - 20px) calc(var(--reveal-dx) * -1 - 20px) -20px -20px;
   }
 
-  /* On small screens, shrink the satellites to fit the viewport. */
+  /* On small screens, scale satellites to fit the viewport while
+     staying large enough to be legible and feel substantial. */
   @media (max-width: 640px) {
     .hover-reveal {
-      --reveal-size: 72px !important;
-      --reveal-dx-base: 44px !important;
-      --reveal-dy-base: 56px !important;
+      --reveal-size: 108px !important;
+      --reveal-dx-base: 56px !important;
+      --reveal-dy-base: 68px !important;
       --reveal-dist: 1 !important;
     }
   }

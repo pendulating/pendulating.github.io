@@ -33,6 +33,8 @@ export interface Props {
   curve?: "natural" | "arc-right" | "arc-left" | "taut" | "loop";
   /** Tether length — how far the card floats from the word */
   distance?: "short" | "normal" | "long" | "xlong";
+  /** Override placement on mobile (coarse pointer) to avoid off-screen cards */
+  mobilePlacement?: "top-right" | "top-left" | "bottom-right" | "bottom-left";
   /** Unique identifier (useful for future JS / analytics) */
   id?: string;
 }
@@ -50,6 +52,7 @@ const {
   placement = "top-right",
   curve = "natural",
   distance = "normal",
+  mobilePlacement,
   id,
 } = Astro.props;
 
@@ -119,7 +122,7 @@ const linkProps = href
   : {};
 ---
 
-<span class:list={["hover-reveal", `hover-reveal--${placement}`, `hover-reveal--${shape}`]} style={inlineStyle} data-hover-reveal={id}
+<span class:list={["hover-reveal", `hover-reveal--${placement}`, `hover-reveal--${shape}`]} style={inlineStyle} data-hover-reveal={id} data-placement={placement} data-mobile-placement={mobilePlacement || undefined}
 ><span class="hover-reveal__word" tabindex="0" aria-describedby={id ? `${id}-card` : undefined}><slot /></span><svg class="hover-reveal__tether" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path d={tetherPath} vector-effect="non-scaling-stroke" pathLength="100" /></svg><CardTag class:list={["hover-reveal__card", `hover-reveal__card--${variant}`]} id={id ? `${id}-card` : undefined} role={href ? undefined : "img"} aria-label={label} {...linkProps}>{variant === "image" && src && <img src={src} alt={alt} loading="lazy" draggable="false" />}{variant === "logo" && src && <img src={src} alt={alt} loading="lazy" draggable="false" class="is-logo" />}{variant === "text" && text && <span class="hover-reveal__text">{text}</span>}</CardTag></span>
 
 <script>
@@ -136,8 +139,38 @@ const linkProps = href
     const wrappers = document.querySelectorAll<HTMLElement>(".hover-reveal");
     if (!wrappers.length) return;
 
+    // Swap placement classes for any satellite with a mobile override.
+    const placements = ["top-right", "top-left", "bottom-right", "bottom-left"];
+    wrappers.forEach((w) => {
+      const mobilePl = w.dataset.mobilePlacement;
+      if (!mobilePl) return;
+      placements.forEach((p) => w.classList.remove(`hover-reveal--${p}`));
+      w.classList.add(`hover-reveal--${mobilePl}`);
+      // Also update the tether SVG path for the new direction.
+      const svg = w.querySelector<SVGPathElement>(".hover-reveal__tether path");
+      if (svg) {
+        const paths: Record<string, string> = {
+          "top-right": "M 2 98 Q 18 44, 98 2",
+          "top-left": "M 98 98 Q 82 44, 2 2",
+          "bottom-right": "M 2 2 Q 18 56, 98 98",
+          "bottom-left": "M 98 2 Q 82 56, 2 98",
+        };
+        svg.setAttribute("d", paths[mobilePl] || paths["top-right"]);
+      }
+    });
+
+    let autoCloseTimer: ReturnType<typeof setTimeout> | null = null;
+
     const closeAll = () => {
+      if (autoCloseTimer) { clearTimeout(autoCloseTimer); autoCloseTimer = null; }
       wrappers.forEach((w) => w.classList.remove("is-tapped"));
+    };
+
+    const openSatellite = (wrapper: HTMLElement) => {
+      closeAll();
+      wrapper.classList.add("is-tapped");
+      // Auto-dismiss after 3 seconds.
+      autoCloseTimer = setTimeout(closeAll, 3000);
     };
 
     // Track touch movement so scroll gestures don't trigger toggles/dismiss.
@@ -179,18 +212,20 @@ const linkProps = href
           // Tap on an anchor word — toggle that satellite.
           event.preventDefault();
           const wasOpen = tappedWrapper.classList.contains("is-tapped");
-          closeAll();
-          if (!wasOpen) tappedWrapper.classList.add("is-tapped");
+          if (wasOpen) {
+            closeAll();
+          } else {
+            openSatellite(tappedWrapper);
+          }
           return;
         }
 
         if (tappedCard) {
-          // Tap inside an open card (likely the user wants to follow a link).
-          // Let the browser handle the click normally; keep the card open.
+          // Tap inside an open card — let the browser handle link clicks.
           return;
         }
 
-        // Tap anywhere else — dismiss any open satellite.
+        // Tap anywhere else — dismiss immediately.
         closeAll();
       },
       { passive: false },

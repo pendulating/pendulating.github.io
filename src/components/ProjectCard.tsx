@@ -33,9 +33,6 @@ export default function ProjectCard({ project, secHeading = true }: Props) {
   // True for a single tick after a pointerdown on the card — lets us
   // distinguish pointer-originated focus (tap/click) from keyboard focus.
   const focusFromPointerRef = useRef(false);
-  // True after touchend toggles expansion — prevents the synthetic click
-  // event (which fires ~300ms later on some devices) from double-toggling.
-  const handledByTouchRef = useRef(false);
 
   const getYoutubeEmbedUrl = (id: string) => {
     if (id.includes('youtube.com') || id.includes('youtu.be')) {
@@ -241,11 +238,6 @@ export default function ProjectCard({ project, secHeading = true }: Props) {
 
   const handleCardClick = (event: MouseEvent<HTMLElement>) => {
     if (isHoverCapable) return;
-    // If touchend already handled this interaction, skip the synthetic click.
-    if (handledByTouchRef.current) {
-      handledByTouchRef.current = false;
-      return;
-    }
     const target = event.target as HTMLElement;
     if (target.closest("a, button")) return;
     if (isControlled) {
@@ -255,38 +247,6 @@ export default function ProjectCard({ project, secHeading = true }: Props) {
     }
   };
 
-  // iOS Safari may not fire `click` on non-interactive elements (article with
-  // tabindex). touchend always fires, so we listen to it as a reliable fallback
-  // for single-tap expansion on mobile.
-  const touchRef = useRef({ x: 0, y: 0 });
-  const handleCardTouchStart = (event: React.TouchEvent<HTMLElement>) => {
-    const t = event.touches[0];
-    if (t) {
-      touchRef.current = { x: t.clientX, y: t.clientY };
-    }
-  };
-  const handleCardTouchEnd = (event: React.TouchEvent<HTMLElement>) => {
-    if (isHoverCapable) return;
-    const t = event.changedTouches[0];
-    if (!t) return;
-    // Ignore scrolls / swipes.
-    const dx = Math.abs(t.clientX - touchRef.current.x);
-    const dy = Math.abs(t.clientY - touchRef.current.y);
-    if (dx > 10 || dy > 10) return;
-
-    const target = event.target as HTMLElement;
-    if (target.closest("a, button")) return;
-
-    // Mark so the follow-up synthetic click is suppressed.
-    handledByTouchRef.current = true;
-    window.setTimeout(() => { handledByTouchRef.current = false; }, 400);
-
-    if (isControlled) {
-      gridContext!.setExpandedCardId(isExpanded ? null : slug);
-    } else {
-      setInternalExpanded((prev) => !prev);
-    }
-  };
 
   const handleCardKeyDown = (event: KeyboardEvent<HTMLElement>) => {
     if (event.key === "Enter" || event.key === " ") {
@@ -312,13 +272,12 @@ export default function ProjectCard({ project, secHeading = true }: Props) {
       ref={cardRef}
       className={`project-card ${isExpanded ? "is-expanded" : "is-minimized"}`}
       data-expanded={isExpanded}
+      data-slug={slug}
       tabIndex={0}
       aria-expanded={isExpanded}
       onMouseEnter={handleCardMouseEnter}
       onMouseLeave={handleCardMouseLeave}
       onPointerDown={handleCardPointerDown}
-      onTouchStart={handleCardTouchStart}
-      onTouchEnd={handleCardTouchEnd}
       onFocus={handleCardFocus}
       onBlur={handleCardBlur}
       onClick={handleCardClick}

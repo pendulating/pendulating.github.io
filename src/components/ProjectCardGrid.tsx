@@ -1,5 +1,5 @@
 import type { CollectionEntry } from "astro:content";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import ProjectCard from "./ProjectCard";
 import { ProjectCardGridContext } from "./ProjectCardGridContext";
 
@@ -43,9 +43,56 @@ export default function ProjectCardGrid({
     [expandedCardId, collapseDelay],
   );
 
+  const gridRef = useRef<HTMLDivElement>(null);
+
+  // On mobile (no hover), expand whichever card is closest to the viewport
+  // center as the user scrolls — no tapping required.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mq = window.matchMedia("(hover: hover) and (pointer: fine)");
+    if (mq.matches) return; // desktop — skip
+
+    const grid = gridRef.current;
+    if (!grid) return;
+
+    const cards = Array.from(
+      grid.querySelectorAll<HTMLElement>(".project-card"),
+    );
+    if (!cards.length) return;
+
+    // Observe a narrow band in the center of the viewport (middle 30%).
+    const observer = new IntersectionObserver(
+      (entries) => {
+        // Pick the entry with the highest intersection ratio.
+        let best: IntersectionObserverEntry | null = null;
+        for (const entry of entries) {
+          if (
+            entry.isIntersecting &&
+            (!best || entry.intersectionRatio > best.intersectionRatio)
+          ) {
+            best = entry;
+          }
+        }
+        if (best) {
+          const slug = (best.target as HTMLElement).dataset.slug;
+          if (slug) setExpandedCardId(slug);
+        }
+      },
+      {
+        // Shrink the observation root so only the middle ~30% of viewport counts.
+        rootMargin: "-35% 0px -35% 0px",
+        threshold: [0, 0.25, 0.5, 0.75, 1],
+      },
+    );
+
+    cards.forEach((card) => observer.observe(card));
+    return () => observer.disconnect();
+  }, []);
+
   return (
     <ProjectCardGridContext.Provider value={contextValue}>
       <div
+        ref={gridRef}
         className={className}
         onMouseLeave={handleGridMouseLeave}
       >
