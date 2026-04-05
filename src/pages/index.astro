@@ -8,6 +8,7 @@ import Hr from "@components/Hr.astro";
 import Card from "@components/Card";
 import ProjectCardGrid from "@components/ProjectCardGrid";
 import Socials from "@components/Socials.astro";
+import HoverReveal from "@components/HoverReveal.astro";
 import getSortedPosts from "@utils/getSortedPosts";
 import { isAcademicPost } from "@utils/flairPostSplit";
 import { SITE, SOCIALS } from "@config";
@@ -53,7 +54,18 @@ const socialCount = SOCIALS.filter(social => social.active).length;
           )
         }
         <p>
-          I am a Computer Science PhD Candidate at Cornell University, based at the New York City campus, Cornell Tech, and advised by Wendy Ju and Helen Nissenbaum.  My research is supported by the Cornell Tech Urban Tech Hub, the Cornell Dean's Excellence Fellowship, the Siegel PiTech PhD Impact Fellowship, and the Digital Life Initiative Doctoral Fellowship. I have held summer fellowships at Hayden AI and the Design Trust for Public Space. I have written about and received coverage of my work in the New York Times, Gothamist, New York Post, The Economist, and other local NYC news outlets.
+          I am a Computer Science PhD Candidate at Cornell University, based at the New York City campus, <HoverReveal
+            id="cornell-tech"
+            variant="image"
+            src="/assets/cornell-tech.jpg"
+            alt="Cornell Tech campus on Roosevelt Island"
+            label="Cornell Tech campus"
+            size="lg"
+            shape="rect"
+            placement="top-right"
+            curve="arc-right"
+            distance="short"
+          >Cornell Tech</HoverReveal>, and advised by Wendy Ju and Helen Nissenbaum.  My research is supported by the Cornell Tech Urban Tech Hub, the Cornell Dean's Excellence Fellowship, the Siegel PiTech PhD Impact Fellowship, and the Digital Life Initiative Doctoral Fellowship. I have held summer fellowships at Hayden AI and the Design Trust for Public Space. I have written about, interviewed, and received coverage of my work in the New York Times, Gothamist, New York Post, The Economist, and other local NYC news outlets.
           <br><br>
 
           Since 2024, I co-organize the EAAMO Urban Data Working Group.
@@ -61,7 +73,62 @@ const socialCount = SOCIALS.filter(social => social.active).length;
 
           I care most about upholding agency in public spaces, expectation-aligned and automated appropriateness in inferential AI systems, and large-scale & creative urban visual analytics.  
           <br><br>
-          I play, compose, and record neoclassical piano music, pendulate between fiction and non-fiction books, hike whilst on vacation, write, and model once or twice per year.
+          I <HoverReveal
+            id="piano"
+            variant="image"
+            src="/assets/piano.jpg"
+            alt="Piano"
+            label="A piano I play"
+            size="lg"
+            shape="portrait"
+            placement="top-right"
+            curve="natural"
+            distance="short"
+          >play</HoverReveal>, compose, and record neoclassical piano music, pendulate between <HoverReveal
+            id="master-margarita"
+            variant="image"
+            src="/assets/master-margarita.jpg"
+            alt="The Master and Margarita by Mikhail Bulgakov"
+            label="The Master and Margarita — a fiction favorite"
+            size="lg"
+            shape="portrait"
+            placement="top-left"
+            curve="natural"
+            distance="short"
+          >fiction</HoverReveal> and <HoverReveal
+            id="geb"
+            variant="image"
+            src="/assets/geb.jpg"
+            alt="Gödel, Escher, Bach by Douglas Hofstadter"
+            label="Gödel, Escher, Bach — a non-fiction favorite"
+            size="lg"
+            shape="portrait"
+            placement="top-right"
+            curve="natural"
+            distance="short"
+          >non-fiction</HoverReveal> books, <HoverReveal
+            id="hike"
+            variant="image"
+            src="/assets/hike.jpg"
+            alt="A hike in the mountains"
+            label="A recent hike"
+            size="lg"
+            shape="rect"
+            placement="bottom-right"
+            curve="arc-right"
+            distance="short"
+          >hike</HoverReveal> whilst on vacation, write, and <HoverReveal
+            id="model"
+            variant="image"
+            src="/assets/model.png"
+            alt="Modeling"
+            label="A modeling shoot"
+            size="lg"
+            shape="portrait"
+            placement="top-left"
+            curve="natural"
+            distance="short"
+          >model</HoverReveal> once or twice per year.
         </p>
       </section>
       <section id="news" class="mt-8">

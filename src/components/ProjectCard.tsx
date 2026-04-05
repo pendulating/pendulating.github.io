@@ -81,7 +81,10 @@ export default function ProjectCard({ project, secHeading = true }: Props) {
   }, []);
 
   useEffect(() => {
-    if (!isHoverCapable) return;
+    // Only uncontrolled cards need the global pointer tracker for their
+    // `isPointerWithinIntentZone` check. Controlled cards (in a grid) rely
+    // on the grid's collapse logic instead.
+    if (!isHoverCapable || isControlled) return;
 
     const trackPointer = (event: PointerEvent) => {
       pointerRef.current = { x: event.clientX, y: event.clientY };
@@ -89,7 +92,7 @@ export default function ProjectCard({ project, secHeading = true }: Props) {
 
     window.addEventListener("pointermove", trackPointer, { passive: true });
     return () => window.removeEventListener("pointermove", trackPointer);
-  }, [isHoverCapable]);
+  }, [isHoverCapable, isControlled]);
 
   const clearCollapseTimer = () => {
     if (collapseTimeoutRef.current !== null) {

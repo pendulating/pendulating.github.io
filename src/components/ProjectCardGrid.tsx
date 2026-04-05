@@ -1,5 +1,5 @@
 import type { CollectionEntry } from "astro:content";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import ProjectCard from "./ProjectCard";
 import { ProjectCardGridContext } from "./ProjectCardGridContext";
 
@@ -33,12 +33,15 @@ export default function ProjectCardGrid({
     }, collapseDelay);
   }, [clearCollapseTimer, collapseDelay]);
 
-  const contextValue = {
-    expandedCardId,
-    setExpandedCardId,
-    collapseDelay,
-    collapseTimeoutRef,
-  };
+  const contextValue = useMemo(
+    () => ({
+      expandedCardId,
+      setExpandedCardId,
+      collapseDelay,
+      collapseTimeoutRef,
+    }),
+    [expandedCardId, collapseDelay],
+  );
 
   return (
     <ProjectCardGridContext.Provider value={contextValue}>
