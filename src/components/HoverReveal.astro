@@ -123,11 +123,11 @@ const linkProps = href
 ><span class="hover-reveal__word" tabindex="0" aria-describedby={id ? `${id}-card` : undefined}><slot /></span><svg class="hover-reveal__tether" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path d={tetherPath} vector-effect="non-scaling-stroke" pathLength="100" /></svg><CardTag class:list={["hover-reveal__card", `hover-reveal__card--${variant}`]} id={id ? `${id}-card` : undefined} role={href ? undefined : "img"} aria-label={label} {...linkProps}>{variant === "image" && src && <img src={src} alt={alt} loading="lazy" draggable="false" />}{variant === "logo" && src && <img src={src} alt={alt} loading="lazy" draggable="false" class="is-logo" />}{variant === "text" && text && <span class="hover-reveal__text">{text}</span>}</CardTag></span>
 
 <script>
-  // Touch / tap handling. On coarse pointer devices (phones, tablets),
-  // a tap toggles an `.is-tapped` class on the wrapper — which mirrors
-  // the hover/focus-within open state. This is more reliable than
-  // relying on :focus-within alone (iOS Safari occasionally drops focus
-  // when tapping non-interactive text nodes).
+  // Touch handling for coarse pointer devices (phones, tablets).
+  // We use `touchstart` directly rather than `click` because iOS Safari
+  // does not synthesize click events for taps on non-interactive elements
+  // (plain text spans) — so a document-level click listener would never
+  // catch "tap outside the satellite to dismiss". touchstart always fires.
   (() => {
     if (typeof window === "undefined") return;
     const mq = window.matchMedia("(hover: none) and (pointer: coarse)");
@@ -140,23 +140,60 @@ const linkProps = href
       wrappers.forEach((w) => w.classList.remove("is-tapped"));
     };
 
-    wrappers.forEach((wrapper) => {
-      const word = wrapper.querySelector<HTMLElement>(".hover-reveal__word");
-      if (!word) return;
+    // Track touch movement so scroll gestures don't trigger toggles/dismiss.
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let touchStartTarget: EventTarget | null = null;
+    const MOVE_THRESHOLD = 10; // px
 
-      word.addEventListener("click", (event) => {
-        event.stopPropagation();
-        const wasOpen = wrapper.classList.contains("is-tapped");
+    document.addEventListener(
+      "touchstart",
+      (event) => {
+        const t = event.touches[0];
+        if (!t) return;
+        touchStartX = t.clientX;
+        touchStartY = t.clientY;
+        touchStartTarget = event.target;
+      },
+      { passive: true },
+    );
+
+    document.addEventListener(
+      "touchend",
+      (event) => {
+        const t = event.changedTouches[0];
+        if (!t) return;
+        const dx = Math.abs(t.clientX - touchStartX);
+        const dy = Math.abs(t.clientY - touchStartY);
+        // Scroll or drag — ignore.
+        if (dx > MOVE_THRESHOLD || dy > MOVE_THRESHOLD) return;
+
+        const target = touchStartTarget as HTMLElement | null;
+        if (!target) return;
+
+        const tappedWord = target.closest?.(".hover-reveal__word") as HTMLElement | null;
+        const tappedCard = target.closest?.(".hover-reveal__card") as HTMLElement | null;
+        const tappedWrapper = target.closest?.(".hover-reveal") as HTMLElement | null;
+
+        if (tappedWord && tappedWrapper) {
+          // Tap on an anchor word — toggle that satellite.
+          event.preventDefault();
+          const wasOpen = tappedWrapper.classList.contains("is-tapped");
+          closeAll();
+          if (!wasOpen) tappedWrapper.classList.add("is-tapped");
+          return;
+        }
+
+        if (tappedCard) {
+          // Tap inside an open card (likely the user wants to follow a link).
+          // Let the browser handle the click normally; keep the card open.
+          return;
+        }
+
+        // Tap anywhere else — dismiss any open satellite.
         closeAll();
-        if (!wasOpen) wrapper.classList.add("is-tapped");
-      });
-    });
-
-    // Tap anywhere outside an open satellite to dismiss.
-    document.addEventListener("click", (event) => {
-      const target = event.target as HTMLElement | null;
-      if (target && target.closest(".hover-reveal")) return;
-      closeAll();
-    });
+      },
+      { passive: false },
+    );
   })();
 </script>
