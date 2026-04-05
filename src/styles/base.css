@@ -362,6 +362,7 @@ html:not(.brain-layout) {
     @apply py-1 text-xl font-semibold font-bold text-left sm:text-2xl transition-all duration-300;
     position: relative;
     z-index: 60;
+    letter-spacing: 0.01em;
   }
   
   header#main-header.shrunk .logo,
@@ -705,7 +706,8 @@ html:not(.brain-layout) {
   }
 
   .project-card.is-expanded .project-links {
-    margin-top: 0.4rem;
+    margin-top: 0.6rem;
+    padding-top: 0.35rem;
     max-height: 200px;
     opacity: 1;
     transform: translateY(0);
@@ -773,7 +775,7 @@ html:not(.brain-layout) {
   #selected-work .main-section-heading,
   #news .main-section-heading {
     margin-top: 0;
-    margin-bottom: 0;
+    margin-bottom: 1rem;
     padding-bottom: 0;
     transform: translateY(-0.15rem);
   }

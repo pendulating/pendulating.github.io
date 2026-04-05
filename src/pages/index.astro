@@ -61,14 +61,14 @@ const socialCount = SOCIALS.filter(social => social.active).length;
 
           I care most about upholding agency in public spaces, expectation-aligned and automated appropriateness in inferential AI systems, and large-scale & creative urban visual analytics.  
           <br><br>
-          I play, compose, and record neoclassical piano music, pendulate between fiction and non-fiction books, hike whilst on vacation, write (immediately below), and model once or twice per year.
+          I play, compose, and record neoclassical piano music, pendulate between fiction and non-fiction books, hike whilst on vacation, write, and model once or twice per year.
         </p>
       </section>
       <section id="news" class="mt-8">
         <h2 class="main-section-heading">News</h2>
         {
           sortedNews.length > 0 ? (
-            <ul class="mt-4 space-y-3">
+            <ul class="space-y-3">
               {sortedNews.map(({ data }) => (
                 <li class="text-sm text-skin-base">
                   <time datetime={data.date.toISOString()} class="mr-3 opacity-70">
@@ -94,7 +94,7 @@ const socialCount = SOCIALS.filter(social => social.active).length;
               ))}
             </ul>
           ) : (
-            <p class="mt-4 text-sm text-skin-base/70">No news yet.</p>
+            <p class="text-sm text-skin-base/70">No news yet.</p>
           )
         }
       </section>
