@@ -779,7 +779,6 @@ html:not(.brain-layout) {
   /* Anchor word — dotted underline in accent */
   .hover-reveal__word {
     position: relative;
-    cursor: help;
     background-image: linear-gradient(
       to right,
       rgba(var(--color-accent), 0.55) 50%,
