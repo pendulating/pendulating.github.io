@@ -45,8 +45,9 @@ export default function ProjectCardGrid({
 
   const gridRef = useRef<HTMLDivElement>(null);
 
-  // On mobile (no hover), expand whichever card is closest to the viewport
-  // center as the user scrolls — no tapping required.
+  // On touch devices, expand whichever card is closest to the viewport
+  // center as the user scrolls. Uses a throttled scroll listener for
+  // smooth, predictable updates (one check per frame).
   useEffect(() => {
     if (typeof window === "undefined") return;
     const mq = window.matchMedia("(hover: hover) and (pointer: fine)");
@@ -55,38 +56,49 @@ export default function ProjectCardGrid({
     const grid = gridRef.current;
     if (!grid) return;
 
-    const cards = Array.from(
-      grid.querySelectorAll<HTMLElement>(".project-card"),
-    );
-    if (!cards.length) return;
+    let rafId = 0;
+    let currentSlug: string | null = null;
 
-    // Observe a narrow band in the center of the viewport (middle 30%).
-    const observer = new IntersectionObserver(
-      (entries) => {
-        // Pick the entry with the highest intersection ratio.
-        let best: IntersectionObserverEntry | null = null;
-        for (const entry of entries) {
-          if (
-            entry.isIntersecting &&
-            (!best || entry.intersectionRatio > best.intersectionRatio)
-          ) {
-            best = entry;
-          }
-        }
-        if (best) {
-          const slug = (best.target as HTMLElement).dataset.slug;
-          if (slug) setExpandedCardId(slug);
-        }
-      },
-      {
-        // Shrink the observation root so only the middle ~30% of viewport counts.
-        rootMargin: "-35% 0px -35% 0px",
-        threshold: [0, 0.25, 0.5, 0.75, 1],
-      },
-    );
+    const pickFocusedCard = () => {
+      const cards = grid.querySelectorAll<HTMLElement>(".project-card[data-slug]");
+      if (!cards.length) return;
 
-    cards.forEach((card) => observer.observe(card));
-    return () => observer.disconnect();
+      const viewportCenter = window.innerHeight / 2;
+      let closest: HTMLElement | null = null;
+      let closestDist = Infinity;
+
+      cards.forEach((card) => {
+        const rect = card.getBoundingClientRect();
+        const cardCenter = rect.top + rect.height / 2;
+        const dist = Math.abs(cardCenter - viewportCenter);
+        if (dist < closestDist) {
+          closestDist = dist;
+          closest = card;
+        }
+      });
+
+      if (closest) {
+        const slug = closest.dataset.slug!;
+        if (slug !== currentSlug) {
+          currentSlug = slug;
+          setExpandedCardId(slug);
+        }
+      }
+    };
+
+    const onScroll = () => {
+      cancelAnimationFrame(rafId);
+      rafId = requestAnimationFrame(pickFocusedCard);
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    // Run once on mount to expand the initially visible card.
+    pickFocusedCard();
+
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      cancelAnimationFrame(rafId);
+    };
   }, []);
 
   return (

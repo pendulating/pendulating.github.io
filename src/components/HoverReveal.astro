@@ -33,8 +33,6 @@ export interface Props {
   curve?: "natural" | "arc-right" | "arc-left" | "taut" | "loop";
   /** Tether length — how far the card floats from the word */
   distance?: "short" | "normal" | "long" | "xlong";
-  /** Override placement on mobile (coarse pointer) to avoid off-screen cards */
-  mobilePlacement?: "top-right" | "top-left" | "bottom-right" | "bottom-left";
   /** Unique identifier (useful for future JS / analytics) */
   id?: string;
 }
@@ -52,7 +50,6 @@ const {
   placement = "top-right",
   curve = "natural",
   distance = "normal",
-  mobilePlacement,
   id,
 } = Astro.props;
 
@@ -122,15 +119,308 @@ const linkProps = href
   : {};
 ---
 
-<span class:list={["hover-reveal", `hover-reveal--${placement}`, `hover-reveal--${shape}`]} style={inlineStyle} data-hover-reveal={id} data-placement={placement} data-mobile-placement={mobilePlacement || undefined}
+<span class:list={["hover-reveal", `hover-reveal--${placement}`, `hover-reveal--${shape}`]} style={inlineStyle} data-hover-reveal={id} data-placement={placement}
 ><span class="hover-reveal__word" tabindex="0" aria-describedby={id ? `${id}-card` : undefined}><slot /></span><svg class="hover-reveal__tether" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"><path d={tetherPath} vector-effect="non-scaling-stroke" pathLength="100" /></svg><CardTag class:list={["hover-reveal__card", `hover-reveal__card--${variant}`]} id={id ? `${id}-card` : undefined} role={href ? undefined : "img"} aria-label={label} {...linkProps}>{variant === "image" && src && <img src={src} alt={alt} loading="lazy" draggable="false" />}{variant === "logo" && src && <img src={src} alt={alt} loading="lazy" draggable="false" class="is-logo" />}{variant === "text" && text && <span class="hover-reveal__text">{text}</span>}</CardTag></span>
 
 <script>
-  // Touch handling for coarse pointer devices (phones, tablets).
-  // We use `touchstart` directly rather than `click` because iOS Safari
-  // does not synthesize click events for taps on non-interactive elements
-  // (plain text spans) — so a document-level click listener would never
-  // catch "tap outside the satellite to dismiss". touchstart always fires.
+  // —————————————————————————————————————————————————————————————————
+  // 1. Viewport-aware placement (all devices, runs on load + resize)
+  //
+  //    For each satellite, compute which placement + distance keeps
+  //    the card fully on-screen. Tries all 4 placements at multiple
+  //    distances, clamping as a last resort. The tether path is
+  //    computed dynamically from word-anchor → card-anchor so it
+  //    curves naturally for any geometry.
+  // —————————————————————————————————————————————————————————————————
+  (() => {
+    if (typeof window === "undefined") return;
+
+    const PLACEMENTS = ["top-right", "top-left", "bottom-right", "bottom-left"] as const;
+    type Placement = (typeof PLACEMENTS)[number];
+    const DIST_STEPS = [1, 0.6, 0.3, 0.1];
+    const EDGE_PAD = 8; // px from viewport edge
+
+    const wrappers = document.querySelectorAll<HTMLElement>(".hover-reveal");
+    if (!wrappers.length) return;
+
+    /** Card's viewport rect for a given placement + distance scale. */
+    function cardRect(
+      wordRect: DOMRect, placement: Placement,
+      dx: number, dy: number, cardW: number, cardH: number,
+    ) {
+      switch (placement) {
+        case "top-right":
+          return { l: wordRect.right,            t: wordRect.top - dy - cardH,    r: wordRect.right + dx + cardW,  b: wordRect.top - dy };
+        case "top-left":
+          return { l: wordRect.left - dx - cardW, t: wordRect.top - dy - cardH,   r: wordRect.left,                b: wordRect.top - dy };
+        case "bottom-right":
+          return { l: wordRect.right,             t: wordRect.bottom + dy,         r: wordRect.right + dx + cardW,  b: wordRect.bottom + dy + cardH };
+        case "bottom-left":
+          return { l: wordRect.left - dx - cardW, t: wordRect.bottom + dy,         r: wordRect.left,                b: wordRect.bottom + dy + cardH };
+      }
+    }
+
+    function rectOverflow(rect: { l: number; t: number; r: number; b: number }) {
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      return (
+        Math.max(0, EDGE_PAD - rect.l) +
+        Math.max(0, rect.r - (vw - EDGE_PAD)) +
+        Math.max(0, EDGE_PAD - rect.t) +
+        Math.max(0, rect.b - (vh - EDGE_PAD))
+      );
+    }
+
+    /** Clamp a rect into the viewport, returning the shift applied. */
+    function clampRect(rect: { l: number; t: number; r: number; b: number }) {
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      let shiftX = 0, shiftY = 0;
+      if (rect.l < EDGE_PAD) shiftX = EDGE_PAD - rect.l;
+      else if (rect.r > vw - EDGE_PAD) shiftX = (vw - EDGE_PAD) - rect.r;
+      if (rect.t < EDGE_PAD) shiftY = EDGE_PAD - rect.t;
+      else if (rect.b > vh - EDGE_PAD) shiftY = (vh - EDGE_PAD) - rect.b;
+      return {
+        rect: { l: rect.l + shiftX, t: rect.t + shiftY, r: rect.r + shiftX, b: rect.b + shiftY },
+        shiftX, shiftY,
+      };
+    }
+
+    /** Generate a quadratic bezier tether path between two anchor
+     *  points, expressed in a 100×100 viewBox. The control point
+     *  is offset perpendicular to the line for a natural curve. */
+    function tetherPath(
+      x0: number, y0: number, x1: number, y1: number,
+    ) {
+      // Midpoint
+      const mx = (x0 + x1) / 2;
+      const my = (y0 + y1) / 2;
+      // Perpendicular offset (gives the curve its bow)
+      const len = Math.hypot(x1 - x0, y1 - y0) || 1;
+      const nx = -(y1 - y0) / len;
+      const ny =  (x1 - x0) / len;
+      const bow = 18; // how far the curve bulges, in viewBox units
+      const cx = mx + nx * bow;
+      const cy = my + ny * bow;
+      return `M ${x0.toFixed(1)} ${y0.toFixed(1)} Q ${cx.toFixed(1)} ${cy.toFixed(1)}, ${x1.toFixed(1)} ${y1.toFixed(1)}`;
+    }
+
+    /** Word-side anchor (0..100) and card-side anchor (0..100) in the
+     *  tether's coordinate space, given the placement direction. */
+    function tetherAnchors(placement: Placement) {
+      switch (placement) {
+        case "top-right":    return { wx: 2, wy: 98, cx: 98, cy: 2 };
+        case "top-left":     return { wx: 98, wy: 98, cx: 2, cy: 2 };
+        case "bottom-right": return { wx: 2, wy: 2,  cx: 98, cy: 98 };
+        case "bottom-left":  return { wx: 98, wy: 2,  cx: 2,  cy: 98 };
+      }
+    }
+
+    function applyPlacement(wrapper: HTMLElement, placement: Placement) {
+      PLACEMENTS.forEach((p) => wrapper.classList.remove(`hover-reveal--${p}`));
+      wrapper.classList.add(`hover-reveal--${placement}`);
+    }
+
+    function resolve(wrapper: HTMLElement) {
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+      {
+        const word = wrapper.querySelector<HTMLElement>(".hover-reveal__word");
+        const card = wrapper.querySelector<HTMLElement>(".hover-reveal__card");
+        const tether = wrapper.querySelector<SVGSVGElement>(".hover-reveal__tether");
+        const pathEl = tether?.querySelector<SVGPathElement>("path");
+        if (!word || !card || !tether || !pathEl) return;
+
+        const wordRect = word.getBoundingClientRect();
+        const cs = getComputedStyle(wrapper);
+        const size = parseFloat(cs.getPropertyValue("--reveal-size")) || 88;
+        const dxBase = parseFloat(cs.getPropertyValue("--reveal-dx-base")) || 70;
+        const dyBase = parseFloat(cs.getPropertyValue("--reveal-dy-base")) || 78;
+        const authoredDist = parseFloat(cs.getPropertyValue("--reveal-dist")) || 1;
+
+        let cardW = size, cardH = size;
+        if (wrapper.classList.contains("hover-reveal--rect")) {
+          cardW = size * 1.5; cardH = size;
+        } else if (wrapper.classList.contains("hover-reveal--portrait")) {
+          cardW = size * 0.72; cardH = size * 1.1;
+        }
+
+        const authored = (wrapper.dataset.placement || "top-right") as Placement;
+        const wordCx = (wordRect.left + wordRect.right) / 2;
+
+        // Build candidates: 4 placements × distance steps + centered above/below.
+        type Candidate = {
+          p: Placement;
+          rect: { l: number; t: number; r: number; b: number };
+          shiftNeeded: number;
+        };
+
+        const candidates: Candidate[] = [];
+
+        for (const dMult of DIST_STEPS) {
+          const dx = dxBase * authoredDist * dMult;
+          const dy = dyBase * authoredDist * dMult;
+          for (const p of PLACEMENTS) {
+            const r = cardRect(wordRect, p, dx, dy, cardW, cardH);
+            const { shiftX, shiftY } = clampRect(r);
+            candidates.push({
+              p,
+              rect: { l: r.l + shiftX, t: r.t + shiftY, r: r.r + shiftX, b: r.b + shiftY },
+              shiftNeeded: Math.abs(shiftX) + Math.abs(shiftY),
+            });
+          }
+        }
+
+        // Add centered-below and centered-above candidates.
+        for (const vert of ["above", "below"] as const) {
+          const dy = dyBase * authoredDist * 0.3;
+          const cl = wordCx - cardW / 2;
+          const ct = vert === "below" ? wordRect.bottom + dy : wordRect.top - dy - cardH;
+          const r = { l: cl, t: ct, r: cl + cardW, b: ct + cardH };
+          const { shiftX, shiftY } = clampRect(r);
+          // Map to the nearest quadrant placement for CSS class.
+          const quadrant: Placement = vert === "below"
+            ? (wordCx > vw / 2 ? "bottom-left" : "bottom-right")
+            : (wordCx > vw / 2 ? "top-left" : "top-right");
+          candidates.push({
+            p: quadrant,
+            rect: { l: r.l + shiftX, t: r.t + shiftY, r: r.r + shiftX, b: r.b + shiftY },
+            shiftNeeded: Math.abs(shiftX) + Math.abs(shiftY),
+          });
+        }
+
+        // Sort: prefer authored placement, then least shift, then largest card-to-word distance.
+        candidates.sort((a, b) => {
+          // Zero-shift candidates first.
+          const aZero = a.shiftNeeded < 1 ? 0 : 1;
+          const bZero = b.shiftNeeded < 1 ? 0 : 1;
+          if (aZero !== bZero) return aZero - bZero;
+          // Among equal-shift, prefer authored placement.
+          const aAuth = a.p === authored ? 0 : 1;
+          const bAuth = b.p === authored ? 0 : 1;
+          if (aAuth !== bAuth) return aAuth - bAuth;
+          // Less shift wins.
+          return a.shiftNeeded - b.shiftNeeded;
+        });
+
+        const best = candidates[0];
+        if (!best) return;
+
+        // Determine if the unclamped authored placement fits at full distance.
+        const fullDx = dxBase * authoredDist;
+        const fullDy = dyBase * authoredDist;
+        const authoredRect = cardRect(wordRect, authored, fullDx, fullDy, cardW, cardH);
+        const authoredFits = rectOverflow(authoredRect) < 1;
+
+        if (authoredFits) {
+          // Happy path: authored placement fits. Use CSS classes directly,
+          // restore original vars, clear any inline overrides.
+          applyPlacement(wrapper, authored);
+          wrapper.style.removeProperty("--reveal-dx");
+          wrapper.style.removeProperty("--reveal-dy");
+          card.style.removeProperty("--clamp-x");
+          card.style.removeProperty("--clamp-y");
+          card.style.removeProperty("left");
+          card.style.removeProperty("top");
+          card.style.removeProperty("bottom");
+          card.style.removeProperty("right");
+          card.classList.remove("is-clamped");
+          tether.style.removeProperty("width");
+          tether.style.removeProperty("height");
+          tether.style.removeProperty("left");
+          tether.style.removeProperty("right");
+          tether.style.removeProperty("top");
+          tether.style.removeProperty("bottom");
+          const a = tetherAnchors(authored);
+          pathEl.setAttribute("d", tetherPath(a.wx, a.wy, a.cx, a.cy));
+          return;
+        }
+
+        // Constrained path: card needs repositioning.
+        // Use best.rect (already clamped into viewport).
+        // Position card + tether via inline styles relative to the wrapper.
+        const wrapperRect = wrapper.getBoundingClientRect();
+
+        // Card: position with inline style overrides.
+        const cardLeft = best.rect.l - wrapperRect.left;
+        const cardTop = best.rect.t - wrapperRect.top;
+        card.style.setProperty("--clamp-x", "0px");
+        card.style.setProperty("--clamp-y", "0px");
+        card.classList.add("is-clamped");
+        // Override the class-based positioning entirely.
+        card.style.left = cardLeft + "px";
+        card.style.top = cardTop + "px";
+        card.style.bottom = "auto";
+        card.style.right = "auto";
+
+        // Word anchor point (center of word).
+        const wAnchorX = (wordRect.left + wordRect.right) / 2 - wrapperRect.left;
+        const wAnchorY = (wordRect.top + wordRect.bottom) / 2 - wrapperRect.top;
+
+        // Card anchor point (nearest edge center to word).
+        const cCx = cardLeft + cardW / 2;
+        const cCy = cardTop + cardH / 2;
+        // Pick the card edge closest to the word.
+        let cAnchorX: number, cAnchorY: number;
+        if (Math.abs(cCx - wAnchorX) > Math.abs(cCy - wAnchorY)) {
+          // Horizontal gap dominates → anchor on left or right edge of card.
+          cAnchorX = cCx < wAnchorX ? cardLeft + cardW : cardLeft;
+          cAnchorY = Math.max(cardTop, Math.min(cardTop + cardH, wAnchorY));
+        } else {
+          // Vertical gap dominates → anchor on top or bottom edge.
+          cAnchorX = Math.max(cardLeft, Math.min(cardLeft + cardW, wAnchorX));
+          cAnchorY = cCy < wAnchorY ? cardTop + cardH : cardTop;
+        }
+
+        // Tether SVG: position and size to span from word anchor to card anchor.
+        const tetherLeft = Math.min(wAnchorX, cAnchorX);
+        const tetherTop = Math.min(wAnchorY, cAnchorY);
+        const tetherW = Math.max(12, Math.abs(cAnchorX - wAnchorX));
+        const tetherH = Math.max(12, Math.abs(cAnchorY - wAnchorY));
+
+        tether.style.left = tetherLeft + "px";
+        tether.style.top = tetherTop + "px";
+        tether.style.width = tetherW + "px";
+        tether.style.height = tetherH + "px";
+        tether.style.bottom = "auto";
+        tether.style.right = "auto";
+
+        // Path: map word/card anchors into the 100×100 viewBox.
+        const wx = ((wAnchorX - tetherLeft) / tetherW) * 100;
+        const wy = ((wAnchorY - tetherTop) / tetherH) * 100;
+        const cx = ((cAnchorX - tetherLeft) / tetherW) * 100;
+        const cy = ((cAnchorY - tetherTop) / tetherH) * 100;
+        pathEl.setAttribute("d", tetherPath(wx, wy, cx, cy));
+
+        // Set a dummy placement class (for bridge/open-state CSS).
+        applyPlacement(wrapper, best.p);
+        wrapper.style.setProperty("--reveal-dx", tetherW + "px");
+        wrapper.style.setProperty("--reveal-dy", tetherH + "px");
+      }
+    }
+
+    // Expose resolve() globally so the touch script can call it too.
+    (window as any).__resolveReveal = resolve;
+
+    // On desktop, resolve placement just before the card appears (mouseenter).
+    wrappers.forEach((wrapper) => {
+      wrapper.addEventListener("mouseenter", () => resolve(wrapper));
+    });
+
+    // On resize, viewport dimensions change — re-resolve all.
+    let resizeTimer: ReturnType<typeof setTimeout>;
+    window.addEventListener("resize", () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => wrappers.forEach(resolve), 150);
+    });
+  })();
+
+  // —————————————————————————————————————————————————————————————————
+  // 2. Touch handling (coarse pointer devices only)
+  //
+  //    Tapping a word toggles .is-tapped; auto-closes after 3 s.
+  //    Tapping outside dismisses. Scroll gestures are ignored.
+  // —————————————————————————————————————————————————————————————————
   (() => {
     if (typeof window === "undefined") return;
     const mq = window.matchMedia("(hover: none) and (pointer: coarse)");
@@ -139,96 +429,69 @@ const linkProps = href
     const wrappers = document.querySelectorAll<HTMLElement>(".hover-reveal");
     if (!wrappers.length) return;
 
-    // Swap placement classes for any satellite with a mobile override.
-    const placements = ["top-right", "top-left", "bottom-right", "bottom-left"];
-    wrappers.forEach((w) => {
-      const mobilePl = w.dataset.mobilePlacement;
-      if (!mobilePl) return;
-      placements.forEach((p) => w.classList.remove(`hover-reveal--${p}`));
-      w.classList.add(`hover-reveal--${mobilePl}`);
-      // Also update the tether SVG path for the new direction.
-      const svg = w.querySelector<SVGPathElement>(".hover-reveal__tether path");
-      if (svg) {
-        const paths: Record<string, string> = {
-          "top-right": "M 2 98 Q 18 44, 98 2",
-          "top-left": "M 98 98 Q 82 44, 2 2",
-          "bottom-right": "M 2 2 Q 18 56, 98 98",
-          "bottom-left": "M 98 2 Q 82 56, 2 98",
-        };
-        svg.setAttribute("d", paths[mobilePl] || paths["top-right"]);
-      }
-    });
-
     let autoCloseTimer: ReturnType<typeof setTimeout> | null = null;
+    let openWrapper: HTMLElement | null = null;
+
+    const clearTimer = () => {
+      if (autoCloseTimer) { clearTimeout(autoCloseTimer); autoCloseTimer = null; }
+    };
 
     const closeAll = () => {
-      if (autoCloseTimer) { clearTimeout(autoCloseTimer); autoCloseTimer = null; }
+      clearTimer();
+      openWrapper = null;
       wrappers.forEach((w) => w.classList.remove("is-tapped"));
     };
 
     const openSatellite = (wrapper: HTMLElement) => {
-      closeAll();
+      clearTimer();
+      if (openWrapper && openWrapper !== wrapper) {
+        openWrapper.classList.remove("is-tapped");
+      }
+      // Resolve placement at the moment of opening, based on current scroll.
+      const resolveFn = (window as any).__resolveReveal;
+      if (resolveFn) resolveFn(wrapper);
+      openWrapper = wrapper;
       wrapper.classList.add("is-tapped");
-      // Auto-dismiss after 3 seconds.
-      autoCloseTimer = setTimeout(closeAll, 3000);
+      autoCloseTimer = setTimeout(() => {
+        wrapper.classList.remove("is-tapped");
+        if (openWrapper === wrapper) openWrapper = null;
+        autoCloseTimer = null;
+      }, 3000);
     };
 
-    // Track touch movement so scroll gestures don't trigger toggles/dismiss.
     let touchStartX = 0;
     let touchStartY = 0;
     let touchStartTarget: EventTarget | null = null;
-    const MOVE_THRESHOLD = 10; // px
+    const MOVE_THRESHOLD = 10;
 
-    document.addEventListener(
-      "touchstart",
-      (event) => {
-        const t = event.touches[0];
-        if (!t) return;
-        touchStartX = t.clientX;
-        touchStartY = t.clientY;
-        touchStartTarget = event.target;
-      },
-      { passive: true },
-    );
+    document.addEventListener("touchstart", (event) => {
+      const t = event.touches[0];
+      if (!t) return;
+      touchStartX = t.clientX;
+      touchStartY = t.clientY;
+      touchStartTarget = event.target;
+    }, { passive: true });
 
-    document.addEventListener(
-      "touchend",
-      (event) => {
-        const t = event.changedTouches[0];
-        if (!t) return;
-        const dx = Math.abs(t.clientX - touchStartX);
-        const dy = Math.abs(t.clientY - touchStartY);
-        // Scroll or drag — ignore.
-        if (dx > MOVE_THRESHOLD || dy > MOVE_THRESHOLD) return;
+    document.addEventListener("touchend", (event) => {
+      const t = event.changedTouches[0];
+      if (!t) return;
+      if (Math.abs(t.clientX - touchStartX) > MOVE_THRESHOLD || Math.abs(t.clientY - touchStartY) > MOVE_THRESHOLD) return;
 
-        const target = touchStartTarget as HTMLElement | null;
-        if (!target) return;
+      const target = touchStartTarget as HTMLElement | null;
+      if (!target) return;
 
-        const tappedWord = target.closest?.(".hover-reveal__word") as HTMLElement | null;
-        const tappedCard = target.closest?.(".hover-reveal__card") as HTMLElement | null;
-        const tappedWrapper = target.closest?.(".hover-reveal") as HTMLElement | null;
+      const tappedWord = target.closest?.(".hover-reveal__word") as HTMLElement | null;
+      const tappedCard = target.closest?.(".hover-reveal__card") as HTMLElement | null;
+      const tappedWrapper = target.closest?.(".hover-reveal") as HTMLElement | null;
 
-        if (tappedWord && tappedWrapper) {
-          // Tap on an anchor word — toggle that satellite.
-          event.preventDefault();
-          const wasOpen = tappedWrapper.classList.contains("is-tapped");
-          if (wasOpen) {
-            closeAll();
-          } else {
-            openSatellite(tappedWrapper);
-          }
-          return;
-        }
-
-        if (tappedCard) {
-          // Tap inside an open card — let the browser handle link clicks.
-          return;
-        }
-
-        // Tap anywhere else — dismiss immediately.
-        closeAll();
-      },
-      { passive: false },
-    );
+      if (tappedWord && tappedWrapper) {
+        event.preventDefault();
+        const wasOpen = tappedWrapper.classList.contains("is-tapped");
+        if (wasOpen) { closeAll(); } else { openSatellite(tappedWrapper); }
+        return;
+      }
+      if (tappedCard) return;
+      closeAll();
+    }, { passive: false });
   })();
 </script>

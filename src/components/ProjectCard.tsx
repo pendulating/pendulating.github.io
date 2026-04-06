@@ -208,9 +208,7 @@ export default function ProjectCard({ project, secHeading = true }: Props) {
   };
 
   const handleCardFocus = () => {
-    // If focus came from a tap/click, skip auto-expanding here —
-    // handleCardClick will handle expansion based on current state,
-    // avoiding the focus-then-click toggle-back that required 2 taps.
+    // Skip focus-from-pointer to avoid focus+click double-toggle.
     if (focusFromPointerRef.current) return;
     if (isControlled) gridContext!.setExpandedCardId(slug);
     else {

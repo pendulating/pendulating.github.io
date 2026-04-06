@@ -992,6 +992,15 @@ html:not(.brain-layout) {
     pointer-events: auto;
   }
 
+  /* When the card is clamped to stay in-viewport, inline styles set
+     left/top directly. Override the placement-class positioning and
+     use a simpler transform (just scale + rotate, no translate). */
+  .hover-reveal:hover .hover-reveal__card.is-clamped,
+  .hover-reveal:focus-within .hover-reveal__card.is-clamped,
+  .hover-reveal.is-tapped .hover-reveal__card.is-clamped {
+    transform: scale(1) rotate(var(--reveal-rotate));
+  }
+
   /* Clickable card — subtle accent-ring lift on hover */
   a.hover-reveal__card:hover {
     box-shadow:
@@ -1044,22 +1053,44 @@ html:not(.brain-layout) {
     }
   }
 
-  /* iOS Safari requires non-interactive elements to look clickable
-     (cursor: pointer) before it will fire `click` on the first tap.
-     Without this, tapping only focuses/simulates :hover, and a second
-     tap is needed to activate. */
+  /* Touch device adjustments */
   @media (hover: none) and (pointer: coarse) {
     .hover-reveal__word {
       cursor: pointer;
       -webkit-tap-highlight-color: rgba(var(--color-accent), 0.18);
       touch-action: manipulation;
     }
-    /* Same iOS workaround: make the card look clickable on first tap
-       so handleCardClick fires and expands on a single tap. */
     .project-card {
       cursor: pointer;
       -webkit-tap-highlight-color: transparent;
       touch-action: manipulation;
+    }
+    /* On touch devices the script manages satellite visibility via the
+       .is-tapped class with a 3-second auto-close timer. Disable the
+       :focus-within path so it can't fight with the timer and keep cards
+       visible after is-tapped is removed. */
+    .hover-reveal:focus-within:not(.is-tapped) .hover-reveal__tether {
+      opacity: 0;
+    }
+    .hover-reveal:focus-within:not(.is-tapped) .hover-reveal__tether path {
+      stroke-dashoffset: 100;
+    }
+    .hover-reveal:focus-within:not(.is-tapped) .hover-reveal__card {
+      opacity: 0;
+      transform: translateY(8px) scale(0.78) rotate(-2deg);
+      pointer-events: none;
+      box-shadow: 0 0 0 rgba(0, 0, 0, 0);
+    }
+    .hover-reveal:focus-within:not(.is-tapped) .hover-reveal__card::before {
+      pointer-events: none;
+    }
+    .hover-reveal:focus-within:not(.is-tapped) .hover-reveal__word {
+      color: inherit;
+      background-image: linear-gradient(
+        to right,
+        rgba(var(--color-accent), 0.55) 50%,
+        transparent 50%
+      );
     }
   }
 
