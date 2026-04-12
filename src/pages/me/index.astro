@@ -54,7 +54,7 @@ const sortedProjects = projects.sort((a, b) => (a.data.order || Infinity) - (b.d
     <div class="right-col">
       <section id="selected-work">
         <h2 class="main-section-heading">Projects</h2>
-        <ProjectCardGrid projects={sortedProjects} client:load />
+        <ProjectCardGrid projects={sortedProjects} client:idle />
       </section>
     </div>
   </main>

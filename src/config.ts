@@ -3,7 +3,7 @@ import type { Site, SocialObjects } from "./types";
 export const PROFILE = {
   name: "Matt Franchi",
   title: "PhD Candidate @ Cornell",
-  profilePic: "/assets/profile_photo.png", // Add your profile pic to public/assets
+  profilePic: "/assets/profile_photo.webp", // Add your profile pic to public/assets
   bio: "Urban data scientist exploring inequality through the lens of computation and photography",
   location: "Ithaca, NY",
   links: {

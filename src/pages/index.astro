@@ -57,7 +57,7 @@ const socialCount = SOCIALS.filter(social => social.active).length;
           I am a Computer Science PhD Candidate at Cornell University, based at the New York City campus, <HoverReveal
             id="cornell-tech"
             variant="image"
-            src="/assets/cornell-tech.jpg"
+            src="/assets/cornell-tech.webp"
             alt="Cornell Tech campus on Roosevelt Island"
             label="Cornell Tech campus"
             size="lg"
@@ -76,7 +76,7 @@ const socialCount = SOCIALS.filter(social => social.active).length;
           I <HoverReveal
             id="piano"
             variant="image"
-            src="/assets/piano.jpg"
+            src="/assets/piano.webp"
             alt="Piano"
             label="A piano I play"
             size="lg"
@@ -87,7 +87,7 @@ const socialCount = SOCIALS.filter(social => social.active).length;
           >play</HoverReveal>, compose, and record neoclassical piano music, pendulate between <HoverReveal
             id="master-margarita"
             variant="image"
-            src="/assets/master-margarita.jpg"
+            src="/assets/master-margarita.webp"
             alt="The Master and Margarita by Mikhail Bulgakov"
             label="The Master and Margarita — a fiction favorite"
             size="lg"
@@ -98,7 +98,7 @@ const socialCount = SOCIALS.filter(social => social.active).length;
           >fiction</HoverReveal> and <HoverReveal
             id="geb"
             variant="image"
-            src="/assets/geb.jpg"
+            src="/assets/geb.webp"
             alt="Gödel, Escher, Bach by Douglas Hofstadter"
             label="Gödel, Escher, Bach — a non-fiction favorite"
             size="lg"
@@ -109,7 +109,7 @@ const socialCount = SOCIALS.filter(social => social.active).length;
           >non-fiction</HoverReveal> books, <HoverReveal
             id="hike"
             variant="image"
-            src="/assets/hike.jpg"
+            src="/assets/hike.webp"
             alt="A hike in the mountains"
             label="A recent hike"
             size="lg"
@@ -120,7 +120,7 @@ const socialCount = SOCIALS.filter(social => social.active).length;
           >hike</HoverReveal> whilst on vacation, write, and <HoverReveal
             id="model"
             variant="image"
-            src="/assets/model.png"
+            src="/assets/model.webp"
             alt="Modeling"
             label="A modeling shoot"
             size="lg"
@@ -169,7 +169,7 @@ const socialCount = SOCIALS.filter(social => social.active).length;
     <div class="right-col">
       <section id='selected-work'>
         <h2 class="main-section-heading">Research Projects</h2>
-        <ProjectCardGrid projects={sortedProjects} client:load />
+        <ProjectCardGrid projects={sortedProjects} client:idle />
       </section>
     </div>
   </main>
