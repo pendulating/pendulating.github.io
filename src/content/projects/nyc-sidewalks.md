@@ -1,6 +1,6 @@
 ---
 title: "Sidewalk 'Claustrophobia'"
-venue: "The New York Times"
+venue: "The New York Times 'Street Wars'"
 pdf: "https://mfranchi.net/posts/claustrophobic-streets/"
 site: "https://www.nytimes.com/2024/07/29/nyregion/street-wars-crowded-sidewalks-times-square.html"
 code: "https://github.com/mattwfranchi/claustrophobic-streets"
