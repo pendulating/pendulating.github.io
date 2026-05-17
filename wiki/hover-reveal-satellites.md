@@ -95,8 +95,29 @@ to express itself).
 
 - The anchor word is keyboard-focusable (`tabindex="0"`) and opens the card on `:focus-within`.
 - `aria-describedby` links the word to the card's id.
-- Cards are hidden on screens ≤640px — the prose keeps reading normally on mobile.
+- On touch/coarse-pointer devices the card opens on tap (`.is-tapped`, 3 s auto-close) and is **scaled down but still shown** ≤640px — it is not hidden.
 - `prefers-reduced-motion` suppresses the spring animation but keeps the opacity fade.
+
+## Placement is automatic & header-safe
+
+The authored `placement` / `distance` / `curve` are only a *preference*. At
+open time the component's script (`resolve()` in `HoverReveal.astro`)
+recomputes the card position against a **safe region** whose top edge is the
+live `#main-header` box (`safeInsets()`), so a card can never be drawn behind
+the fixed header or off any viewport edge.
+
+- On **coarse-pointer** devices it always uses the deterministic path: the
+  card + tether switch to `position: fixed` in viewport coordinates and the
+  tether re-attaches to the anchor word's nearest line fragment — so a
+  wrapped inline word can't throw the geometry off. Scrolling while open
+  dismisses the card (it can't drift, being fixed).
+- On **fine-pointer** devices, if the authored placement fits the safe
+  region it's used verbatim (the curve presets below still apply); otherwise
+  the same constrained path runs.
+
+Practical effect: choosing `placement`/`distance` well still gives the nicest
+*default* curve on desktop, but you no longer need to hand-tune them to avoid
+the header or small screens — that's handled.
 
 ## Examples to crib from
 

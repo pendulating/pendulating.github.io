@@ -1001,6 +1001,29 @@ html:not(.brain-layout) {
     transform: scale(1) rotate(var(--reveal-rotate));
   }
 
+  /* Clamped: the script positions card + tether in *viewport*
+     coordinates (immune to the inline anchor's wrapped box), so they
+     must be fixed, not absolute-to-wrapper. */
+  .hover-reveal.is-clamped .hover-reveal__card,
+  .hover-reveal.is-clamped .hover-reveal__tether {
+    position: fixed;
+  }
+
+  /* When a clamped card is open, lift it above the fixed site header
+     (header bg is z-50, its logo/socials z-60). The card is already
+     kept out of the header band positionally — this is belt-and-braces
+     so nothing can occlude it mid-animation. */
+  .hover-reveal.is-clamped:hover .hover-reveal__card,
+  .hover-reveal.is-clamped:focus-within .hover-reveal__card,
+  .hover-reveal.is-clamped.is-tapped .hover-reveal__card {
+    z-index: 70;
+  }
+  .hover-reveal.is-clamped:hover .hover-reveal__tether,
+  .hover-reveal.is-clamped:focus-within .hover-reveal__tether,
+  .hover-reveal.is-clamped.is-tapped .hover-reveal__tether {
+    z-index: 69;
+  }
+
   /* Clickable card — subtle accent-ring lift on hover */
   a.hover-reveal__card:hover {
     box-shadow:

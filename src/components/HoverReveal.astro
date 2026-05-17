@@ -138,7 +138,41 @@ const linkProps = href
     const PLACEMENTS = ["top-right", "top-left", "bottom-right", "bottom-left"] as const;
     type Placement = (typeof PLACEMENTS)[number];
     const DIST_STEPS = [1, 0.6, 0.3, 0.1];
-    const EDGE_PAD = 8; // px from viewport edge
+    const EDGE_PAD = 8; // px from viewport side/bottom edges
+    const HEADER_GAP = 10; // breathing room below the fixed header
+
+    // Coarse-pointer (touch) devices always use the deterministic,
+    // viewport-anchored path — never the wrapper-relative happy path,
+    // since inline anchors wrap unpredictably in the narrow column.
+    const isCoarse =
+      window.matchMedia("(hover: none) and (pointer: coarse)").matches;
+
+    /**
+     * Safe region the card must stay inside, in viewport coordinates.
+     * The top inset tracks the *live* header box (it shrinks on scroll
+     * and changes height responsively), so a card can never be drawn
+     * behind the fixed header. Falls back to the --header-height CSS
+     * custom property, then to a bare edge pad.
+     */
+    function safeInsets() {
+      let top = EDGE_PAD;
+      const header = document.querySelector<HTMLElement>("#main-header");
+      if (header) {
+        const hb = header.getBoundingClientRect().bottom;
+        if (hb > 0) top = hb + HEADER_GAP;
+      } else {
+        const cssH = parseFloat(
+          getComputedStyle(document.documentElement).getPropertyValue("--header-height"),
+        );
+        if (cssH > 0) top = cssH + HEADER_GAP;
+      }
+      return {
+        top,
+        left: EDGE_PAD,
+        right: window.innerWidth - EDGE_PAD,
+        bottom: window.innerHeight - EDGE_PAD,
+      };
+    }
 
     const wrappers = document.querySelectorAll<HTMLElement>(".hover-reveal");
     if (!wrappers.length) return;
@@ -160,26 +194,28 @@ const linkProps = href
       }
     }
 
-    function rectOverflow(rect: { l: number; t: number; r: number; b: number }) {
-      const vw = window.innerWidth;
-      const vh = window.innerHeight;
+    type Insets = ReturnType<typeof safeInsets>;
+
+    function rectOverflow(
+      rect: { l: number; t: number; r: number; b: number }, ins: Insets,
+    ) {
       return (
-        Math.max(0, EDGE_PAD - rect.l) +
-        Math.max(0, rect.r - (vw - EDGE_PAD)) +
-        Math.max(0, EDGE_PAD - rect.t) +
-        Math.max(0, rect.b - (vh - EDGE_PAD))
+        Math.max(0, ins.left - rect.l) +
+        Math.max(0, rect.r - ins.right) +
+        Math.max(0, ins.top - rect.t) +
+        Math.max(0, rect.b - ins.bottom)
       );
     }
 
-    /** Clamp a rect into the viewport, returning the shift applied. */
-    function clampRect(rect: { l: number; t: number; r: number; b: number }) {
-      const vw = window.innerWidth;
-      const vh = window.innerHeight;
+    /** Clamp a rect into the safe region, returning the shift applied. */
+    function clampRect(
+      rect: { l: number; t: number; r: number; b: number }, ins: Insets,
+    ) {
       let shiftX = 0, shiftY = 0;
-      if (rect.l < EDGE_PAD) shiftX = EDGE_PAD - rect.l;
-      else if (rect.r > vw - EDGE_PAD) shiftX = (vw - EDGE_PAD) - rect.r;
-      if (rect.t < EDGE_PAD) shiftY = EDGE_PAD - rect.t;
-      else if (rect.b > vh - EDGE_PAD) shiftY = (vh - EDGE_PAD) - rect.b;
+      if (rect.l < ins.left) shiftX = ins.left - rect.l;
+      else if (rect.r > ins.right) shiftX = ins.right - rect.r;
+      if (rect.t < ins.top) shiftY = ins.top - rect.t;
+      else if (rect.b > ins.bottom) shiftY = ins.bottom - rect.b;
       return {
         rect: { l: rect.l + shiftX, t: rect.t + shiftY, r: rect.r + shiftX, b: rect.b + shiftY },
         shiftX, shiftY,
@@ -223,7 +259,6 @@ const linkProps = href
 
     function resolve(wrapper: HTMLElement) {
       const vw = window.innerWidth;
-      const vh = window.innerHeight;
       {
         const word = wrapper.querySelector<HTMLElement>(".hover-reveal__word");
         const card = wrapper.querySelector<HTMLElement>(".hover-reveal__card");
@@ -231,7 +266,15 @@ const linkProps = href
         const pathEl = tether?.querySelector<SVGPathElement>("path");
         if (!word || !card || !tether || !pathEl) return;
 
-        const wordRect = word.getBoundingClientRect();
+        // An inline anchor that wraps across lines has several client
+        // rects; getBoundingClientRect() would return their full-width
+        // union and throw off every placement. Anchor to the dominant
+        // (widest) line fragment instead.
+        const wordRects = Array.from(word.getClientRects());
+        const wordRect = wordRects.length
+          ? wordRects.reduce((a, b) => (b.width >= a.width ? b : a))
+          : word.getBoundingClientRect();
+        const ins = safeInsets();
         const cs = getComputedStyle(wrapper);
         const size = parseFloat(cs.getPropertyValue("--reveal-size")) || 88;
         const dxBase = parseFloat(cs.getPropertyValue("--reveal-dx-base")) || 70;
@@ -262,7 +305,7 @@ const linkProps = href
           const dy = dyBase * authoredDist * dMult;
           for (const p of PLACEMENTS) {
             const r = cardRect(wordRect, p, dx, dy, cardW, cardH);
-            const { shiftX, shiftY } = clampRect(r);
+            const { shiftX, shiftY } = clampRect(r, ins);
             candidates.push({
               p,
               rect: { l: r.l + shiftX, t: r.t + shiftY, r: r.r + shiftX, b: r.b + shiftY },
@@ -277,7 +320,7 @@ const linkProps = href
           const cl = wordCx - cardW / 2;
           const ct = vert === "below" ? wordRect.bottom + dy : wordRect.top - dy - cardH;
           const r = { l: cl, t: ct, r: cl + cardW, b: ct + cardH };
-          const { shiftX, shiftY } = clampRect(r);
+          const { shiftX, shiftY } = clampRect(r, ins);
           // Map to the nearest quadrant placement for CSS class.
           const quadrant: Placement = vert === "below"
             ? (wordCx > vw / 2 ? "bottom-left" : "bottom-right")
@@ -310,9 +353,9 @@ const linkProps = href
         const fullDx = dxBase * authoredDist;
         const fullDy = dyBase * authoredDist;
         const authoredRect = cardRect(wordRect, authored, fullDx, fullDy, cardW, cardH);
-        const authoredFits = rectOverflow(authoredRect) < 1;
+        const authoredFits = rectOverflow(authoredRect, ins) < 1;
 
-        if (authoredFits) {
+        if (authoredFits && !isCoarse) {
           // Happy path: authored placement fits. Use CSS classes directly,
           // restore original vars, clear any inline overrides.
           applyPlacement(wrapper, authored);
@@ -325,6 +368,7 @@ const linkProps = href
           card.style.removeProperty("bottom");
           card.style.removeProperty("right");
           card.classList.remove("is-clamped");
+          wrapper.classList.remove("is-clamped");
           tether.style.removeProperty("width");
           tether.style.removeProperty("height");
           tether.style.removeProperty("left");
@@ -336,31 +380,36 @@ const linkProps = href
           return;
         }
 
-        // Constrained path: card needs repositioning.
-        // Use best.rect (already clamped into viewport).
-        // Position card + tether via inline styles relative to the wrapper.
-        const wrapperRect = wrapper.getBoundingClientRect();
-
-        // Card: position with inline style overrides.
-        const cardLeft = best.rect.l - wrapperRect.left;
-        const cardTop = best.rect.t - wrapperRect.top;
-        card.style.setProperty("--clamp-x", "0px");
-        card.style.setProperty("--clamp-y", "0px");
+        // Constrained path: card is repositioned to a guaranteed-safe
+        // slot. Card + tether switch to position:fixed (via .is-clamped)
+        // and are placed in *viewport* coordinates — independent of the
+        // inline wrapper's box, which is unreliable when the anchor word
+        // wraps. best.rect is already clamped inside safeInsets(), so the
+        // card can never land behind the header or off any edge.
         card.classList.add("is-clamped");
-        // Override the class-based positioning entirely.
-        card.style.left = cardLeft + "px";
-        card.style.top = cardTop + "px";
+        wrapper.classList.add("is-clamped");
+        card.style.left = best.rect.l + "px";
+        card.style.top = best.rect.t + "px";
         card.style.bottom = "auto";
         card.style.right = "auto";
 
-        // Word anchor point (center of word).
-        const wAnchorX = (wordRect.left + wordRect.right) / 2 - wrapperRect.left;
-        const wAnchorY = (wordRect.top + wordRect.bottom) / 2 - wrapperRect.top;
-
-        // Card anchor point (nearest edge center to word).
+        const cardLeft = best.rect.l;
+        const cardTop = best.rect.t;
         const cCx = cardLeft + cardW / 2;
         const cCy = cardTop + cardH / 2;
-        // Pick the card edge closest to the word.
+
+        // Word anchor: the point on the word fragment nearest the card.
+        // Re-pick the closest line fragment so a wrapped word's tether
+        // attaches to the fragment the reader is actually looking at.
+        const near = (r: DOMRect) =>
+          Math.hypot((r.left + r.right) / 2 - cCx, (r.top + r.bottom) / 2 - cCy);
+        const wf = wordRects.length
+          ? wordRects.reduce((a, b) => (near(b) < near(a) ? b : a))
+          : wordRect;
+        const wAnchorX = Math.max(wf.left, Math.min(wf.right, cCx));
+        const wAnchorY = Math.max(wf.top, Math.min(wf.bottom, cCy));
+
+        // Card anchor point (nearest edge center to word).
         let cAnchorX: number, cAnchorY: number;
         if (Math.abs(cCx - wAnchorX) > Math.abs(cCy - wAnchorY)) {
           // Horizontal gap dominates → anchor on left or right edge of card.
@@ -372,7 +421,7 @@ const linkProps = href
           cAnchorY = cCy < wAnchorY ? cardTop + cardH : cardTop;
         }
 
-        // Tether SVG: position and size to span from word anchor to card anchor.
+        // Tether SVG: fixed, spanning word anchor → card anchor (viewport).
         const tetherLeft = Math.min(wAnchorX, cAnchorX);
         const tetherTop = Math.min(wAnchorY, cAnchorY);
         const tetherW = Math.max(12, Math.abs(cAnchorX - wAnchorX));
@@ -451,6 +500,7 @@ const linkProps = href
       const resolveFn = (window as any).__resolveReveal;
       if (resolveFn) resolveFn(wrapper);
       openWrapper = wrapper;
+      scrollAnchorY = window.scrollY;
       wrapper.classList.add("is-tapped");
       autoCloseTimer = setTimeout(() => {
         wrapper.classList.remove("is-tapped");
@@ -458,6 +508,15 @@ const linkProps = href
         autoCloseTimer = null;
       }, 3000);
     };
+
+    // A clamped card is position:fixed, resolved against the header/scroll
+    // at open time. If the page scrolls while it's open it would detach
+    // from its word — so dismiss on scroll instead of letting it drift.
+    let scrollAnchorY = window.scrollY;
+    window.addEventListener("scroll", () => {
+      if (!openWrapper) { scrollAnchorY = window.scrollY; return; }
+      if (Math.abs(window.scrollY - scrollAnchorY) > 4) closeAll();
+    }, { passive: true });
 
     let touchStartX = 0;
     let touchStartY = 0;
