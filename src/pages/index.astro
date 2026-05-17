@@ -141,7 +141,7 @@ const socialCount = SOCIALS.filter(social => social.active).length;
                   <time datetime={data.date.toISOString()} class="mr-3 opacity-70">
                     {formatNewsDate(data.date)}
                   </time>
-                  <span>{data.news}</span>
+                  <span set:html={data.news} />
                   {
                     data.link && (
                       <>
