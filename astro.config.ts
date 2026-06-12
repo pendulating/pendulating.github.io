@@ -11,7 +11,8 @@ import partytown from "@astrojs/partytown";
 export default defineConfig({
   site: "https://mfranchi.net",
   redirects: {
-     '/claustrophobic-streets': '/posts/claustrophobic-streets'
+     '/claustrophobic-streets': '/posts/claustrophobic-streets',
+     '/normative-simulacra': 'https://github.com/pendulating/trawler'
   },
   integrations: [
     tailwind({
