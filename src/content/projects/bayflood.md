@@ -1,8 +1,8 @@
 ---
 title: "Bay(esian)Flood(risk)"
-venue: "Nature Communications (Forthcoming Fall 2026)"
-pdf: "https://arxiv.org/abs/2503.14754"
-code: "https://github.com/mattwfranchi/street-flooding"
+venue: "Nature Communications"
+pdf: "https://www.nature.com/articles/s41467-026-75938-1"
+code: "https://github.com/pendulating/street-flooding"
 image: "../../assets/selected-work/bayflood.jpg"
 category: "computational-social-science"
 pubDatetime: 2025-07-14
